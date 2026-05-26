@@ -1,24 +1,34 @@
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "flashlib"
 version = "0.1.0"
-description = "High-performance ML primitives, applications, and informative cost API — Triton kernels for NVIDIA GPUs."
+description = "High-performance ML primitives, applications, and informative cost API — Triton + CuteDSL kernels for NVIDIA GPUs."
 requires-python = ">=3.9"
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [
-    {name = "flashlib authors"},
+    {name = "Shuo Yang", email = "andy_yang@berkeley.edu"},
 ]
-keywords = ["triton", "gpu", "machine-learning", "kmeans", "knn", "pca", "dbscan", "cuml"]
+maintainers = [
+    {name = "Shuo Yang", email = "andy_yang@berkeley.edu"},
+]
+keywords = ["triton", "cutedsl", "gpu", "machine-learning", "kmeans", "knn", "pca", "dbscan", "hdbscan", "umap", "cuml"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Operating System :: POSIX :: Linux",
+    "Environment :: GPU :: NVIDIA CUDA",
 ]
 dependencies = [
     "torch>=2.0",
@@ -26,6 +36,7 @@ dependencies = [
     "numpy",
     "numba",                # hdbscan tree-condensation helpers (CPU-side)
     "nvidia-cutlass-dsl",   # CuteDSL backends for kmeans/knn/dbscan/hdbscan/umap/spectral_clustering/polar/orthonormalize
+    "tqdm",                 # progress bar in kmeans Lloyd iterations
 ]
 
 [project.optional-dependencies]
@@ -41,7 +52,9 @@ bench = [
 
 [project.urls]
 Homepage = "https://flashml-org.github.io/"
+Documentation = "https://flashml-org.github.io/"
 Repository = "https://github.com/FlashML-org/flashlib"
+Issues = "https://github.com/FlashML-org/flashlib/issues"
 
 [tool.setuptools.packages.find]
 include = ["flashlib*"]
