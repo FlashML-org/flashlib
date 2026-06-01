@@ -1,5 +1,7 @@
 # FlashLib
 
+[![Slack](https://img.shields.io/badge/Slack-join%20the%20community-4A154B?logo=slack&logoColor=white)](https://join.slack.com/t/flashml/shared_invite/zt-3zpdh5j10-9dwTXrgLiqpVxizhA9KVbA)
+
 A GPU library for classical machine-learning operators — `kmeans`, `knn`,
 `ivf-flat`, `pca`, `svd`, `dbscan`, `hdbscan`, `umap`, `t-sne`, regression,
 GEMM, and more — built on Triton and CuteDSL.
