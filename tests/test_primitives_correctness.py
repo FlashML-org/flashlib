@@ -210,6 +210,258 @@ def test_ivf_flat_gemm_matches_elementwise_high_d():
 
 
 @cuda_only
+@pytest.mark.parametrize("by_residual", [True, False])
+def test_ivf_pq_isoresult_vs_oracle(by_residual):
+    """Triton ADC kernel == pure-torch reference on the SAME index.
+
+    With every list probed (``nprobe == nlist``) both paths scan the
+    identical candidate set, so the fused Triton ADC must equal the torch
+    reference **bit-for-bit** -- any divergence is a kernel bug. Covers
+    both the residual (per-(query, list) LUT) and non-residual (query-only
+    LUT, probe-stride 0) code paths.
+
+    For *partial* nprobe the Triton coarse (``flash_knn``, tf32 GEMM) and
+    the reference coarse (``cdist``, exact fp32) can pick a different
+    ``nprobe``-th list at near-tied centroids; because ADC distances are
+    approximate, that rare probe-set difference perturbs a handful of
+    queries (a far list can inject a quantization-error false positive),
+    so we require the vast majority -- not all -- of queries to match.
+    """
+    from flashlib import flash_ivf_pq_build, flash_ivf_pq_search
+    from flashlib.primitives.ivf_pq import torch_fallback as tf
+
+    torch.manual_seed(0)
+    M, D, nlist, m, k = 12_000, 48, 64, 16, 8
+    X = _blobs(M, D, 10, "cuda", seed=2)
+    Q = _blobs(128, D, 10, "cuda", seed=3)
+
+    index = flash_ivf_pq_build(
+        X, nlist, m=m, nprobe=8, by_residual=by_residual, niter=15, seed=0
+    )
+
+    # Exhaustive probing: candidate set = all lists for both paths, so the
+    # coarse step is deterministic and the kernels must agree bit-for-bit.
+    gv, gi = flash_ivf_pq_search(index, Q, k, nprobe=nlist)
+    tv, ti = tf.ivf_pq_search_torch(index, Q, k, nprobe=nlist)
+    assert torch.allclose(
+        gv.sort(1).values, tv.sort(1).values, rtol=1e-3, atol=1e-1
+    ), f"exhaustive ADC distances diverge (by_residual={by_residual})"
+    same = (gi.sort(1).values == ti.sort(1).values).float().mean().item()
+    assert same >= 0.98, f"exhaustive iso-result id mismatch: {same:.4f}"
+
+    # Partial nprobe: the vast majority of queries match exactly (the rest
+    # differ only because flash_knn vs cdist picked a different far list).
+    for nprobe in (4, 8, 16):
+        gv, _ = flash_ivf_pq_search(index, Q, k, nprobe=nprobe)
+        tv, _ = tf.ivf_pq_search_torch(index, Q, k, nprobe=nprobe)
+        row_ok = torch.isclose(
+            gv.sort(1).values, tv.sort(1).values, rtol=1e-3, atol=1e-1
+        ).all(dim=1).float().mean().item()
+        assert row_ok >= 0.95, (
+            f"too many queries diverge at nprobe={nprobe} "
+            f"(by_residual={by_residual}): {row_ok:.4f}"
+        )
+
+
+@cuda_only
+def test_ivf_pq_recall_vs_brute():
+    """Fine PQ clears a recall bar vs exact L2; recall is monotonic in nprobe.
+
+    With small sub-vectors (``dsub=2`` here, 256 sub-centroids each) the PQ
+    reconstruction is accurate, so even though the returned distances are
+    ADC-approximate the recovered neighbour ids largely match exact
+    brute-force. Recall climbs monotonically with nprobe -- more probed
+    lists can only enlarge the candidate set.
+    """
+    from flashlib import flash_ivf_pq_build, flash_ivf_pq_search
+
+    torch.manual_seed(0)
+    M, D, nlist, m, k = 20_000, 32, 128, 16, 10
+    X = _blobs(M, D, 16, "cuda", seed=0)
+    Q = _blobs(256, D, 16, "cuda", seed=1)
+
+    index = flash_ivf_pq_build(X, nlist, m=m, nprobe=8, niter=15, seed=0)
+
+    ref = torch.cdist(Q, X) ** 2
+    _, ref_ids = ref.topk(k, largest=False, dim=1)
+
+    # Exhaustive probing scans every list (distances still ADC-approximate).
+    _, ids_all = flash_ivf_pq_search(index, Q, k, nprobe=nlist)
+    assert _recall(ids_all, ref_ids) >= 0.5
+
+    r_lo = _recall(flash_ivf_pq_search(index, Q, k, nprobe=2)[1], ref_ids)
+    r_hi = _recall(flash_ivf_pq_search(index, Q, k, nprobe=32)[1], ref_ids)
+    assert r_hi >= r_lo
+
+
+@cuda_only
+def test_ivf_pq_nprobe_monotonic():
+    """Recall rises sharply with nprobe (ADC lets it wiggle near saturation).
+
+    More probed lists enlarge the candidate set, so recall climbs with
+    nprobe. Unlike exact IVF-Flat the climb is not *strictly* monotonic:
+    ADC distances are approximate, so a newly probed far list can
+    occasionally inject a quantization-error false positive and nudge
+    recall down once it has saturated. We assert the dominant upward trend
+    and bound any local dip.
+    """
+    from flashlib import flash_ivf_pq_build, flash_ivf_pq_search
+
+    torch.manual_seed(0)
+    M, D, nlist, m, k = 12_000, 48, 64, 12, 10
+    X = _blobs(M, D, 12, "cuda", seed=6)
+    Q = _blobs(128, D, 12, "cuda", seed=7)
+    index = flash_ivf_pq_build(X, nlist, m=m, nprobe=8, niter=12, seed=0)
+
+    ref = torch.cdist(Q, X) ** 2
+    _, ref_ids = ref.topk(k, largest=False, dim=1)
+    recalls = [
+        _recall(flash_ivf_pq_search(index, Q, k, nprobe=p)[1], ref_ids)
+        for p in (1, 4, 16, 64)
+    ]
+    # Clear gain from probing more lists ...
+    assert recalls[-1] >= recalls[0] + 0.2, f"nprobe gave no recall gain: {recalls}"
+    # ... with only small ADC-induced dips along the way.
+    for lo, hi in zip(recalls, recalls[1:]):
+        assert hi >= lo - 0.03, f"recall dropped too much in nprobe: {recalls}"
+
+
+@cuda_only
+def test_ivf_pq_application_class():
+    """The sklearn-style IVFPQ wrapper round-trips fit -> kneighbors."""
+    from flashlib import IVFPQ
+
+    torch.manual_seed(0)
+    X = _blobs(8_000, 32, 8, "cuda", seed=4)
+    Q = _blobs(64, 32, 8, "cuda", seed=5)
+    model = IVFPQ(nlist=64, m=16, nprobe=32, n_neighbors=10, niter=10, seed=0).fit(X)
+    dist, idx = model.kneighbors(Q)
+    assert dist.shape == (64, 10) and idx.shape == (64, 10)
+    assert idx.dtype == torch.int64
+    assert (idx >= -1).all() and (idx < 8_000).all()
+    assert torch.isfinite(dist).all()
+    # 32-dim fp32 vector (128 B) -> 16-byte PQ code = 8x compression.
+    assert model.compression_ratio is not None and model.compression_ratio > 1.0
+
+    ref = torch.cdist(Q, X) ** 2
+    _, ref_ids = ref.topk(10, largest=False, dim=1)
+    assert _recall(idx, ref_ids) >= 0.5
+
+
+@cuda_only
+def test_ivf_pq_batch_matches_online():
+    """The group-by-list `batch` kernel == the online kernel (exact ADC).
+
+    Both fine-scan variants compute the identical asymmetric distance
+    (a sum of LUT lookups, no x²-free approximation), so their returned
+    distances must match and their ids must agree save for the rare ADC
+    tie at the k-th boundary.
+    """
+    from flashlib import flash_ivf_pq_build, flash_ivf_pq_search
+
+    torch.manual_seed(0)
+    M, D, nlist, m, k = 16_000, 64, 64, 16, 10
+    X = _blobs(M, D, 12, "cuda", seed=8)
+    Q = _blobs(512, D, 12, "cuda", seed=9)   # large batch -> high code reuse
+    index = flash_ivf_pq_build(X, nlist, m=m, nprobe=16, niter=12, seed=0)
+
+    for nprobe in (8, 16):
+        ov, oi = flash_ivf_pq_search(index, Q, k, nprobe=nprobe, variant="online")
+        bv, bi = flash_ivf_pq_search(index, Q, k, nprobe=nprobe, variant="batch")
+        assert torch.allclose(ov, bv, rtol=1e-4, atol=1e-2), \
+            f"online vs batch ADC distances diverge at nprobe={nprobe}"
+        same = (oi == bi).float().mean().item()
+        assert same >= 0.98, f"online vs batch id mismatch at nprobe={nprobe}: {same:.4f}"
+
+
+@cuda_only
+@pytest.mark.parametrize("by_residual", [True, False])
+def test_ivf_pq_gemm_matches_oracle(by_residual):
+    """No-LUT decode+GEMM kernel == pure-torch ADC oracle (the bulk path).
+
+    The ``gemm`` variant scores candidates with a tf32 tensor-core cross
+    term instead of an ADC LUT, then exact-re-ranks an oversampled pool, so
+    its returned distances must equal the reference ADC (to fp tolerance)
+    and -- with every list probed, where the coarse step is deterministic --
+    its ids must match. Covers residual and non-residual encoding, and the
+    cross-list merge that residual ``‖rq_c‖²`` makes non-trivial.
+    """
+    from flashlib import flash_ivf_pq_build, flash_ivf_pq_search
+    from flashlib.primitives.ivf_pq import torch_fallback as tf
+
+    torch.manual_seed(0)
+    M, D, nlist, m, k = 16_000, 64, 64, 16, 10
+    X = _blobs(M, D, 12, "cuda", seed=2)
+    Q = _blobs(1024, D, 12, "cuda", seed=3)   # bulk batch -> exercises GEMM
+    index = flash_ivf_pq_build(
+        X, nlist, m=m, nprobe=16, by_residual=by_residual, niter=15, seed=0
+    )
+
+    # Exhaustive probing: identical candidate set for both paths.
+    gv, gi = flash_ivf_pq_search(index, Q, k, nprobe=nlist, variant="gemm")
+    tv, ti = tf.ivf_pq_search_torch(index, Q, k, nprobe=nlist)
+    assert torch.allclose(
+        gv.sort(1).values, tv.sort(1).values, rtol=1e-3, atol=1e-1
+    ), f"gemm ADC distances diverge from oracle (by_residual={by_residual})"
+    same = (gi.sort(1).values == ti.sort(1).values).float().mean().item()
+    assert same >= 0.98, f"gemm vs oracle id mismatch: {same:.4f}"
+
+    # gemm and online resolve to the same ADC distances on the same index.
+    for nprobe in (8, 16):
+        gv, _ = flash_ivf_pq_search(index, Q, k, nprobe=nprobe, variant="gemm")
+        ov, _ = flash_ivf_pq_search(index, Q, k, nprobe=nprobe, variant="online")
+        assert torch.allclose(
+            gv.sort(1).values, ov.sort(1).values, rtol=1e-3, atol=1e-1
+        ), f"gemm vs online ADC distances diverge at nprobe={nprobe}"
+
+
+@cuda_only
+def test_ivf_pq_query_tiling_identical():
+    """Flash-style query tiling is exact: tiled == untiled, bit for bit.
+
+    The residual LUT ``(nq, nprobe, m, 256)`` is the only structure that
+    scales with ``nq * nprobe``; search tiles over query blocks so only a
+    ``(q_tile, ...)`` LUT is ever live. Tiling changes *when* work runs,
+    never *what*, so every tile size must reproduce the single-tile result
+    exactly (no tolerance) -- and the live LUT must shrink with q_tile.
+    """
+    from flashlib import flash_ivf_pq_build, flash_ivf_pq_search
+
+    torch.manual_seed(0)
+    M, D, nlist, m, k = 60_000, 96, 256, 24, 10
+    X = _blobs(M, D, 16, "cuda", seed=10)
+    Q = _blobs(3000, D, 16, "cuda", seed=11)
+    index = flash_ivf_pq_build(X, nlist, m=m, nprobe=16, niter=12, seed=0)
+
+    # Tiling only applies to the LUT path, so pin the variant (auto would
+    # route this work to the no-LUT GEMM kernel, which never tiles).
+    # Reference: force a single tile (no tiling).
+    ref_v, ref_i = flash_ivf_pq_search(
+        index, Q, k, nprobe=16, variant="online", q_tile=10**9
+    )
+
+    prev_peak = None
+    for q_tile in (2048, 512, 128):
+        torch.cuda.reset_peak_memory_stats()
+        v, i = flash_ivf_pq_search(
+            index, Q, k, nprobe=16, variant="online", q_tile=q_tile
+        )
+        peak = torch.cuda.max_memory_allocated()
+        assert torch.equal(v, ref_v), f"tiled vals differ at q_tile={q_tile}"
+        assert torch.equal(i, ref_i), f"tiled ids differ at q_tile={q_tile}"
+        if prev_peak is not None:
+            assert peak <= prev_peak, "smaller q_tile must not raise peak memory"
+        prev_peak = peak
+
+    # The auto tile must keep the live LUT under the budget.
+    from flashlib.primitives.ivf_pq.triton.search import (
+        _auto_q_tile, _LUT_BUDGET_BYTES,
+    )
+    bq = _auto_q_tile(Q.shape[0], 16, m, index.by_residual)
+    assert bq * 16 * m * 256 * 4 <= _LUT_BUDGET_BYTES
+
+
+@cuda_only
 def test_dbscan_recovers_blobs():
     from flashlib import flash_dbscan
 

@@ -97,6 +97,73 @@ def cluster_count(labels) -> int:
     return len(s) - (1 if -1 in s else 0)
 
 
+# ── real ANN datasets (ann-benchmarks HDF5: train / test / exact GT) ─────────
+_ANN_DATASETS = {
+    # name -> (url, metric). HDF5 layout: train (N,D), test (nq,D),
+    # neighbors (nq,100) exact top-100 ids, distances (nq,100).
+    "sift-128-euclidean": ("http://ann-benchmarks.com/sift-128-euclidean.hdf5", "l2"),
+    "glove-100-angular": ("http://ann-benchmarks.com/glove-100-angular.hdf5", "cosine"),
+    "fashion-mnist-784-euclidean":
+        ("http://ann-benchmarks.com/fashion-mnist-784-euclidean.hdf5", "l2"),
+}
+
+
+def ann_cache_dir() -> str:
+    """Directory for cached datasets (override via ``FLASHLIB_BENCH_CACHE``)."""
+    import os
+    d = os.environ.get(
+        "FLASHLIB_BENCH_CACHE", os.path.expanduser("~/.cache/flashlib_bench")
+    )
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+def load_ann_dataset(name: str = "sift-128-euclidean"):
+    """Download (once, cached) an ann-benchmarks dataset.
+
+    Returns ``(train, test, gt)`` -- ``train`` ``(N, D)`` f32 base vectors,
+    ``test`` ``(nq, D)`` f32 queries, ``gt`` ``(nq, 100)`` int64 exact
+    nearest-neighbour ids (the recall ground truth). Raises a helpful
+    error if ``h5py`` is missing or the download fails so callers can SKIP.
+    """
+    import os
+    import numpy as np
+    try:
+        import h5py
+    except ImportError as e:  # pragma: no cover - optional dep
+        raise RuntimeError("real datasets need h5py (`pip install h5py`)") from e
+    if name not in _ANN_DATASETS:
+        raise KeyError(f"unknown dataset {name!r}; known: {list(_ANN_DATASETS)}")
+
+    url, _metric = _ANN_DATASETS[name]
+    path = os.path.join(ann_cache_dir(), name + ".hdf5")
+    if not os.path.exists(path):
+        import urllib.request
+        tmp = path + ".part"
+
+        def _hook(blk, bs, total):
+            done = blk * bs
+            if total > 0:
+                print(f"\r  downloading {name}: {100*done/total:5.1f}% "
+                      f"({done/1e6:6.0f}/{total/1e6:.0f} MB)", end="", flush=True)
+
+        print(f"  fetching {url}")
+        # ann-benchmarks.com is behind Cloudflare, which 403s the default
+        # urllib User-Agent -- present a browser-like one.
+        opener = urllib.request.build_opener()
+        opener.addheaders = [("User-Agent", "Mozilla/5.0 (flashlib-bench)")]
+        urllib.request.install_opener(opener)
+        urllib.request.urlretrieve(url, tmp, _hook)
+        print()
+        os.rename(tmp, path)
+
+    with h5py.File(path, "r") as f:
+        train = np.ascontiguousarray(f["train"][:], dtype=np.float32)
+        test = np.ascontiguousarray(f["test"][:], dtype=np.float32)
+        gt = np.ascontiguousarray(f["neighbors"][:], dtype=np.int64)
+    return train, test, gt
+
+
 def header() -> None:
     """Print a one-line environment header."""
     import torch, cuml

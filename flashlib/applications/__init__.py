@@ -14,6 +14,7 @@ _LAZY_CLASSES: dict[str, str] = {
     "FlashKMeans":           "flashlib.applications.kmeans",
     "NearestNeighbors":      "flashlib.applications.knn",
     "IVFFlat":               "flashlib.applications.ivf_flat",
+    "IVFPQ":                 "flashlib.applications.ivf_pq",
     "PCA":                   "flashlib.applications.pca",
     "StandardScaler":        "flashlib.applications.standard_scaler",
     "DBSCAN":                "flashlib.applications.dbscan",

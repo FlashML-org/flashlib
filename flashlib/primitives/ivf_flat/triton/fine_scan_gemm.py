@@ -50,7 +50,7 @@ def _ivf_fine_gemm_kernel(
     M,
     D: tl.constexpr, K: tl.constexpr,
     BN: tl.constexpr, BM: tl.constexpr, D_INNER: tl.constexpr,
-    TOPK_PAD: tl.constexpr, MAX_STEPS: tl.constexpr, MAX_M_CHUNKS: tl.constexpr,
+    TOPK_PAD: tl.constexpr, MAX_STEPS: tl.constexpr,
 ):
     """Grid: ``(nlist, MAX_QTILES)``. One (list, query-tile) per program.
 
@@ -94,7 +94,11 @@ def _ivf_fine_gemm_kernel(
     k_range = tl.arange(0, TOPK_PAD)
     bm_range = tl.arange(0, BM)
 
-    for ci in range(MAX_M_CHUNKS):
+    # Per-list dynamic loop bound: iterate only the chunks this list needs,
+    # not the global longest-list count (which wastes masked-empty chunks on
+    # short lists and serializes the whole grid behind the longest list).
+    n_chunks = tl.cdiv(c_end - c_start, BM)
+    for ci in range(n_chunks):
         m_start = c_start + ci * BM
         m_offs = m_start + bm_range.to(tl.int64)          # (BM,) data rows
         m_mask = m_offs < c_end
@@ -180,7 +184,6 @@ def ivf_fine_scan_gemm(
     list_offsets: torch.Tensor,
     k: int,
     *,
-    max_list_len: int,
     BN: int = 64,
     BM: int = 64,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -222,7 +225,6 @@ def ivf_fine_scan_gemm(
     # true L2). Wider vectors use a larger pool.
     OVER = 8 if Dp > 256 else 4
     MAX_STEPS = min(k, BM)
-    MAX_M_CHUNKS = max(1, (max_list_len + BM - 1) // BM)
 
     pv_sorted = torch.full((P, TOPK_PAD), float("inf"), device=device, dtype=torch.float32)
     pi_sorted = torch.full((P, TOPK_PAD), -1, device=device, dtype=torch.int32)
@@ -239,7 +241,7 @@ def ivf_fine_scan_gemm(
         M,
         D=Dp, K=k,
         BN=BN, BM=BM, D_INNER=D_INNER,
-        TOPK_PAD=TOPK_PAD, MAX_STEPS=MAX_STEPS, MAX_M_CHUNKS=MAX_M_CHUNKS,
+        TOPK_PAD=TOPK_PAD, MAX_STEPS=MAX_STEPS,
         num_warps=4,
     )
 

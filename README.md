@@ -39,8 +39,8 @@ labels, centroids, n_iter = flash_kmeans(x, n_clusters=1024, max_iters=20)
 Every primitive is exposed as a top-level `flash_*` function and as a
 sklearn-style class (`KMeans`, `PCA`, `HDBSCAN`, …).
 
-Index-based primitives like IVF-Flat (GPU approximate nearest neighbours)
-build an index once and query it many times:
+Index-based primitives like IVF-Flat and IVF-PQ (GPU approximate nearest
+neighbours) build an index once and query it many times:
 
 ```python
 import torch
@@ -56,6 +56,30 @@ distances, indices = index.kneighbors(queries, n_neighbors=10)  # squared L2
 `nprobe` is the recall knob: at a fixed `(nlist, nprobe)` the probed
 candidate set — and thus recall — matches a reference IVF-Flat (FAISS /
 cuVS), so raising it trades speed for recall without changing the kernel.
+
+For billion-scale corpora, `IVFPQ` adds product-quantization compression:
+each vector is stored as `m` 1-byte codes (8–32× smaller than fp32):
+
+```python
+from flashlib import IVFPQ
+
+# 128-dim fp32 (512 B/vec) -> m=16 PQ codes (16 B/vec) = 32x compression
+index = IVFPQ(nlist=1024, m=16, nprobe=16).fit(db)
+distances, indices = index.kneighbors(queries, n_neighbors=10)  # ADC squared L2
+print(index.compression_ratio)  # 32.0
+```
+
+`m` (sub-quantizers) is the accuracy/size knob; returned distances are the
+asymmetric (ADC) squared-L2 to each candidate's PQ reconstruction.
+
+For batched search the fine-scan groups queries by the list they probe,
+**decodes** each list's PQ codes back to sub-vectors once per query tile,
+and scores them with a tensor-core cross term — ADC as a GEMM, with **no
+lookup table** to build or blow up with `nprobe` (an oversampled exact
+re-rank keeps distances ADC-exact). On SIFT1M (H100) this runs **1.2–2.4×
+faster than cuVS** IVF-PQ; tiny query batches fall back to a fused on-chip
+ADC lookup table. Same no-materialization spirit as the rest of flashlib —
+no `(queries × candidates)` matrix ever exists.
 
 ### Informative API
 
@@ -79,12 +103,12 @@ per-primitive benchmarks.
 
 ## Coverage
 
-The current release ships **16 high-level primitives** across the following families:
+The current release ships **17 high-level primitives** across the following families:
 
 | family         | primitives                                                                       |
 | -------------- | -------------------------------------------------------------------------------- |
 | Clustering     | `flash_kmeans`, `flash_dbscan`, `flash_hdbscan`, `flash_spectral_clustering`     |
-| Nearest nbrs   | `flash_knn`, `flash_ivf_flat` (IVF-Flat ANN)                                     |
+| Nearest nbrs   | `flash_knn`, `flash_ivf_flat` (IVF-Flat ANN), `flash_ivf_pq` (IVF-PQ ANN)        |
 | Decomposition  | `flash_pca`, `flash_truncated_svd`                                               |
 | Manifold       | `flash_umap`, `flash_tsne`                                                       |
 | Regression     | `flash_linear_regression`, `flash_ridge`, `flash_logistic_regression`            |

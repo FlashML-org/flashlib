@@ -59,6 +59,11 @@ _LAZY_ATTRS: dict[str, tuple[str, str]] = {
     "flash_ivf_flat_build":       ("flashlib.primitives.ivf_flat", "flash_ivf_flat_build"),
     "flash_ivf_flat_search":      ("flashlib.primitives.ivf_flat", "flash_ivf_flat_search"),
     "IvfFlatIndex":               ("flashlib.primitives.ivf_flat", "IvfFlatIndex"),
+    # ivf-pq -- GPU ANN (inverted file + product quantization); compressed.
+    "flash_ivf_pq":               ("flashlib.primitives.ivf_pq", "flash_ivf_pq"),
+    "flash_ivf_pq_build":         ("flashlib.primitives.ivf_pq", "flash_ivf_pq_build"),
+    "flash_ivf_pq_search":        ("flashlib.primitives.ivf_pq", "flash_ivf_pq_search"),
+    "IvfPqIndex":                 ("flashlib.primitives.ivf_pq", "IvfPqIndex"),
     # decomposition
     "flash_pca":                 ("flashlib.primitives.pca", "flash_pca"),
     "flash_pca_cutedsl":         ("flashlib.primitives.pca", "flash_pca_cutedsl"),
@@ -111,6 +116,7 @@ _LAZY_ATTRS: dict[str, tuple[str, str]] = {
     "FlashKMeans":       ("flashlib.applications", "FlashKMeans"),
     "NearestNeighbors":  ("flashlib.applications", "NearestNeighbors"),
     "IVFFlat":           ("flashlib.applications", "IVFFlat"),
+    "IVFPQ":             ("flashlib.applications", "IVFPQ"),
     "PCA":               ("flashlib.applications", "PCA"),
     "StandardScaler":    ("flashlib.applications", "StandardScaler"),
     "DBSCAN":            ("flashlib.applications", "DBSCAN"),

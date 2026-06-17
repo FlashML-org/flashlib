@@ -91,6 +91,13 @@ _DEFAULT_EFFICIENCY: dict[str, float] = {
     "ivf_flat":         0.55,
     "ivf_flat_search":  0.60,  # coalesced list reads, top-K epilogue derate
     "ivf_flat_build":   0.45,  # dominated by the kmeans assign pass
+    # IVF-PQ ADC fine-scan: streams compressed uint8 codes and gathers an
+    # m-entry distance from the per-(query,list) LUT per candidate -> strongly
+    # bandwidth-/gather-bound (the LUT gathers, not the codes, dominate). Build
+    # adds PQ codebook training + encode on top of the kmeans assign pass.
+    "ivf_pq":           0.50,
+    "ivf_pq_search":    0.55,  # LUT-gather + top-K epilogue derate
+    "ivf_pq_build":     0.45,
 }
 
 
@@ -186,6 +193,13 @@ _SUSTAINED_BW_TBS: dict[tuple[str, str], float] = {
     # batch); H100 scaled by the HBM-peak ratio (3.1/4.8).
     ("ivf_flat_search", "H200"): 1.0,
     ("ivf_flat_search", "H100"): 0.7,
+    # IVF-PQ ADC fine-scan: the steady-state cost is the random LUT gathers
+    # (4 B each) plus the coalesced uint8 code stream. Effective sustained
+    # bandwidth is gather-limited, conservatively ~0.9 TB/s on H200 (online
+    # elementwise path); H100 scaled by the HBM-peak ratio (3.1/4.8). Backfill
+    # from benchmarks/vs_cuml/ivf_pq.py once measured.
+    ("ivf_pq_search", "H200"): 0.9,
+    ("ivf_pq_search", "H100"): 0.6,
 }
 
 

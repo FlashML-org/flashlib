@@ -24,6 +24,7 @@ _OP_REGISTRY: dict[str, str] = {
     "ridge":                "flashlib.primitives.ridge.cost",
     "logistic_regression":  "flashlib.primitives.logistic_regression.cost",
     "ivf_flat":             "flashlib.primitives.ivf_flat.cost",
+    "ivf_pq":               "flashlib.primitives.ivf_pq.cost",
     "dbscan":               "flashlib.primitives.dbscan.cost",
     "hdbscan":              "flashlib.primitives.hdbscan.cost",
     "umap":                 "flashlib.primitives.umap.cost",
@@ -39,6 +40,7 @@ _OP_REGISTRY: dict[str, str] = {
     "knn_triton":               "flashlib.primitives.knn.cost:estimate_knn_triton",
     "knn_cutedsl_fa3":          "flashlib.primitives.knn.cost:estimate_knn_cutedsl_fa3",
     "ivf_flat_triton":          "flashlib.primitives.ivf_flat.cost:estimate_ivf_flat_triton",
+    "ivf_pq_triton":            "flashlib.primitives.ivf_pq.cost:estimate_ivf_pq_triton",
     "pca_triton":               "flashlib.primitives.pca.cost:estimate_pca_triton",
     "pca_cutedsl":              "flashlib.primitives.pca.cost:estimate_pca_cutedsl",
     "truncated_svd_triton":     "flashlib.primitives.truncated_svd.cost:estimate_truncated_svd_triton",
@@ -129,8 +131,8 @@ _VARIANTS: dict[str, list[str]] = {
     "kmeans":               ["kmeans_triton", "kmeans_cutedsl"],
     # Triton (default-routed) + CuteDSL FA3 (opt-in via backend='cutedsl').
     "knn":                  ["knn_triton", "knn_cutedsl_fa3"],
-    # ivf_flat is single-GPU-backend (Triton only; torch is a CPU reference,
-    # not a Pareto variant) so it omits a variant-family entry by convention.
+    # ivf_flat / ivf_pq are single-GPU-backend (Triton only; torch is a CPU
+    # reference, not a Pareto variant) so they omit a variant-family entry.
     "pca":                  ["pca_triton", "pca_cutedsl"],
     "truncated_svd":        ["truncated_svd_triton", "truncated_svd_cutedsl"],
     "linear_regression":    ["linear_regression_triton", "linear_regression_cutedsl"],

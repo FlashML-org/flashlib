@@ -86,14 +86,20 @@ def ivf_flat_search_triton(
     )[0].to(torch.int32)                                          # (nq, nprobe)
 
     # ── fine: fused ragged-list scan + on-chip top-k ───────────────────
-    # max_list_len is precomputed at build (avoids a per-search D2H sync).
-    max_list_len = index.max_list_len or int(index.list_lengths().max().item())
     chosen = _pick_variant(variant, Q.shape[0], nprobe, index.nlist, Dp)
-    fine = ivf_fine_scan_gemm if chosen == "gemm" else ivf_fine_scan
-    vals, pos = fine(
-        Qp, index.data, probed, index.list_offsets, k,
-        max_list_len=max_list_len,
-    )                                                             # (nq, k)
+    if chosen == "gemm":
+        # GEMM path uses per-list dynamic chunk bounds -> no max_list_len needed.
+        vals, pos = ivf_fine_scan_gemm(
+            Qp, index.data, probed, index.list_offsets, k,
+        )                                                         # (nq, k)
+    else:
+        # Online path still sizes its static chunk loop from max_list_len,
+        # precomputed at build (avoids a per-search D2H sync).
+        max_list_len = index.max_list_len or int(index.list_lengths().max().item())
+        vals, pos = ivf_fine_scan(
+            Qp, index.data, probed, index.list_offsets, k,
+            max_list_len=max_list_len,
+        )                                                         # (nq, k)
 
     # Map stored-row positions back to original ids (guard -1 padding).
     valid = pos >= 0
