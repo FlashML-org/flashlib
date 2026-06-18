@@ -98,12 +98,19 @@ def reduce_rerank(
     Dp = Qp.shape[1]
     TOPK_PAD = pv_sorted.shape[1]
 
-    pv = torch.empty_like(pv_sorted)
-    pi = torch.empty_like(pi_sorted)
-    pv[perm] = pv_sorted
-    pi[perm] = pi_sorted
-    pv = pv.view(nq, nprobe * TOPK_PAD)
-    pi = pi.view(nq, nprobe * TOPK_PAD)
+    # ``perm=None`` means the partials are already in natural (query, probe)
+    # order (the one-CTA-per-(query, probe) LUT path), so the scatter is a
+    # no-op -- skip the extra alloc + copy.
+    if perm is None:
+        pv = pv_sorted.view(nq, nprobe * TOPK_PAD)
+        pi = pi_sorted.view(nq, nprobe * TOPK_PAD)
+    else:
+        pv = torch.empty_like(pv_sorted)
+        pi = torch.empty_like(pi_sorted)
+        pv[perm] = pv_sorted
+        pi[perm] = pi_sorted
+        pv = pv.view(nq, nprobe * TOPK_PAD)
+        pi = pi.view(nq, nprobe * TOPK_PAD)
 
     KK = min(_next_pow2(k * over), pv.shape[1])
     _, sel = pv.topk(KK, dim=-1, largest=False, sorted=False)
