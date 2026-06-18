@@ -12,9 +12,10 @@ call:
     - ``layout``   : bincount + cumsum + argsort + cell-contiguous reorder
                      of the compact code array.
 * **search** -- per query batch (the steady-state cost). Two strategies,
-  routed by estimated work exactly like the runtime ``_pick_variant``:
+  routed exactly like the runtime ``_pick_regime`` (enough work, then the
+  dsub/qpl/m crossover; large dsub or large ``m`` keep the LUT ahead):
 
-  - **No-LUT decode + GEMM** (``nq*nprobe*(M/nlist) >= _GEMM_MIN_WORK``):
+  - **No-LUT decode + GEMM** (enough work *and* the crossover favours GEMM):
       - ``coarse``  : ``flash_knn`` top-``nprobe`` over the ``nlist`` centroids.
       - ``group``   : inverse map -- argsort the ``nq*nprobe`` ``(query, list)``
                       pairs so each list's probing queries are contiguous.
@@ -154,11 +155,29 @@ def _build_subops(M, nlist, niter, pq_niter, ksub, m, dsub, Dp,
     return [km, assign, pq_train, encode, layout]
 
 
-# Mirror of triton.search._pick_variant: the no-LUT decode+GEMM path is
-# chosen once there are enough queries (to amortise grouping) AND enough
-# candidate comparisons (to repay its higher fixed floor); else the LUT scan.
+# Mirror of triton.search._pick_regime: no-LUT decode+GEMM is chosen once
+# there are enough queries (to amortise grouping) AND candidate comparisons
+# (to repay its floor) AND the dsub/qpl/m crossover favours GEMM -- short
+# sub-vectors decode cheaply, but large dsub or large m keep the LUT ahead.
+# See that module for the sweep that calibrates these.
 _GEMM_MIN_NQ = 256
 _GEMM_MIN_WORK = 2_000_000
+_DSUB_LUT_MIN = 9
+_QPL_LUT_SLOPE = 4.0
+_M_LUT_MIN = 48
+_DSUB_LUT_ALWAYS = 48
+
+
+def _route_is_gemm(nq, nprobe, M, nlist, dsub, m):
+    """True iff search routes to no-LUT decode+GEMM (mirror of _pick_regime)."""
+    work = nq * nprobe * (M / max(nlist, 1))
+    if nq < _GEMM_MIN_NQ or work < _GEMM_MIN_WORK:
+        return False
+    if dsub < _DSUB_LUT_MIN:
+        return True
+    if m >= _M_LUT_MIN or dsub >= _DSUB_LUT_ALWAYS:
+        return False
+    return nq * nprobe / max(nlist, 1) > _QPL_LUT_SLOPE * dsub
 
 
 # ── search phase ──────────────────────────────────────────────────────────
@@ -227,9 +246,8 @@ def _search_subops_gemm(M, nlist, nprobe, k, nq, by_residual, m, dsub, Dp,
 
 def _search_subops(M, nlist, nprobe, k, nq, ksub, by_residual, m, dsub, Dp,
                    dtype, device):
-    # Route exactly like the runtime: no-LUT GEMM once it amortises.
-    work = nq * nprobe * (M / max(nlist, 1))
-    if nq >= _GEMM_MIN_NQ and work >= _GEMM_MIN_WORK:
+    # Route exactly like the runtime (triton.search._pick_regime).
+    if _route_is_gemm(nq, nprobe, M, nlist, dsub, m):
         return _search_subops_gemm(M, nlist, nprobe, k, nq, by_residual,
                                    m, dsub, Dp, dtype, device)
 

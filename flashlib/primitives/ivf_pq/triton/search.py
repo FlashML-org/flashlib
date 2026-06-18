@@ -73,22 +73,29 @@ _LUT_BUDGET_BYTES = 1 << 31  # 2 GiB
 _GEMM_MIN_NQ = 256
 _GEMM_MIN_WORK = 2_000_000
 
-# Past the floor, the road is a 2-variable crossover (calibrated on Hopper,
-# D=128/256/960). Per probed candidate the LUT does ``m`` gathers while
-# decode+GEMM reconstructs ``D = m*dsub`` dims -- but decode+GEMM decodes a
-# list's codes *once* per list and reuses them across every query probing
-# that list, so its cost is amortised by the queries-per-list
-# ``qpl = nq*nprobe/nlist``. Two conditions must hold for the LUT to win:
-#   * sub-vectors long enough: ``dsub >= _DSUB_LUT_MIN`` (short sub-vectors
-#     decode cheaply, and a large-m LUT loses occupancy to its SMEM table),
-#   * batch small enough per list: ``qpl <= _QPL_LUT_SLOPE * dsub`` (the
-#     decode+GEMM win region grows ~linearly with qpl, so at high batch the
-#     tensor cores win even for long sub-vectors).
-# Measured boundary: dsub<9 -> GEMM always; else LUT iff qpl <= 2*dsub
-# (e.g. dsub=16 flips LUT->GEMM near qpl~32; GIST dsub>=10 stays LUT at the
-# qpl~16 its 1k-query set allows). Either side of the seam is within ~1.2x.
+# Past the floor, routing is a crossover calibrated on Hopper (D=128/256/960,
+# re-swept after the coalesced ``cute_lut`` redesign roughly doubled its
+# crossover). Per probed candidate the LUT does ``m`` gathers; decode+GEMM
+# reconstructs ``D = m*dsub`` dims on the tensor cores, decoding each list
+# once and amortising it over the queries-per-list ``qpl = nq*nprobe/nlist``.
+# The LUT wins when both hold:
+#   * sub-vectors aren't too short -- ``dsub >= _DSUB_LUT_MIN`` (tiny dsub
+#     decodes cheaply on the tensor cores; e.g. SIFT dsub<=8 -> GEMM), and
+#   * the batch per list is small enough -- ``qpl <= _QPL_LUT_SLOPE * dsub``
+#     (decode+GEMM's win region grows ~linearly in qpl).
+# Two geometries pick the LUT regardless of qpl (measured LUT-win out to the
+# swept qpl=512):
+#   * many sub-quantizers ``m >= _M_LUT_MIN`` -- decode+GEMM's reconstruction
+#     loop is unrolled over m and becomes the bottleneck (GIST m=64: cute_lut
+#     ~2.6-6x faster than cute_gemm), and
+#   * long sub-vectors ``dsub >= _DSUB_LUT_ALWAYS`` -- so few gathers per
+#     candidate that the LUT stays ahead even at large batch.
+# vs the old ``qpl<=2*dsub`` this cuts mis-routes 13->3 / 48 swept points and
+# worst-case regret 294%->31% (the 294% case was GIST m=64 routed to GEMM).
 _DSUB_LUT_MIN = 9
-_QPL_LUT_SLOPE = 2.0
+_QPL_LUT_SLOPE = 4.0
+_M_LUT_MIN = 48
+_DSUB_LUT_ALWAYS = 48
 
 
 def _auto_q_tile(nq: int, nprobe: int, m: int, by_residual: bool) -> int:
@@ -119,27 +126,33 @@ def _cutedsl_hopper() -> bool:
 
 
 def _pick_regime(
-    nq: int, nprobe: int, avg_list_len: float, dsub: int, nlist: int,
+    nq: int, nprobe: int, avg_list_len: float, dsub: int, m: int, nlist: int,
 ) -> str:
     """Pick the fine-scan road: ``"lut"`` (ADC gather) or ``"gemm"``.
 
     Tiny batches / low total work don't amortise the GEMM floor -> LUT.
-    Otherwise the LUT wins only when sub-vectors are long enough *and* the
-    batch (queries-per-list) is small enough that decode+GEMM can't amortise
-    its per-list decode (see ``_DSUB_LUT_MIN`` / ``_QPL_LUT_SLOPE``).
+    Short sub-vectors (``dsub < _DSUB_LUT_MIN``) decode cheaply on the tensor
+    cores -> GEMM. Many sub-quantizers (``m >= _M_LUT_MIN``) or long
+    sub-vectors (``dsub >= _DSUB_LUT_ALWAYS``) keep the LUT ahead at any
+    batch. Otherwise the LUT wins while the batch per list is small enough
+    (``qpl <= _QPL_LUT_SLOPE * dsub``).
     """
     work = nq * nprobe * max(avg_list_len, 1.0)
     if nq < _GEMM_MIN_NQ or work < _GEMM_MIN_WORK:
         return "lut"
+    if dsub < _DSUB_LUT_MIN:
+        return "gemm"
+    if m >= _M_LUT_MIN or dsub >= _DSUB_LUT_ALWAYS:
+        return "lut"
     qpl = nq * nprobe / max(nlist, 1)
-    if dsub >= _DSUB_LUT_MIN and qpl <= _QPL_LUT_SLOPE * dsub:
+    if qpl <= _QPL_LUT_SLOPE * dsub:
         return "lut"
     return "gemm"
 
 
 def _pick_variant(
     variant: str, nq: int, nprobe: int, avg_list_len: float, dsub: int,
-    nlist: int,
+    m: int, nlist: int,
 ) -> str:
     """Resolve ``variant`` to a concrete fine-scan kernel.
 
@@ -154,7 +167,7 @@ def _pick_variant(
             f"unknown variant {variant!r} "
             "(auto|gemm|batch|online|cute_lut|cute_gemm)"
         )
-    regime = _pick_regime(nq, nprobe, avg_list_len, dsub, nlist)
+    regime = _pick_regime(nq, nprobe, avg_list_len, dsub, m, nlist)
     if _cutedsl_hopper():
         return "cute_lut" if regime == "lut" else "cute_gemm"
     return "online" if regime == "lut" else "gemm"
@@ -321,7 +334,7 @@ def ivf_pq_search_triton(
 
     # No-LUT decode+GEMM path: no LUT to materialise, so no query tiling.
     chosen = _pick_variant(
-        variant, nq, nprobe, avg_list_len, index.dsub, index.nlist,
+        variant, nq, nprobe, avg_list_len, index.dsub, index.m, index.nlist,
     )
     if chosen == "gemm":
         return _search_gemm(index, Qp_all, centroids, codebooks, k, nprobe)

@@ -38,6 +38,13 @@ Design (each item fixed a measured bottleneck):
      register top-k over its strided candidates with no scan-time
      barriers, then an iterative ``shuffle_sync_bfly`` block arg-min
      merges the ``T`` local lists.
+  5. **Warp-coalesced interleaved codes.** The cell-contiguous ``(M, m)``
+     codes are read uncoalesced (a warp's 32 lanes hit 32 rows at stride
+     ``m``), which ncu showed was the dominant high-D stall (L1TEX
+     scoreboard). A one-time interleaved copy (groups of 32 candidates,
+     ``il[L] + g*m*32 + s*32 + lane``) makes each warp read one contiguous
+     32-byte run per sub-quantizer. Built + cached per index; the canonical
+     codes layout and the other scan kernels are untouched.
 """
 from __future__ import annotations
 
@@ -98,7 +105,7 @@ class HopperIvfPqSharedLut:
     def __call__(
         self,
         mQ: cute.Tensor, mCent: cute.Tensor, mProbed: cute.Tensor,
-        mListOff: cute.Tensor, mCodes: cute.Tensor,
+        mListOff: cute.Tensor, mCodesIl: cute.Tensor, mIlOff: cute.Tensor,
         mCT: cute.Tensor, mQT: cute.Tensor, mPV: cute.Tensor, mPI: cute.Tensor,
         stream: cuda.CUstream,
     ):
@@ -127,14 +134,14 @@ class HopperIvfPqSharedLut:
         nprobe = mProbed.shape[1]
         grid = (nq, nprobe, 1)
         self.kernel(
-            mQ, mCent, mProbed, mListOff, mCodes, mCT, mQT, mPV, mPI,
+            mQ, mCent, mProbed, mListOff, mCodesIl, mIlOff, mCT, mQT, mPV, mPI,
         ).launch(grid=grid, block=[self.threads, 1, 1], stream=stream)
 
     @cute.kernel
     def kernel(
         self,
         mQ: cute.Tensor, mCent: cute.Tensor, mProbed: cute.Tensor,
-        mListOff: cute.Tensor, mCodes: cute.Tensor,
+        mListOff: cute.Tensor, mCodesIl: cute.Tensor, mIlOff: cute.Tensor,
         mCT: cute.Tensor, mQT: cute.Tensor, mPV: cute.Tensor, mPI: cute.Tensor,
     ):
         M = self.M
@@ -206,25 +213,36 @@ class HopperIvfPqSharedLut:
         worst = cutlass.Float32(_INF)
         qrsq0 = sQRSQ[0]
 
+        # Interleaved (group=32) codes -> coalesced loads. With T a multiple
+        # of 32, a thread's lane = (r-c_start) % 32 is invariant, so a warp's
+        # 32 lanes read codes_il[il_base + g*M32 + s*32 + lane] as one 32-byte
+        # transaction instead of 32 stride-m scattered byte loads (the
+        # measured L1TEX-scoreboard stall that dominated the high-D scan).
+        M32 = M * 32
+        il_base = cutlass.Int32(mIlOff[c])
         r = c_start + tid
         while r < c_end:
+            p = r - c_start
+            g = p // 32
+            lane = p % 32
+            cbase = il_base + g * M32 + lane
             a0 = cutlass.Float32(0.0)
             a1 = cutlass.Float32(0.0)
             a2 = cutlass.Float32(0.0)
             a3 = cutlass.Float32(0.0)
             s = 0
             while s < M4:
-                c0 = cutlass.Int32(mCodes[r, s])
-                c1 = cutlass.Int32(mCodes[r, s + 1])
-                c2 = cutlass.Int32(mCodes[r, s + 2])
-                c3 = cutlass.Int32(mCodes[r, s + 3])
+                c0 = cutlass.Int32(mCodesIl[cbase + s * 32])
+                c1 = cutlass.Int32(mCodesIl[cbase + (s + 1) * 32])
+                c2 = cutlass.Int32(mCodesIl[cbase + (s + 2) * 32])
+                c3 = cutlass.Int32(mCodesIl[cbase + (s + 3) * 32])
                 a0 = a0 + sLUT[s * KSUB + c0].to(cutlass.Float32)
                 a1 = a1 + sLUT[(s + 1) * KSUB + c1].to(cutlass.Float32)
                 a2 = a2 + sLUT[(s + 2) * KSUB + c2].to(cutlass.Float32)
                 a3 = a3 + sLUT[(s + 3) * KSUB + c3].to(cutlass.Float32)
                 s += 4
             while s < M:
-                cr = cutlass.Int32(mCodes[r, s])
+                cr = cutlass.Int32(mCodesIl[cbase + s * 32])
                 a0 = a0 + sLUT[s * KSUB + cr].to(cutlass.Float32)
                 s += 1
             d = a0 + a1 + a2 + a3 + qrsq0
@@ -298,6 +316,9 @@ class HopperIvfPqSharedLut:
 
 _kernel_cache: dict = {}
 _cterm_cache: dict = {}
+_interleave_cache: dict = {}
+
+_IL_GROUP = 32  # interleave group = warp width, so a warp's lanes coalesce
 
 
 def _compute_qterm2(Qp: torch.Tensor, codebooks: torch.Tensor) -> torch.Tensor:
@@ -350,6 +371,59 @@ def _get_cterm2(
     return out
 
 
+def _build_interleaved(codes: torch.Tensor, list_offsets: torch.Tensor, m: int):
+    """Interleave the (cell-contiguous) PQ codes for warp-coalesced loads.
+
+    Lays each inverted list out in groups of ``_IL_GROUP`` (=32) candidates:
+    element ``(group g, sub-quantizer s, lane)`` of list ``L`` lives at
+    ``il_offsets[L] + g*(m*32) + s*32 + lane`` in the flat ``codes_il``
+    buffer (lists padded up to a multiple of 32; padding rows are never read
+    because the scan stops at the true list length). A warp scanning 32
+    consecutive candidates then reads one contiguous 32-byte run per ``s``.
+
+    Returns ``(codes_il (uint8, 1-D), il_offsets (int32, nlist+1))`` in
+    *elements*. Built once and cached (this is a one-time index transform).
+    """
+    G = _IL_GROUP
+    device = codes.device
+    M = codes.shape[0]
+    nlist = list_offsets.shape[0] - 1
+    lo = list_offsets.to(torch.int64)
+    lengths = lo[1:] - lo[:-1]                              # (nlist,)
+    num_groups = (lengths + (G - 1)) // G                   # (nlist,)
+    group_off = torch.zeros(nlist + 1, dtype=torch.int64, device=device)
+    group_off[1:] = num_groups.cumsum(0)
+    total_groups = int(group_off[-1].item())                # one-time build sync
+    il_offsets = (group_off * (m * G)).to(torch.int32)      # (nlist+1,) elements
+    codes_il = torch.zeros(max(total_groups, 1) * m * G,
+                           dtype=torch.uint8, device=device)
+    if M > 0:
+        rows = torch.arange(M, device=device, dtype=torch.int64)
+        row_list = torch.searchsorted(lo, rows, right=True) - 1   # list of each row
+        p = rows - lo[row_list]                             # local position in list
+        dest_group = group_off[row_list] + (p // G)         # group index in buffer
+        lane = p % G
+        codes_il.view(total_groups, m, G)[dest_group, :, lane] = codes
+    return codes_il, il_offsets
+
+
+def _get_interleaved(codes: torch.Tensor, list_offsets: torch.Tensor, m: int):
+    """Cached :func:`_build_interleaved` (weakref-validated, like cterm)."""
+    key = (codes.data_ptr(), list_offsets.data_ptr(), m)
+    ent = _interleave_cache.get(key)
+    if ent is not None:
+        codes_il, il_offsets, codes_ref, lo_ref = ent
+        if codes_ref() is codes and lo_ref() is list_offsets:
+            return codes_il, il_offsets
+    codes_il, il_offsets = _build_interleaved(codes, list_offsets, m)
+    try:
+        _interleave_cache[key] = (codes_il, il_offsets,
+                                  weakref.ref(codes), weakref.ref(list_offsets))
+    except TypeError:
+        pass
+    return codes_il, il_offsets
+
+
 def _to_cute(t: torch.Tensor):
     mt = cute_rt.from_dlpack(t, assumed_align=16)
     return mt.mark_layout_dynamic(leading_dim=t.ndim - 1)
@@ -385,17 +459,22 @@ def ivf_pq_fine_scan_shared_lut(
     by_residual: bool,
     threads: int = 128,
     over: int = 2,
-    lut_dtype: str = "fp32",
+    lut_dtype: str = "auto",
     rerank: Optional[bool] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Precomputed-table ADC-LUT fine scan (CuTe DSL), one CTA per
     ``(query, probe)``.
 
-    With the default ``lut_dtype="fp32"`` the SMEM LUT is exact to fp
-    tolerance, so the per-probe top-k is final and the host side is a
-    single ``topk`` merge -- no inverse map, no scatter, no re-rank. Pass
-    ``lut_dtype="fp16"`` (which auto-enables ``rerank``) for the rare
-    large-``m`` table where the fp32 LUT would cost too much SMEM.
+    The PQ codes are scanned from a warp-coalesced interleaved copy (groups
+    of 32 candidates; built + cached once per index) so each warp reads one
+    32-byte run per sub-quantizer instead of stride-``m`` byte gathers.
+
+    ``lut_dtype="auto"`` (default) keeps the exact fp32 SMEM LUT while it
+    fits (``m <= 32``) -- the per-probe top-k is then final and the host side
+    is a single ``topk`` merge (no inverse map, scatter, or re-rank) -- and
+    switches to a compact fp16 table (auto-enabling an exact-ADC ``rerank``)
+    for larger ``m``, where the fp32 table would otherwise cap occupancy.
+    Pass ``"fp32"`` / ``"fp16"`` to force one.
 
     Returns ``(vals, pos)`` -- ``vals`` ``(nq, k)`` ADC squared-L2 (fp32),
     ``pos`` ``(nq, k)`` int64 stored-row positions (``-1`` padded).
@@ -407,6 +486,11 @@ def ivf_pq_fine_scan_shared_lut(
     m = codes.shape[1]
     ksub, dsub = codebooks.shape[1], codebooks.shape[2]
     device = Qp.device
+    if lut_dtype == "auto":
+        # fp32 LUT is exact (no re-rank) but costs m*256*4 B of SMEM; past
+        # ~32 KB (m>32) that caps occupancy, so switch to the compact fp16
+        # table (+ exact re-rank) where it pays for itself.
+        lut_dtype = "fp32" if m * ksub * 4 <= 32 * 1024 else "fp16"
     if rerank is None:
         rerank = (lut_dtype == "fp16")
     cute_lut_dtype = _LUT_DTYPE[lut_dtype]
@@ -415,6 +499,8 @@ def ivf_pq_fine_scan_shared_lut(
     centroids = centroids.contiguous()
     codebooks = codebooks.contiguous()
     codes = codes.contiguous()
+    # Warp-coalesced interleaved copy of the codes for the scan (built once).
+    codes_il, il_offsets = _get_interleaved(codes, list_offsets, m)
 
     # Precomputed-table LUT terms (FAISS-style): the dsub cross term is a
     # per-query GEMM (qterm2) + a cached per-index GEMM (cterm2), so the
@@ -442,7 +528,7 @@ def ivf_pq_fine_scan_shared_lut(
         compiled = cute.compile(
             kernel,
             _to_cute(Qp), _to_cute(centroids), _to_cute(probed_i32),
-            _to_cute(list_off_i32), _to_cute(codes),
+            _to_cute(list_off_i32), _to_cute(codes_il), _to_cute(il_offsets),
             _to_cute(cterm2), _to_cute(qterm2), _to_cute(pv), _to_cute(pi),
             stream,
         )
@@ -450,7 +536,7 @@ def ivf_pq_fine_scan_shared_lut(
 
     compiled(
         _to_cute(Qp), _to_cute(centroids), _to_cute(probed_i32),
-        _to_cute(list_off_i32), _to_cute(codes),
+        _to_cute(list_off_i32), _to_cute(codes_il), _to_cute(il_offsets),
         _to_cute(cterm2), _to_cute(qterm2), _to_cute(pv), _to_cute(pi),
         stream,
     )
