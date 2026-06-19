@@ -64,6 +64,11 @@ _LAZY_ATTRS: dict[str, tuple[str, str]] = {
     "flash_ivf_pq_build":         ("flashlib.primitives.ivf_pq", "flash_ivf_pq_build"),
     "flash_ivf_pq_search":        ("flashlib.primitives.ivf_pq", "flash_ivf_pq_search"),
     "IvfPqIndex":                 ("flashlib.primitives.ivf_pq", "IvfPqIndex"),
+    # cagra -- GPU graph ANN (proximity graph + greedy traversal).
+    "flash_cagra":                ("flashlib.primitives.cagra", "flash_cagra"),
+    "flash_cagra_build":          ("flashlib.primitives.cagra", "flash_cagra_build"),
+    "flash_cagra_search":         ("flashlib.primitives.cagra", "flash_cagra_search"),
+    "CagraIndex":                 ("flashlib.primitives.cagra", "CagraIndex"),
     # decomposition
     "flash_pca":                 ("flashlib.primitives.pca", "flash_pca"),
     "flash_pca_cutedsl":         ("flashlib.primitives.pca", "flash_pca_cutedsl"),
@@ -117,6 +122,7 @@ _LAZY_ATTRS: dict[str, tuple[str, str]] = {
     "NearestNeighbors":  ("flashlib.applications", "NearestNeighbors"),
     "IVFFlat":           ("flashlib.applications", "IVFFlat"),
     "IVFPQ":             ("flashlib.applications", "IVFPQ"),
+    "CAGRA":             ("flashlib.applications", "CAGRA"),
     "PCA":               ("flashlib.applications", "PCA"),
     "StandardScaler":    ("flashlib.applications", "StandardScaler"),
     "DBSCAN":            ("flashlib.applications", "DBSCAN"),
