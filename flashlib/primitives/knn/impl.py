@@ -78,8 +78,40 @@ def _route(
 _OP_NAME = {
     "triton":  "knn_triton",
     "cutedsl": "knn_cutedsl_fa3",
+    "blackwell": "knn_cutedsl_blackwell",
     "torch":   "knn_torch",
 }
+
+# Small-Q threshold below which Triton's tl.dot (min M=16) cannot run on
+# sm_100 -- the Blackwell CuteDSL search kernel is auto-routed there.
+_BLACKWELL_SMALLQ = 16
+
+
+def _blackwell_autopick(x: torch.Tensor, c: torch.Tensor, k: int,
+                        hw: _hw.HwProps) -> bool:
+    """Whether to transparently use the Blackwell CuteDSL KNN kernel instead
+    of Triton. Only fires in the regime Triton can't serve: small-Q search
+    on sm_100, BF16/D=128, single batch (restores a working path *and* wins).
+    Build / large-Q stay on Triton (already competitive)."""
+    if not hw.is_blackwell:
+        return False
+    B, N, Dd = x.shape
+    M = c.shape[1]
+    if B != 1 or Dd != 128 or k > 64:
+        return False
+    if x.dtype != torch.bfloat16 or c.dtype != torch.bfloat16:
+        return False
+    is_build = (x.data_ptr() == c.data_ptr() and N == M)
+    if is_build:
+        return False  # large-Q build: Triton/cake territory, keep Triton
+    if N >= _BLACKWELL_SMALLQ:
+        return False  # Triton's MMA-batched search already beats cake here
+    try:
+        from flashlib.primitives.knn.cutedsl.blackwell_fused import (
+            blackwell_supported)
+    except Exception:  # noqa: BLE001
+        return False
+    return blackwell_supported(x, c, k)
 
 
 def route_op_name(*, B: int, N: int, M: int, D: int, k: int,
@@ -185,7 +217,23 @@ def flash_knn_dispatch(
 
     x_p, c_p = _prepare_inputs(x, c)
 
-    if chosen == "cutedsl":
+    # Transparent Blackwell CuteDSL fast-path: only when explicitly requested or
+    # when Triton cannot serve the shape (small-Q search on sm_100). Any failure
+    # falls back to Triton so behaviour is never worse than the default.
+    use_blackwell = (chosen == "blackwell")
+    if chosen != "blackwell" and backend is None:
+        use_blackwell = _blackwell_autopick(x_p, c_p, k,
+                                             _hw.current())
+    if use_blackwell:
+        try:
+            from flashlib.primitives.knn.cutedsl.blackwell_fused import (
+                blackwell_flash_knn)
+            idxs = blackwell_flash_knn(x_p, c_p, k)
+        except Exception:  # noqa: BLE001 - never regress below Triton
+            if chosen == "blackwell":
+                raise
+            idxs = flash_knn_triton(x_p, c_p, k, **kwargs)
+    elif chosen == "cutedsl":
         idxs = cutedsl_flash_knn(x_p, c_p, k, **kwargs)
     else:
         idxs = flash_knn_triton(x_p, c_p, k, **kwargs)

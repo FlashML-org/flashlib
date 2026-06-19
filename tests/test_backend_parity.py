@@ -39,6 +39,11 @@ def _is_hopper() -> bool:
     return p.major >= 9
 
 
+def _is_blackwell() -> bool:
+    p = torch.cuda.get_device_properties(0)
+    return p.major >= 10
+
+
 # ---------------------------------------------------------------------------
 # kmeans parity
 # ---------------------------------------------------------------------------
@@ -198,6 +203,98 @@ def test_knn_cutedsl_fa3_matches_triton():
     s_c = set(map(tuple, idxs_c[0].sort(dim=-1).values.cpu().tolist()))
     overlap = len(s_t & s_c) / len(s_t)
     assert overlap > 0.90, f"knn triton/cutedsl-fa3 overlap {overlap:.3f} too low"
+
+
+def _exact_idx(x, c, k):
+    xf = x.float(); cf = c.float()
+    d = ((xf * xf).sum(-1, keepdim=True) + (cf * cf).sum(-1)[None, :]
+         - 2.0 * (xf @ cf.t()))
+    d.clamp_(min=0)
+    return torch.topk(d, k, dim=-1, largest=False, sorted=True)[1]
+
+
+@pytest.mark.skipif(not _is_blackwell(),
+                    reason="Blackwell CuteDSL knn requires sm_100")
+@pytest.mark.parametrize("q,m,k", [(1, 16384, 10), (4, 65536, 5), (4, 4096, 10)])
+def test_knn_blackwell_search_matches_exact(q, m, k):
+    """Small-Q search on sm_100 (where Triton's tl.dot min-M=16 cannot run):
+    the Blackwell CuteDSL kernel must hit recall 1.0 vs the fp32-exact top-K."""
+    _seeded(q * 13 + m + k)
+    from flashlib.primitives.knn.cutedsl import (
+        blackwell_available, knn_search_cutedsl)
+    if not blackwell_available():
+        pytest.skip("cutlass-dsl / cuda-python unavailable")
+    qx = torch.randn(q, 128, device=DEVICE, dtype=torch.bfloat16)
+    db = torch.randn(m, 128, device=DEVICE, dtype=torch.bfloat16)
+    dist, idx = knn_search_cutedsl(qx, db, k)
+    torch.cuda.synchronize()
+    ri = _exact_idx(qx, db, k)
+    recall = (idx.long().unsqueeze(-1) == ri.unsqueeze(-2)).any(-1).float().mean()
+    assert recall.item() == 1.0, f"blackwell search recall {recall.item():.4f}"
+    assert idx.dtype == torch.int32 and tuple(idx.shape) == (q, k)
+
+
+@pytest.mark.skipif(not _is_blackwell(),
+                    reason="Blackwell CuteDSL knn requires sm_100")
+@pytest.mark.parametrize("n,k", [(512, 5), (1024, 10), (2048, 5)])
+def test_knn_blackwell_build_matches_exact(n, k):
+    """Self-kNN build (tcgen05 MMA + register top-K) recall 1.0 vs exact."""
+    _seeded(n * 7 + k)
+    from flashlib.primitives.knn.cutedsl import (
+        blackwell_available, knn_build_cutedsl)
+    if not blackwell_available():
+        pytest.skip("cutlass-dsl / cuda-python unavailable")
+    x = torch.randn(n, 128, device=DEVICE, dtype=torch.bfloat16)
+    dist, idx = knn_build_cutedsl(x, k)
+    torch.cuda.synchronize()
+    ri = _exact_idx(x, x, k)
+    recall = (idx.long().unsqueeze(-1) == ri.unsqueeze(-2)).any(-1).float().mean()
+    assert recall.item() == 1.0, f"blackwell build recall {recall.item():.4f}"
+
+
+@pytest.mark.skipif(not _is_blackwell(),
+                    reason="Blackwell CuteDSL knn requires sm_100")
+@pytest.mark.parametrize("n,k", [(8192, 10), (16384, 10)])
+def test_knn_blackwell_build_largeN_highk(n, k):
+    """Large-N k>5 build: the default fast path (top-KEEP_CAP per split +
+    fine-split merge) is near-exact; exact=True is guaranteed 1.0."""
+    _seeded(n * 7 + k)
+    from flashlib.primitives.knn.cutedsl import (
+        blackwell_available, knn_build_cutedsl)
+    if not blackwell_available():
+        pytest.skip("cutlass-dsl / cuda-python unavailable")
+    x = torch.randn(n, 128, device=DEVICE, dtype=torch.bfloat16)
+    ri = _exact_idx(x, x, k)
+    _, idx = knn_build_cutedsl(x, k)              # fast (k_keep=5) path
+    torch.cuda.synchronize()
+    rec = (idx.long().unsqueeze(-1) == ri.unsqueeze(-2)).any(-1).float().mean()
+    assert rec.item() >= 0.9999, f"fast build recall {rec.item():.5f}"
+    _, idxe = knn_build_cutedsl(x, k, exact=True)  # full-k path
+    torch.cuda.synchronize()
+    rece = (idxe.long().unsqueeze(-1) == ri.unsqueeze(-2)).any(-1).float().mean()
+    assert rece.item() == 1.0, f"exact build recall {rece.item():.5f}"
+
+
+@pytest.mark.skipif(not _is_blackwell(),
+                    reason="Blackwell CuteDSL knn requires sm_100")
+def test_knn_flash_auto_routes_smallq_to_blackwell():
+    """flash_knn transparently serves the small-Q search shape Triton cannot
+    compile on sm_100, and the result matches the exact top-K."""
+    _seeded()
+    from flashlib.primitives.knn import flash_knn
+    from flashlib.primitives.knn.cutedsl import blackwell_available
+    if not blackwell_available():
+        pytest.skip("cutlass-dsl / cuda-python unavailable")
+    q = torch.randn(4, 128, device=DEVICE, dtype=torch.bfloat16)
+    c = torch.randn(16384, 128, device=DEVICE, dtype=torch.bfloat16)
+    vals, idxs = flash_knn(q, c, 10)            # auto-route (no backend kw)
+    torch.cuda.synchronize()
+    ri = _exact_idx(q, c, 10)
+    recall = (idxs.long().unsqueeze(-1) == ri.unsqueeze(-2)).any(-1).float().mean()
+    assert recall.item() == 1.0
+    # vals are true squared-L2 (gathered); must be non-negative and ascending
+    assert (vals >= 0).all()
+    assert (vals[:, 1:] >= vals[:, :-1] - 1e-3).all()
 
 
 # ---------------------------------------------------------------------------
