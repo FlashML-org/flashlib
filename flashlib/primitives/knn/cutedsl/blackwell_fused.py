@@ -168,6 +168,78 @@ if _BW_AVAILABLE:
             self.num_ab_stage = 2
             self.threads_per_cta = 128
 
+        # ---- reusable device-side top-K (cake-style), @cute.jit-inlined ----
+        # Factored out of the kernel body so build/search/fused variants can
+        # share one tuned implementation. These are preprocessed + inlined at
+        # trace time (zero runtime cost vs hand-inlining). Rules: mutable rmem
+        # state (best_d/best_i) is passed and mutated in place; SSA scalars
+        # (worst_d/worst_pos) are returned; the dynamic store best_d[worst_pos]
+        # must stay inside the `if` so it lowers to a REAL branch (the skip).
+        @cute.jit
+        def _topk_init(self, K: cutlass.Constexpr):
+            """Unsorted per-thread register top-K + cached worst.
+            Returns (best_d, best_i, worst_d, worst_pos)."""
+            best_d = cute.make_rmem_tensor(cute.make_layout((K,)),
+                                           cutlass.Float32)
+            best_i = cute.make_rmem_tensor(cute.make_layout((K,)), cutlass.Int32)
+            for j in cutlass.range_constexpr(K):
+                best_d[j] = INF
+                best_i[j] = cutlass.Int32(-1)
+            return best_d, best_i, cutlass.Float32(INF), cutlass.Int32(0)
+
+        @cute.jit
+        def _worst_tree(self, best_d, K: cutlass.Constexpr):
+            """Balanced max-tree over best_d -> (worst_d, worst_pos). O(log K)
+            dependent compares vs O(K) for a linear scan."""
+            items = []
+            for j in cutlass.range_constexpr(K):
+                items.append((best_d[j], cutlass.Int32(j)))
+            while cutlass.const_expr(len(items) > 1):
+                nxt = []
+                m = len(items) // 2
+                for a in cutlass.range_constexpr(m):
+                    va, pa = items[2 * a]
+                    vb, pb = items[2 * a + 1]
+                    gt = vb > va
+                    nxt.append((cutlass.max(va, vb),
+                                cutlass.select_(gt, pb, pa)))
+                if cutlass.const_expr(len(items) % 2 == 1):
+                    nxt.append(items[-1])
+                items = nxt
+            return items[0]
+
+        @cute.jit
+        def _topk_consume_tile(self, best_d, best_i, worst_d, worst_pos, frag,
+                               sCsq, base, K: cutlass.Constexpr,
+                               BN: cutlass.Constexpr):
+            """Fold one [BN] distance fragment into the running top-K with the
+            group-min threshold skip (scan 4 at a time; skip the whole group
+            when even its min can't beat worst). best_d/best_i mutated in
+            place; returns updated (worst_d, worst_pos)."""
+            for g in cutlass.range_constexpr(BN // 4):
+                cands = [sCsq[g * 4 + 0] - 2.0 * frag[g * 4 + 0],
+                         sCsq[g * 4 + 1] - 2.0 * frag[g * 4 + 1],
+                         sCsq[g * 4 + 2] - 2.0 * frag[g * 4 + 2],
+                         sCsq[g * 4 + 3] - 2.0 * frag[g * 4 + 3]]
+                gmin = cutlass.min(cutlass.min(cands[0], cands[1]),
+                                   cutlass.min(cands[2], cands[3]))
+                if gmin < worst_d:
+                    for t in cutlass.range_constexpr(4):
+                        cv = cands[t]
+                        if cv < worst_d:
+                            best_d[worst_pos] = cv
+                            best_i[worst_pos] = cutlass.Int32(base + g * 4 + t)
+                            worst_d, worst_pos = self._worst_tree(best_d, K)
+            return worst_d, worst_pos
+
+        @cute.jit
+        def _topk_write_partials(self, best_d, best_i, mPartS, mPartI, q, split,
+                                 K: cutlass.Constexpr):
+            """Write the unsorted top-K to split partials (the merge sorts)."""
+            for j in cutlass.range_constexpr(K):
+                mPartS[q, split, j] = best_d[j]
+                mPartI[q, split, j] = best_i[j]
+
         @cute.jit
         def __call__(self, mX: cute.Tensor, mC: cute.Tensor, mCsq: cute.Tensor,
                      mPartS: cute.Tensor, mPartI: cute.Tensor,
@@ -336,19 +408,8 @@ if _BW_AVAILABLE:
 
             tmem.relinquish_alloc_permit()
 
-            # per-thread running top-K (cake-style): UNSORTED array in an rmem
-            # fragment + scalar `worst` and its slot. The dynamic-indexed store
-            # best_d[worst_pos]=cv is a memory side-effect that forces the
-            # candidate scf.if to a REAL branch (a pure-SSA update would lower
-            # to a select -> predicated -> the group-min skip below would never
-            # fire). worst is recomputed with a balanced max-TREE.
-            best_d = cute.make_rmem_tensor(cute.make_layout((K,)), cutlass.Float32)
-            best_i = cute.make_rmem_tensor(cute.make_layout((K,)), cutlass.Int32)
-            for j in cutlass.range_constexpr(K):
-                best_d[j] = INF
-                best_i[j] = cutlass.Int32(-1)
-            worst_d = cutlass.Float32(INF)
-            worst_pos = cutlass.Int32(0)
+            # per-thread running top-K (cake-style), via reusable device helper.
+            best_d, best_i, worst_d, worst_pos = self._topk_init(K)
 
             tiles_per_split = n_db_tiles // num_splits
             db_start = bidy * tiles_per_split
@@ -423,49 +484,18 @@ if _BW_AVAILABLE:
                         acc_pipeline.producer_commit(acc_prod)
                         acc_prod.advance()
 
-                # group-min threshold skip (cake): scan 4 candidates at a time;
-                # if even the smallest can't beat the running worst, skip the
-                # whole max-tree update. As worst shrinks this skips ~all groups,
-                # turning the O(N*K) cascade into an O(N) scan.
+                # cake-style top-K update (group-min skip + max-tree recompute),
+                # via the reusable device helper.
                 base = db * BLOCK_N
                 frag = tTR_rAcc.load()
-                for g in cutlass.range_constexpr(BLOCK_N // 4):
-                    cands = [sCsq[g * 4 + 0] - 2.0 * frag[g * 4 + 0],
-                             sCsq[g * 4 + 1] - 2.0 * frag[g * 4 + 1],
-                             sCsq[g * 4 + 2] - 2.0 * frag[g * 4 + 2],
-                             sCsq[g * 4 + 3] - 2.0 * frag[g * 4 + 3]]
-                    gmin = cutlass.min(cutlass.min(cands[0], cands[1]),
-                                       cutlass.min(cands[2], cands[3]))
-                    if gmin < worst_d:
-                        for t in cutlass.range_constexpr(4):
-                            cv = cands[t]
-                            if cv < worst_d:
-                                best_d[worst_pos] = cv
-                                best_i[worst_pos] = cutlass.Int32(base + g * 4 + t)
-                                # new worst = max over K via balanced tree
-                                items = []
-                                for j in cutlass.range_constexpr(K):
-                                    items.append((best_d[j], cutlass.Int32(j)))
-                                while cutlass.const_expr(len(items) > 1):
-                                    nxt = []
-                                    m = len(items) // 2
-                                    for a in cutlass.range_constexpr(m):
-                                        va, pa = items[2 * a]
-                                        vb, pb = items[2 * a + 1]
-                                        gt = vb > va
-                                        nxt.append((cutlass.max(va, vb),
-                                                    cutlass.select_(gt, pb, pa)))
-                                    if cutlass.const_expr(len(items) % 2 == 1):
-                                        nxt.append(items[-1])
-                                    items = nxt
-                                worst_d, worst_pos = items[0]
+                worst_d, worst_pos = self._topk_consume_tile(
+                    best_d, best_i, worst_d, worst_pos, frag, sCsq, base,
+                    K, BLOCK_N)
                 cute.arch.barrier()
 
             # Unsorted is fine -- the merge does a top-K over all S*K partials.
             q = bidx * BLOCK_Q + tidx
-            for j in cutlass.range_constexpr(K):
-                mPartS[q, bidy, j] = best_d[j]
-                mPartI[q, bidy, j] = best_i[j]
+            self._topk_write_partials(best_d, best_i, mPartS, mPartI, q, bidy, K)
 
             cute.arch.sync_threads()
             tmem.free(tmem_ptr)
