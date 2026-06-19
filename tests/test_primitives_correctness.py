@@ -514,6 +514,161 @@ def test_ivf_pq_query_tiling_identical():
 
 
 @cuda_only
+def test_cagra_recall_vs_brute():
+    """CAGRA recall climbs with itopk_size and clears a high bar.
+
+    Unlike IVF there is no ``(nlist, nprobe)`` that reproduces an exact
+    candidate set -- CAGRA is heuristic, so the contract is recall@k vs
+    exact brute-force ground truth, governed by graph quality and the
+    search budget. ``itopk_size`` is the dominant accuracy/speed knob:
+    a larger internal buffer both widens the beam and (since the buffer is
+    random-filled at start) adds traversal restarts, so recall rises with
+    it and saturates near exhaustive.
+    """
+    from flashlib import flash_cagra_build, flash_cagra_search
+
+    torch.manual_seed(0)
+    M, D, k = 12_000, 48, 10
+    X = _blobs(M, D, 12, "cuda", seed=6)
+    Q = _blobs(128, D, 12, "cuda", seed=7)
+
+    index = flash_cagra_build(X, graph_degree=32, intermediate_degree=64, seed=0)
+    assert index.graph.shape == (M, 32)
+
+    ref = torch.cdist(Q, X) ** 2
+    _, ref_ids = ref.topk(k, largest=False, dim=1)
+
+    recalls = [
+        _recall(flash_cagra_search(index, Q, k, itopk_size=it)[1], ref_ids)
+        for it in (32, 64, 128, 256)
+    ]
+    # A large internal buffer gets us close to exhaustive recall ...
+    assert recalls[-1] >= 0.90, f"itopk=256 recall too low: {recalls}"
+    # ... with a clear, near-monotone climb from the smallest budget.
+    assert recalls[-1] >= recalls[0] + 0.15, f"itopk gave no gain: {recalls}"
+    for lo, hi in zip(recalls, recalls[1:]):
+        assert hi >= lo - 0.03, f"recall dropped with larger itopk: {recalls}"
+
+
+@cuda_only
+def test_cagra_torch_triton_parity():
+    """Triton search == the torch oracle on a shared graph (search_width=1).
+
+    With ``search_width=1`` the traversal is a single deterministic
+    best-first walk, so the Triton single-CTA kernel and the vectorized
+    torch oracle -- seeded identically and walking the *same* optimized
+    graph -- must return the same neighbours (ids agree; distances match to
+    fp tolerance).
+    """
+    from flashlib import flash_cagra_build, flash_cagra_search
+
+    torch.manual_seed(0)
+    M, D, k = 3_000, 32, 10
+    X = _blobs(M, D, 8, "cuda", seed=2)
+    Q = _blobs(64, D, 8, "cuda", seed=3)
+
+    index = flash_cagra_build(X, graph_degree=32, intermediate_degree=64, seed=0)
+    tv, ti = flash_cagra_search(
+        index, Q, k, itopk_size=64, search_width=1, seed=0, backend="triton")
+    ov, oi = flash_cagra_search(
+        index, Q, k, itopk_size=64, search_width=1, seed=0, backend="torch")
+
+    assert _recall(ti, oi) >= 0.98, "triton/torch search disagree at sw=1"
+    assert (tv - ov).abs().max().item() < 1e-2
+
+
+@pytest.mark.skipif(not _hopper_cutedsl(), reason="Hopper + CUTLASS DSL required")
+def test_cagra_cutedsl_triton_parity():
+    """CuteDSL SMEM search == the Triton search on the same graph.
+
+    Both keep an itopk buffer over the same optimized graph with identical
+    seeding; the CuteDSL kernel moves the buffer + dedup to shared memory
+    and computes distances with warp-teams, but the *result set* must match
+    Triton's (same neighbours; squared-L2 distances to fp tolerance) at
+    every itopk -- including the large buffers where Triton spills and
+    CuteDSL is the faster path.
+    """
+    from flashlib import flash_cagra_build, flash_cagra_search
+
+    torch.manual_seed(0)
+    M, D, k = 8_000, 64, 10
+    X = _blobs(M, D, 8, "cuda", seed=4)
+    Q = _blobs(96, D, 8, "cuda", seed=5)
+
+    index = flash_cagra_build(X, graph_degree=32, intermediate_degree=64, seed=0)
+    ref = torch.cdist(Q, X) ** 2
+    _, ref_ids = ref.topk(k, largest=False, dim=1)
+
+    for itopk in (64, 128, 256):
+        cv, ci = flash_cagra_search(
+            index, Q, k, itopk_size=itopk, search_width=1, seed=0,
+            backend="cutedsl")
+        tv, ti = flash_cagra_search(
+            index, Q, k, itopk_size=itopk, search_width=1, seed=0,
+            backend="triton")
+        # Same graph + seeding -> the two kernels return the same set.
+        assert _recall(ci, ti) >= 0.99, \
+            f"cutedsl/triton disagree at itopk={itopk}: {_recall(ci, ti)}"
+        # Returned distances are the true squared-L2 of the returned ids.
+        true = ((Q[:, None, :] - X[ci.clamp(min=0)]) ** 2).sum(-1)
+        assert (true - cv).abs().max().item() < 1e-2
+        # And recall tracks the exhaustive ground truth.
+        assert _recall(ci, ref_ids) >= _recall(ti, ref_ids) - 0.02
+
+
+@cuda_only
+def test_cagra_graph_properties():
+    """The optimized graph is a valid fixed-degree proximity graph.
+
+    Out-degree must equal ``graph_degree`` exactly, every edge must be a
+    valid in-range neighbour, there are no self-loops, and on a single
+    connected cloud the optimize pass (detour prune + reverse edges) must
+    leave one weakly-connected component (no orphaned nodes that the
+    traversal could never reach).
+    """
+    from flashlib import flash_cagra_build
+    from flashlib.primitives.cagra.triton.optimize import _connectivity_report
+
+    torch.manual_seed(0)
+    M, D = 5_000, 32
+    X = _blobs(M, D, 1, "cuda", seed=0)   # single cloud -> connected
+
+    index = flash_cagra_build(X, graph_degree=32, intermediate_degree=64, seed=0)
+    g = index.graph
+    assert g.shape == (M, 32) and g.dtype == torch.int32
+    assert index.graph_degree == 32
+    assert (g >= 0).all() and (g < M).all(), "out-of-range neighbour id"
+    self_id = torch.arange(M, device=g.device, dtype=g.dtype)[:, None]
+    assert (g == self_id).sum().item() == 0, "graph contains a self-loop"
+    # Each row's neighbours are distinct (merge de-duplicates).
+    sorted_rows = g.sort(dim=1).values
+    assert (sorted_rows[:, 1:] == sorted_rows[:, :-1]).sum().item() == 0
+    # Connected data -> one component.
+    assert _connectivity_report(g) == 1
+
+
+@cuda_only
+def test_cagra_application_class():
+    """The sklearn-style CAGRA wrapper round-trips fit -> kneighbors."""
+    from flashlib import CAGRA
+
+    torch.manual_seed(0)
+    X = _blobs(8_000, 32, 8, "cuda", seed=4)
+    Q = _blobs(64, 32, 8, "cuda", seed=5)
+    model = CAGRA(graph_degree=32, n_neighbors=10, itopk_size=128, seed=0).fit(X)
+    dist, idx = model.kneighbors(Q)
+    assert dist.shape == (64, 10) and idx.shape == (64, 10)
+    assert idx.dtype == torch.int64
+    assert (idx >= -1).all() and (idx < 8_000).all()
+    assert torch.isfinite(dist).all()
+    assert model.graph_degree_ == 32
+
+    ref = torch.cdist(Q, X) ** 2
+    _, ref_ids = ref.topk(10, largest=False, dim=1)
+    assert _recall(idx, ref_ids) >= 0.80
+
+
+@cuda_only
 def test_dbscan_recovers_blobs():
     from flashlib import flash_dbscan
 

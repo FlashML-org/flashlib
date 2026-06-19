@@ -13,6 +13,8 @@ def test_top_level_primitives():
         "IvfFlatIndex",
         "flash_ivf_pq", "flash_ivf_pq_build", "flash_ivf_pq_search",
         "IvfPqIndex",
+        "flash_cagra", "flash_cagra_build", "flash_cagra_search",
+        "CagraIndex",
         "flash_pca",
         "flash_standard_scaler",
         "flash_dbscan",
@@ -21,7 +23,8 @@ def test_top_level_primitives():
         # kernels
         "pairwise_l2", "pairwise_l2sq",
         # applications
-        "KMeans", "FlashKMeans", "NearestNeighbors", "IVFFlat", "IVFPQ", "PCA",
+        "KMeans", "FlashKMeans", "NearestNeighbors", "IVFFlat", "IVFPQ",
+        "CAGRA", "PCA",
         "StandardScaler", "DBSCAN",
         # diagnostics + info
         "diagnose", "info",
@@ -36,6 +39,7 @@ def test_subpackage_paths():
     import flashlib.primitives.knn
     import flashlib.primitives.ivf_flat
     import flashlib.primitives.ivf_pq
+    import flashlib.primitives.cagra
     import flashlib.primitives.pca
     import flashlib.primitives.dbscan
     import flashlib.primitives.standard_scaler
