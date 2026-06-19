@@ -62,6 +62,7 @@ import cutlass.cute.runtime as cute_rt
 import cutlass.utils as utils
 import cuda.bindings.driver as cuda
 
+from flashlib.primitives.cagra.index import default_random_seeds
 from flashlib.primitives.knn.triton._common import _next_pow2
 
 
@@ -93,7 +94,7 @@ class HopperCagraSearch:
     _HPROBE = 12
 
     def __init__(self, *, D, GD, ITOPK, SW, MAXIT, R, K, PCOMB, HSIZE, threads,
-                 INCR=True):
+                 TS=32, INCR=True):
         self.D = D
         self.GD = GD
         self.ITOPK = ITOPK
@@ -104,6 +105,14 @@ class HopperCagraSearch:
         self.PCOMB = PCOMB
         self.HSIZE = HSIZE
         self.threads = threads
+        # team_size: threads that cooperate on one distance (cuVS's knob). A
+        # team loads D/TS *contiguous* dims/thread as vectorized 128-bit loads
+        # and butterfly-reduces; T/TS teams run concurrently, so a smaller TS
+        # puts more candidate rows in flight (better DRAM latency hiding) as
+        # long as TS*16B >= 128B coalescing (TS>=8 with float4). Requires
+        # TS | 32 and D % TS == 0 (host guarantees both).
+        assert 32 % TS == 0 and D % TS == 0
+        self.TS = TS
         # Incremental merge: the buffer is kept sorted, so each iter only the
         # NEW candidates are sorted (cheap) and bitonic-*merged* into it
         # (log2(PCOMB) passes) instead of a full bitonic *sort* of the pool
@@ -157,8 +166,11 @@ class HopperCagraSearch:
         D, GD, ITOPK = self.D, self.GD, self.ITOPK
         SW, MAXIT, R, K = self.SW, self.MAXIT, self.R, self.K
         PCOMB, T, HSIZE = self.PCOMB, self.threads, self.HSIZE
+        TS = self.TS
         NEW = SW * GD
         NWARP = T // 32
+        NTEAM = T // TS
+        VPT = D // TS
         HMASK = HSIZE - 1
         HMULT = self._HMULT
         HPROBE = self._HPROBE
@@ -167,6 +179,8 @@ class HopperCagraSearch:
         tid, _, _ = cute.arch.thread_idx()
         lane = tid % 32
         wid = tid // 32
+        team = tid // TS
+        tlane = tid % TS
 
         N = mData.shape[0]
 
@@ -206,29 +220,42 @@ class HopperCagraSearch:
             i += T
         cute.arch.sync_threads()
 
-        # ── seed distances (warp-team: 32 lanes co-load one row) ───────
-        # Lane l accumulates dims l, l+32, ... of row cid -- consecutive
-        # lanes hit consecutive dims of the *same* row, so each load is a
-        # coalesced 128-B transaction (vs the uncoalesced 1-row-per-lane
-        # gather of a per-thread loop). Then a butterfly all-reduce sums
-        # the partials. (sBufD is INF / sBufF is 0 from the seed write.)
-        c = wid
+        # Each thread keeps its VPT-wide query chunk in registers, reused for
+        # every distance (cuVS keeps the query resident too). Reading the query
+        # from SMEM instead to save registers was measured ~2x slower at
+        # D=960/itopk256 (the per-distance SMEM re-reads dominate), so the query
+        # stays register-resident regardless of D. The team-distance body
+        # (vectorized 128-bit team-load + butterfly reduce) is inlined at each
+        # call site below -- CuteDSL forbids closures in device loops.
+        qfrag = cute.make_fragment(VPT, cutlass.Float32)
+        dfrag = cute.make_fragment(VPT, cutlass.Float32)
+        for j in cutlass.range_constexpr(VPT):
+            qfrag[j] = sQ[tlane * VPT + j]
+
+        # ── seed distances (NTEAM teams compute NTEAM rows in parallel) ──
+        # The butterfly runs for *all* lanes every iteration (outside the
+        # cid>=0 guard): teams sharing a warp may diverge on cid, and a warp
+        # shuffle needs all lanes -- gating it would deadlock. ITOPK % NTEAM
+        # == 0 (both pow2), so every team takes the same iteration count.
+        c = team
         while c < ITOPK:
             cid = sBufI[c]
+            acc = cutlass.Float32(0.0)
             if cid >= 0:
-                partial = cutlass.Float32(0.0)
-                d = lane
-                while d < D:
-                    diff = sQ[d] - mData[cid, d]
-                    partial = partial + diff * diff
-                    d += 32
-                off = 16
-                while off > 0:
-                    partial = partial + cute.arch.shuffle_sync_bfly(partial, off)
-                    off //= 2
-                if lane == 0:
-                    sBufD[c] = partial
-            c += NWARP
+                row = mData[(cid, None)]
+                row2 = cute.make_tensor(
+                    row.iterator, cute.make_layout((TS, VPT), stride=(VPT, 1)))
+                cute.autovec_copy(row2[(tlane, None)], dfrag)
+                for j in cutlass.range_constexpr(VPT):
+                    diff = qfrag[j] - dfrag[j]
+                    acc = acc + diff * diff
+            off = TS // 2
+            while off > 0:
+                acc = acc + cute.arch.shuffle_sync_bfly(acc, off)
+                off //= 2
+            if cid >= 0 and tlane == 0:
+                sBufD[c] = acc
+            c += NTEAM
         cute.arch.sync_threads()
 
         # ── one-time sort of the seed buffer (incremental merge keeps it
@@ -384,27 +411,32 @@ class HopperCagraSearch:
                 i += T
             cute.arch.sync_threads()
 
-            # (d) candidate distances (warp-team coalesced gather) ──────
-            c = wid
+            # (d) candidate distances (NTEAM teams, vectorized team-load). As
+            #     in the seed loop the butterfly is unconditional so all warp
+            #     lanes participate; NEW is a multiple of teams-per-warp (pow2
+            #     graph degree), so teams stay in lockstep.
+            c = team
             while c < NEW:
                 cid = sCandI[c]
+                acc = cutlass.Float32(0.0)
                 if cid >= 0:
-                    partial = cutlass.Float32(0.0)
-                    d = lane
-                    while d < D:
-                        diff = sQ[d] - mData[cid, d]
-                        partial = partial + diff * diff
-                        d += 32
-                    off = 16
-                    while off > 0:
-                        partial = partial + cute.arch.shuffle_sync_bfly(partial, off)
-                        off //= 2
-                    if lane == 0:
-                        sCandD[c] = partial
-                else:
-                    if lane == 0:
+                    row = mData[(cid, None)]
+                    row2 = cute.make_tensor(
+                        row.iterator, cute.make_layout((TS, VPT), stride=(VPT, 1)))
+                    cute.autovec_copy(row2[(tlane, None)], dfrag)
+                    for j in cutlass.range_constexpr(VPT):
+                        diff = qfrag[j] - dfrag[j]
+                        acc = acc + diff * diff
+                off = TS // 2
+                while off > 0:
+                    acc = acc + cute.arch.shuffle_sync_bfly(acc, off)
+                    off //= 2
+                if tlane == 0:
+                    if cid >= 0:
+                        sCandD[c] = acc
+                    else:
                         sCandD[c] = cutlass.Float32(_INF)
-                c += NWARP
+                c += NTEAM
             cute.arch.sync_threads()
 
             # (e) merge the new candidates into the sorted buffer, keep the
@@ -415,68 +447,169 @@ class HopperCagraSearch:
                 # (buffer asc | INF pad | candidates desc) and run a single
                 # bitonic *merge* (log2(PCOMB) passes) -- vs the full sort's
                 # ~(log2 PCOMB)^2 passes that dominated L1/barrier traffic.
+                # Sort the NEW candidates (bitonic), register-resident: thread t
+                # holds candidate t in registers and every stride jj<32 is a
+                # race-free warp shuffle (no SMEM, no barrier). Only the rare
+                # cross-warp stride jj>=32 round-trips SMEM with a block barrier
+                # (1 stride for NEW<=64). This removes ~18 of 21 block barriers.
+                cdi = cutlass.Float32(_INF)
+                cii = cutlass.Int32(-1)
+                if tid < NEW:
+                    cdi = sCandD[tid]
+                    cii = sCandI[tid]
                 kk = 2
                 while kk <= NEW:
                     jj = kk // 2
                     while jj > 0:
-                        i = tid
-                        while i < NEW:
-                            l = i ^ jj
-                            if l > i:
-                                up = (i & kk) == 0
-                                di = sCandD[i]
-                                dl = sCandD[l]
-                                if (di > dl) == up:
-                                    sCandD[i] = dl
-                                    sCandD[l] = di
-                                    ti = sCandI[i]
-                                    sCandI[i] = sCandI[l]
-                                    sCandI[l] = ti
-                            i += T
-                        cute.arch.sync_threads()
+                        up = (tid & kk) == 0
+                        if jj >= 32:
+                            if tid < NEW:
+                                sCandD[tid] = cdi
+                                sCandI[tid] = cii
+                            cute.arch.sync_threads()
+                            if tid < NEW:
+                                dp = sCandD[tid ^ jj]
+                                ip = sCandI[tid ^ jj]
+                                if tid < (tid ^ jj):
+                                    if (cdi > dp) == up:
+                                        cdi = dp
+                                        cii = ip
+                                else:
+                                    if (dp > cdi) == up:
+                                        cdi = dp
+                                        cii = ip
+                            cute.arch.sync_threads()
+                        else:
+                            if tid < NEW:
+                                dp = cute.arch.shuffle_sync_bfly(cdi, jj)
+                                ip = cute.arch.shuffle_sync_bfly(cii, jj)
+                                if tid < (tid ^ jj):
+                                    if (cdi > dp) == up:
+                                        cdi = dp
+                                        cii = ip
+                                else:
+                                    if (dp > cdi) == up:
+                                        cdi = dp
+                                        cii = ip
                         jj //= 2
                     kk *= 2
+                if tid < NEW:
+                    sCandD[tid] = cdi
+                    sCandI[tid] = cii
+                cute.arch.sync_threads()
 
+                # Fuse the first bitonic-merge pass (stride ITOPK) into the pool
+                # build: pool[i] = min(buffer[i], reversed-candidate[i]) already
+                # holds the ITOPK smallest in [0,ITOPK) -- the upper half is
+                # discarded, so the remaining log2(ITOPK) merge passes run over
+                # ITOPK instead of PCOMB (~half the merge's L1/barrier traffic).
                 i = tid
-                while i < PCOMB:
-                    if i < ITOPK:
-                        sPoolD[i] = sBufD[i]
-                        sPoolI[i] = sBufI[i]
-                        sPoolF[i] = sBufF[i]
+                while i < ITOPK:
+                    bd = sBufD[i]
+                    bi = sBufI[i]
+                    bf = sBufF[i]
+                    cd = cutlass.Float32(_INF)
+                    ci = cutlass.Int32(-1)
+                    if i >= ITOPK - NEW:
+                        src = ITOPK - 1 - i        # buffer[i] (asc) pairs cand desc
+                        cd = sCandD[src]
+                        ci = sCandI[src]
+                    if bd <= cd:
+                        sPoolD[i] = bd
+                        sPoolI[i] = bi
+                        sPoolF[i] = bf
                     else:
-                        s = i - ITOPK
-                        if s < ITOPK - NEW:
-                            sPoolD[i] = cutlass.Float32(_INF)
-                            sPoolI[i] = cutlass.Int32(-1)
-                            sPoolF[i] = cutlass.Int32(0)
-                        else:
-                            src = ITOPK - 1 - s   # reversed -> descending
-                            sPoolD[i] = sCandD[src]
-                            sPoolI[i] = sCandI[src]
-                            sPoolF[i] = cutlass.Int32(0)
+                        sPoolD[i] = cd
+                        sPoolI[i] = ci
+                        sPoolF[i] = cutlass.Int32(0)
                     i += T
                 cute.arch.sync_threads()
 
-                jj = PCOMB // 2
+                # Register-resident bitonic merge of the (bitonic) ITOPK pool.
+                # slot-major: thread tid owns elements {slot*T+tid}. A stride
+                # jj>=T compares a thread's own slots (pure registers); a stride
+                # 32<=jj<T round-trips SMEM (cross-warp); jj<32 is a warp
+                # shuffle. Only the few mid strides hit SMEM/barriers, vs all
+                # log2(ITOPK) before. The sorted result is written straight to
+                # the buffer (the separate pool->buffer copyback is dropped).
+                ELS = ITOPK // T if ITOPK >= T else 1
+                NACT = T if ITOPK >= T else ITOPK
+                mdf = cute.make_fragment(ELS, cutlass.Float32)
+                mif = cute.make_fragment(ELS, cutlass.Int32)
+                mff = cute.make_fragment(ELS, cutlass.Int32)
+                if tid < NACT:
+                    for s in cutlass.range_constexpr(ELS):
+                        e = s * T + tid
+                        mdf[s] = sPoolD[e]
+                        mif[s] = sPoolI[e]
+                        mff[s] = sPoolF[e]
+                jj = ITOPK // 2
                 while jj > 0:
-                    i = tid
-                    while i < PCOMB:
-                        l = i ^ jj
-                        if l > i:
-                            di = sPoolD[i]
-                            dl = sPoolD[l]
-                            if di > dl:
-                                sPoolD[i] = dl
-                                sPoolD[l] = di
-                                ti = sPoolI[i]
-                                sPoolI[i] = sPoolI[l]
-                                sPoolI[l] = ti
-                                tf = sPoolF[i]
-                                sPoolF[i] = sPoolF[l]
-                                sPoolF[l] = tf
-                        i += T
-                    cute.arch.sync_threads()
+                    if jj >= T:
+                        sj = jj // T
+                        if tid < NACT:
+                            for s in cutlass.range_constexpr(ELS):
+                                sp = s ^ sj
+                                if s < sp:
+                                    if mdf[s] > mdf[sp]:
+                                        td = mdf[s]
+                                        mdf[s] = mdf[sp]
+                                        mdf[sp] = td
+                                        ti = mif[s]
+                                        mif[s] = mif[sp]
+                                        mif[sp] = ti
+                                        tf = mff[s]
+                                        mff[s] = mff[sp]
+                                        mff[sp] = tf
+                    elif jj >= 32:
+                        if tid < NACT:
+                            for s in cutlass.range_constexpr(ELS):
+                                e = s * T + tid
+                                sPoolD[e] = mdf[s]
+                                sPoolI[e] = mif[s]
+                                sPoolF[e] = mff[s]
+                        cute.arch.sync_threads()
+                        if tid < NACT:
+                            for s in cutlass.range_constexpr(ELS):
+                                ep = s * T + (tid ^ jj)
+                                dp = sPoolD[ep]
+                                ip = sPoolI[ep]
+                                fp = sPoolF[ep]
+                                if tid < (tid ^ jj):
+                                    if mdf[s] > dp:
+                                        mdf[s] = dp
+                                        mif[s] = ip
+                                        mff[s] = fp
+                                else:
+                                    if dp > mdf[s]:
+                                        mdf[s] = dp
+                                        mif[s] = ip
+                                        mff[s] = fp
+                        cute.arch.sync_threads()
+                    else:
+                        if tid < NACT:
+                            for s in cutlass.range_constexpr(ELS):
+                                dp = cute.arch.shuffle_sync_bfly(mdf[s], jj)
+                                ip = cute.arch.shuffle_sync_bfly(mif[s], jj)
+                                fp = cute.arch.shuffle_sync_bfly(mff[s], jj)
+                                if tid < (tid ^ jj):
+                                    if mdf[s] > dp:
+                                        mdf[s] = dp
+                                        mif[s] = ip
+                                        mff[s] = fp
+                                else:
+                                    if dp > mdf[s]:
+                                        mdf[s] = dp
+                                        mif[s] = ip
+                                        mff[s] = fp
                     jj //= 2
+                if tid < NACT:
+                    for s in cutlass.range_constexpr(ELS):
+                        e = s * T + tid
+                        sBufD[e] = mdf[s]
+                        sBufI[e] = mif[s]
+                        sBufF[e] = mff[s]
+                cute.arch.sync_threads()
             else:
                 # Fallback (NEW not pow2 or NEW>ITOPK): full bitonic sort.
                 i = tid
@@ -522,13 +655,13 @@ class HopperCagraSearch:
                         jj //= 2
                     kk *= 2
 
-            i = tid
-            while i < ITOPK:
-                sBufD[i] = sPoolD[i]
-                sBufI[i] = sPoolI[i]
-                sBufF[i] = sPoolF[i]
-                i += T
-            cute.arch.sync_threads()
+                i = tid
+                while i < ITOPK:
+                    sBufD[i] = sPoolD[i]
+                    sBufI[i] = sPoolI[i]
+                    sBufF[i] = sPoolF[i]
+                    i += T
+                cute.arch.sync_threads()
 
             # (f) rebuild the visited set to mirror the new buffer, so next
             #     iter's dedup (step c) is an O(1) membership test.
@@ -596,6 +729,7 @@ def cagra_search_cutedsl(
     num_random_seeds: int = 0,
     seed: int = 0,
     threads: int = 128,
+    team_size: int = 0,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Single-CTA CuteDSL CAGRA search. Returns ``(vals, ids)`` ``(nq, k)``.
 
@@ -615,8 +749,8 @@ def cagra_search_cutedsl(
     ITOPK = _next_pow2(itopk_eff)
     S = max(1, int(search_width))
 
-    R = min(ITOPK, N) if int(num_random_seeds) <= 0 else min(int(num_random_seeds), ITOPK, N)
-    R = max(1, R)
+    R = default_random_seeds(num_random_seeds, getattr(index, "n_components", 1),
+                             ITOPK, N)
 
     max_iters = int(max_iterations) or _auto_max_iters(ITOPK, S)
     max_iters = max(max_iters, int(min_iterations), 1)
@@ -633,19 +767,37 @@ def cagra_search_cutedsl(
     # is essentially never lost to a full probe window (no dup => recall intact).
     HSIZE = _next_pow2(4 * ITOPK)
 
+    # team_size: threads per distance (must divide 32 and D). Each thread
+    # vector-loads VPT=D/TS contiguous dims. There are two competing costs:
+    # a *wider* team shrinks VPT (fewer registers/thread -> higher occupancy)
+    # but *deepens* the butterfly reduction (more shuffles per distance). A TS
+    # sweep on H100 over D=64..960 puts the sweet spot at VPT~4-8: the best TS
+    # is the LARGEST valid one whose VPT stays >= 4 (D=64->TS16, D=96->TS16,
+    # D=128/256/960->TS32). VPT>=4 also keeps the row load float4-shaped.
+    # An explicit team_size overrides when valid.
+    def _valid(ts):
+        return ts > 0 and 32 % ts == 0 and D % ts == 0
+    TS = int(team_size)
+    if not _valid(TS):
+        cap = max(1, D // 4)                    # VPT = D/TS >= 4  <=>  TS <= D/4
+        TS = 1
+        for _cand in (2, 4, 8, 16, 32):        # largest valid divisor <= cap
+            if _valid(_cand) and _cand <= cap:
+                TS = _cand
+
     g = torch.Generator(device="cpu").manual_seed(seed)
     seeds = torch.randint(0, N, (nq, R), generator=g).to(torch.int32).to(Q.device).contiguous()
 
     out_val = torch.empty((nq, k), device=Q.device, dtype=torch.float32)
     out_id = torch.empty((nq, k), device=Q.device, dtype=torch.int32)
 
-    key = (D, gd, ITOPK, S, max_iters, R, int(k), PCOMB, HSIZE, threads, INCR)
+    key = (D, gd, ITOPK, S, max_iters, R, int(k), PCOMB, HSIZE, threads, TS, INCR)
     compiled = _kernel_cache.get(key)
     stream = cuda.CUstream(torch.cuda.current_stream().cuda_stream)
     if compiled is None:
         kernel = HopperCagraSearch(
             D=D, GD=gd, ITOPK=ITOPK, SW=S, MAXIT=max_iters, R=R, K=int(k),
-            PCOMB=PCOMB, HSIZE=HSIZE, threads=threads, INCR=INCR,
+            PCOMB=PCOMB, HSIZE=HSIZE, threads=threads, TS=TS, INCR=INCR,
         )
         compiled = cute.compile(
             kernel,

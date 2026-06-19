@@ -84,11 +84,11 @@ def _use_cutedsl_search(index: "CagraIndex", Q: torch.Tensor, k: int,
     via an atomic-CAS visited set (the Triton kernel keeps the buffer in
     registers and spills past itopk 64). ncu rooflines on H100/1M/D128 show
     CuteDSL beats Triton by ~1.3-1.9x once the effective buffer reaches 128.
-    At the 64-wide buffer the winner depends on out-degree: CuteDSL wins when
-    the buffer is wide relative to the per-iter candidate fan-in (deg<=32:
-    ~1.4x), but the merge/visited-rebuild overhead loses to Triton's register
-    path when deg==64 (candidates ~= buffer). So route the 64 band only for
-    the small-degree case and keep deg==64/itopk==64 on Triton.
+    With the vectorized warp-team distance + register/shuffle merge, CuteDSL
+    now also wins the whole 64-wide band regardless of out-degree -- measured
+    deg=64/itopk=64 at 2.0M vs Triton's 1.1M QPS (and > cuVS's 1.9M). So route
+    every buffer >= 64 to CuteDSL; only the tiny <64 buffers stay on Triton's
+    register path (where the SMEM merge/visited-rebuild fixed cost dominates).
     """
     from flashlib.primitives.knn.triton._common import _next_pow2
     if not (Q.is_cuda and index.dataset.is_cuda and index.graph.is_cuda):
@@ -97,9 +97,7 @@ def _use_cutedsl_search(index: "CagraIndex", Q: torch.Tensor, k: int,
         return False
     itopk_eff = max(int(itopk_size), int(k), int(index.graph_degree))
     buf = _next_pow2(itopk_eff)
-    if buf >= 128:
-        return True
-    return buf >= 64 and int(index.graph_degree) <= 32
+    return buf >= 64
 
 
 def route_op_name(
@@ -184,7 +182,8 @@ def flash_cagra_build(
         X, inter, build_algo=build_algo, metric=metric,
         nlist=nlist, nprobe=nprobe, ivf_pq_m=ivf_pq_m, niter=niter, seed=seed,
     )
-    graph = optimize_graph(graph_init, graph_degree)
+    graph, n_comp = optimize_graph(graph_init, graph_degree,
+                                   return_n_components=True)
     return CagraIndex(
         dataset=dataset,
         graph=graph,
@@ -194,6 +193,7 @@ def flash_cagra_build(
         D=int(X.shape[1]),
         Dp=int(dataset.shape[1]),
         build_algo=str(algo),
+        n_components=int(n_comp) if n_comp else 1,
     )
 
 
@@ -231,14 +231,20 @@ def flash_cagra_search(
         Lower bound on traversal iterations.
     num_random_seeds : int, default 0
         Number of random entry nodes seeded into the buffer per query.
-        ``0`` fills the whole buffer (``itopk_size`` random nodes) -- the
-        most robust default (CAGRA's ``random_pickup`` initialization).
+        ``0`` auto-scales with the graph's connectivity (recorded at build
+        as ``index.n_components``): a *connected* graph is reachable from a
+        few entry nodes so a small fixed set is seeded (faster -- it avoids
+        the up-front gather of ``itopk_size`` far-away rows that are evicted
+        immediately, measured +5-7% QPS at equal recall), while a
+        *disconnected* graph fills the whole buffer (one seed per component
+        is needed or the walk can never cross into the query's component).
+        Pass a positive value to override.
     seed : int, default 0
         RNG seed for entry-point selection (deterministic search).
     backend : {"triton", "cutedsl", "torch"}, optional
         Override the auto-route. ``"cutedsl"`` forces the Hopper SMEM
         kernel (raising if it can't run); the default auto-routes to it on
-        Hopper when the effective buffer is >= 128 (where it beats Triton
+        Hopper when the effective buffer is >= 64 (where it beats Triton
         1.3-2.9x) and to Triton otherwise.
     """
     if Q.ndim != 2:

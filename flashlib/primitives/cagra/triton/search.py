@@ -41,6 +41,7 @@ import torch
 import triton
 import triton.language as tl
 
+from flashlib.primitives.cagra.index import default_random_seeds
 from flashlib.primitives.knn.triton._common import (
     _INF_PACKED,
     _next_pow2,
@@ -203,8 +204,8 @@ def cagra_search_triton(
     ITOPK = _next_pow2(itopk_eff)
     S = max(1, int(search_width))
 
-    R = min(ITOPK, N) if int(num_random_seeds) <= 0 else min(int(num_random_seeds), ITOPK, N)
-    R = max(1, R)
+    R = default_random_seeds(num_random_seeds, getattr(index, "n_components", 1),
+                             ITOPK, N)
 
     max_iters = int(max_iterations) or _auto_max_iters(ITOPK, S)
     max_iters = max(max_iters, int(min_iterations), 1)

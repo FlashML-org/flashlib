@@ -44,6 +44,8 @@ from typing import Optional, Tuple
 
 import torch
 
+from flashlib.primitives.cagra.index import CagraIndex, default_random_seeds
+
 
 # ── build building blocks ──────────────────────────────────────────────────
 def _brute_knn_graph(
@@ -202,8 +204,6 @@ def cagra_build_torch(
     seed: int = 0,
 ):
     """Build a :class:`CagraIndex` with pure torch ops (always brute-force kNN)."""
-    from flashlib.primitives.cagra.index import CagraIndex
-
     if metric != "l2":
         raise NotImplementedError(f"cagra supports metric='l2' only (got {metric!r})")
     if X.ndim != 2:
@@ -221,6 +221,22 @@ def cagra_build_torch(
     rev = reverse_edges(pruned, graph_degree)
     graph = merge_graph(pruned, rev, graph_degree).to(torch.int32)
 
+    # Component count drives the search seed-count heuristic (a disconnected
+    # graph needs ~one seed per component). The CC kernel is Triton/GPU-only,
+    # so on CPU we leave it at 1 (connected) -- the CPU path is the reference
+    # oracle, not a throughput target.
+    n_comp = 1
+    if graph.is_cuda:
+        try:
+            from flashlib.kernels.connected_components import connected_components
+            Ng = graph.shape[0]
+            rows = torch.arange(Ng, device=graph.device, dtype=torch.int32)[:, None]
+            rows = rows.expand(Ng, graph_degree).reshape(-1).contiguous()
+            cols = graph.reshape(-1).to(torch.int32).contiguous()
+            n_comp = int(connected_components(rows, cols, Ng).unique().numel())
+        except Exception:  # pragma: no cover - diagnostics must never break build
+            n_comp = 1
+
     return CagraIndex(
         dataset=Xp,
         graph=graph,
@@ -230,6 +246,7 @@ def cagra_build_torch(
         D=int(D),
         Dp=int(D),
         build_algo="bruteforce",
+        n_components=n_comp,
     )
 
 
@@ -268,9 +285,8 @@ def cagra_search_torch(
     nq = Q.shape[0]
     Qf = Q.to(torch.float32).to(device)
     M = max(int(itopk_size), int(k))
-    # num_random_seeds <= 0 → fill the buffer (CAGRA's random_pickup init).
-    R = min(M, N) if int(num_random_seeds) <= 0 else min(int(num_random_seeds), M, N)
-    R = max(1, R)
+    R = default_random_seeds(num_random_seeds, getattr(index, "n_components", 1),
+                             M, N)
     S = max(1, int(search_width))
     max_iters = int(max_iterations) or _auto_max_iters(M, S)
     max_iters = max(max_iters, int(min_iterations), 1)
