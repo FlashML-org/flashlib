@@ -1,30 +1,22 @@
 """Blackwell (sm_100) CuteDSL flash-KNN kernels (BF16, D=128).
 
-Two specialized kernels, implementing an exact register/smem top-K design,
-targeting the regimes where flashlib's Triton path is weakest on B200 /
-Triton 3.4:
+Two exact kernels for the regimes where flashlib's Triton path is weakest
+on B200:
 
-* :class:`BlackwellKnnBuild` -- self-kNN / large-Q "build" via ``tcgen05``
-  MMA (5th-gen tensor cores) + TMA bulk loads + a register top-K fused in
-  the MMA epilogue, split-K over the database, plus a fused Triton merge.
-  Score ``s = c_sq[m] - 2<x,c>`` (the ``x_sq`` term is constant per row so
-  dropping it preserves argmin-K).  Software-pipelined: the next db tile's
-  async MMA is issued before the (CUDA-core-bound) top-K so tensor-core and
-  CUDA-core work overlap.
+* :class:`BlackwellKnnBuild` -- self-kNN / large-Q build. tcgen05 MMA + TMA
+  loads + a register top-K fused in the MMA epilogue, split-K over the db +
+  a fused merge. Scores with ``s = c_sq[m] - 2<x,c>``: the ``x_sq`` term is
+  constant per query row, so dropping it preserves the argmin-K (the merge
+  re-adds it for true distances). The next db tile's async MMA is issued
+  before the CUDA-core-bound top-K so tensor cores and CUDA cores overlap.
 
-* :class:`BlackwellKnnSearch` -- small-Q search (Q in {1, 4, ...}) where
-  Triton 3.4 ``tl.dot`` asserts ``M >= 16`` on sm_100 and cannot run.  An
-  FMA dot-product kernel: grid ``(Q, S)``, each CTA cooperatively stages a
-  coalesced ``[TILE_M, D]`` db tile into smem, every thread reduces its
-  rows into a per-thread sorted top-K, then a smem pairwise tree merges to
-  the CTA top-K; a final fused merge reduces the S splits.  ``c_sq`` is
-  fused from the staged tile (no separate db-norm pass).
+* :class:`BlackwellKnnSearch` -- small-Q search, where Triton 3.4 ``tl.dot``
+  asserts ``M >= 16`` on sm_100 and cannot run at all. FMA dot-product,
+  per-thread top-K, smem tree merge to the CTA top-K, then a fused merge
+  over the S splits.
 
 Both return ``(B, N, k) int32`` indices (ascending by true squared-L2),
-matching the :func:`flashlib.primitives.knn.flash_knn` backend contract;
-true distances are recovered by the shared gather pass.  Use
-:func:`blackwell_available` to probe importability and
-:func:`blackwell_flash_knn` for the index-only entry point.
+matching the :func:`flashlib.primitives.knn.flash_knn` contract.
 """
 from __future__ import annotations
 
@@ -131,10 +123,8 @@ def _row_sqnorm(x2d: torch.Tensor, out=None) -> torch.Tensor:
 
 
 def _merge(part_s, part_i, x_sq, k):
-    """Fused per-row top-K merge of split partials -> (dist f32, idx i32).
-
-    Reduces the S*k unsorted partials per row to the global sorted top-k and
-    recovers the true distance (adds the dropped x_sq term, clamps >=0)."""
+    """Reduce the S*k unsorted partials per row to the global sorted top-k,
+    re-adding the dropped x_sq term (clamp >=0)."""
     N, S, k_keep = part_s.shape
     SK = S * k_keep
     ps = part_s.reshape(N, SK).contiguous()
@@ -169,17 +159,15 @@ if _BW_AVAILABLE:
             self.num_ab_stage = 2
             self.threads_per_cta = 128
 
-        # ---- reusable device-side exact top-K, @cute.jit-inlined ----
-        # Factored out of the kernel body so build/search/fused variants can
-        # share one tuned implementation. These are preprocessed + inlined at
-        # trace time (zero runtime cost vs hand-inlining). Rules: mutable rmem
-        # state (best_d/best_i) is passed and mutated in place; SSA scalars
-        # (worst_d/worst_pos) are returned; the dynamic store best_d[worst_pos]
-        # must stay inside the `if` so it lowers to a REAL branch (the skip).
+        # ---- reusable device-side exact top-K (@cute.jit-inlined) ----
+        # Preprocessed + inlined at trace time. Conventions that matter:
+        # mutable rmem (best_d/best_i) is mutated in place, SSA scalars
+        # (worst_d/worst_pos) are returned, and the dynamic store
+        # best_d[worst_pos] must stay inside the `if` so it lowers to a REAL
+        # branch (otherwise the group-min skip predicates instead of skipping).
         @cute.jit
         def _topk_init(self, K: cutlass.Constexpr):
-            """Unsorted per-thread register top-K + cached worst.
-            Returns (best_d, best_i, worst_d, worst_pos)."""
+            """Init the unsorted per-thread register top-K (+ cached worst)."""
             best_d = cute.make_rmem_tensor(cute.make_layout((K,)),
                                            cutlass.Float32)
             best_i = cute.make_rmem_tensor(cute.make_layout((K,)), cutlass.Int32)
@@ -190,25 +178,18 @@ if _BW_AVAILABLE:
 
         @cute.jit
         def _worst_of(self, best_d, K: cutlass.Constexpr):
-            """Streaming running-max worst-of-K -> (worst_d, worst_pos), O(1)
-            live state (only worst_d/worst_pos carry across iters). Mirrors
-            cake's k32 kernel (`stage1_k32_unordered`, the `scan_pos` loop).
+            """Streaming running-max worst-of-K (O(1) live state; cake's k32
+            scan). Two CuteDSL-specific choices, each picked over the option
+            that looks better on paper:
 
-            Two CuteDSL-specific choices, both validated by benchmarking against
-            the alternatives that look better on paper:
-
-            * cake uses a balanced max-tree at small K (k10:
-              ``..._vmin_maxtree``); in CuteDSL the max-tree -- which
-              materialises all K leaves into SSA at once on top of the 64-float
-              MMA fragment -- is ~2x SLOWER even at k=5/10 (MLIR keeps the leaves
-              live and spills). The streaming scan keeps two scalars live.
-            * keeping best_d/best_i in registers (compile-time-indexed predicated
-              writes, so no dynamic ``best_d[worst_pos]`` store -> local memory)
-              looks like it should beat the local-memory scan, but forcing all
-              2K values live blows up register pressure (k=32: ~7x SLOWER). The
-              dynamic store + this local-memory scan keeps occupancy high; the
-              scan only runs on the rare insert (the group-min skip rejects most
-              candidates) so the local loads stay L1-resident and cheap."""
+            * max-tree (cake's small-K choice) materialises all K leaves into
+              SSA and spills in CuteDSL -- ~2x SLOWER even at k=5/10. The scan
+              keeps two scalars live.
+            * keeping best_d/best_i register-resident (predicated writes, no
+              dynamic store to local memory) forces 2K values live and blows up
+              register pressure -- ~7x SLOWER at k=32. The dynamic store + this
+              local scan keeps occupancy high, and the group-min skip makes the
+              scan rare enough that the local loads stay L1-resident."""
             worst_d = best_d[0]
             worst_pos = cutlass.Int32(0)
             for jj in cutlass.range_constexpr(K - 1):
@@ -222,10 +203,9 @@ if _BW_AVAILABLE:
         def _topk_consume_tile(self, best_d, best_i, worst_d, worst_pos, frag,
                                sCsq, base, K: cutlass.Constexpr,
                                BN: cutlass.Constexpr):
-            """Fold one [BN] distance fragment into the running top-K with the
-            group-min threshold skip (scan 4 at a time; skip the whole group
-            when even its min can't beat worst). best_d/best_i mutated in
-            place; returns updated (worst_d, worst_pos)."""
+            """Fold one [BN] distance fragment into the top-K. Group-min skip:
+            scan 4 candidates at a time and skip the group when even its min
+            can't beat the current worst."""
             for g in cutlass.range_constexpr(BN // 4):
                 cands = [sCsq[g * 4 + 0] - 2.0 * frag[g * 4 + 0],
                          sCsq[g * 4 + 1] - 2.0 * frag[g * 4 + 1],
@@ -418,13 +398,12 @@ if _BW_AVAILABLE:
 
             tmem.relinquish_alloc_permit()
 
-            # per-thread running exact top-K, via reusable device helper.
             best_d, best_i, worst_d, worst_pos = self._topk_init(K)
 
             tiles_per_split = n_db_tiles // num_splits
             db_start = bidy * tiles_per_split
 
-            # prologue: warp 0 kicks off the MMA for the first db tile
+            # prologue: warp 0 issues the first db tile's MMA
             if warp_idx == 0:
                 for kk in cutlass.range(k_tile_cnt):
                     ab_pipeline.producer_acquire(ab_prod)
@@ -463,9 +442,9 @@ if _BW_AVAILABLE:
 
                 cute.arch.barrier()   # c_sq visible to all threads
 
-                # issue NEXT tile's MMA (warp 0 only): async tcgen05 overlaps
-                # the CUDA-core-bound top-K below; 1 acc stage suffices since the
-                # copy above drained the accumulator to registers.
+                # issue the next tile's MMA now (warp 0): async tcgen05 overlaps
+                # the CUDA-core-bound top-K below. 1 acc stage suffices -- the
+                # copy above already drained the accumulator to registers.
                 db_next = db + 1
                 if dd + 1 < tiles_per_split:
                     if warp_idx == 0:
@@ -494,8 +473,6 @@ if _BW_AVAILABLE:
                         acc_pipeline.producer_commit(acc_prod)
                         acc_prod.advance()
 
-                # exact top-K update (group-min threshold skip + streaming
-                # worst-of-K recompute), via the reusable device helper.
                 base = db * BLOCK_N
                 frag = tTR_rAcc.load()
                 worst_d, worst_pos = self._topk_consume_tile(
@@ -650,13 +627,11 @@ _SM_FILL = 96  # ~B200 SM count; below this many q-tiles we split to fill
 
 
 def pick_splits_build(N: int, k: int = 0) -> int:
-    """Split count for the (always-exact) build. Each split keeps the full
-    top-k per query row and the worst recompute streams cheaply (group-min
-    skip), so a single split with long db runs is the cheapest (no extra merge
-    candidates, one partial write) -- this matches cake's preference for very
-    few splits. We therefore use S=1 as soon as the query tiles alone roughly
-    fill the SMs (``n_q_tiles >= _SM_FILL``); only smaller N splits the db to
-    reach ~2 waves. Empirically S=1 beats S=4 by ~1.8x at N=16384, k=10."""
+    """Split count for the exact build. Each split keeps the full top-k, so
+    fewer splits = fewer merge candidates + one partial write: S=1 is cheapest
+    once the query tiles alone fill the SMs (``n_q_tiles >= _SM_FILL``). Only
+    smaller N splits the db to reach ~2 waves. (S=1 beats S=4 ~1.8x at
+    N=16384, k=10.)"""
     n_db_tiles = N // BLOCK_N
     n_q_tiles = max(1, N // BLOCK_Q)
     if n_q_tiles >= _SM_FILL:
@@ -683,13 +658,10 @@ def _cur_stream():
 def knn_build_cutedsl(x: torch.Tensor, k: int, *, num_splits=None,
                       part_s=None, part_i=None, x_sq=None,
                       return_distances: bool = True):
-    """Exact self-kNN build for x:(N,D) bf16, D=128. Returns idx (N,k) i32 (and
-    dist (N,k) f32 when ``return_distances``).
-
-    Always exact: each split keeps the full top-k per query row (cake's design)
-    and the merge reduces the S*k partials to the global top-k. The worst-of-K
-    recompute is a streaming linear scan (O(1) live state) so the per-thread
-    top-K stays small even at k=32."""
+    """Exact self-kNN build for x:(N,D) bf16, D=128 -> idx (N,k) i32 (+ dist
+    f32 when ``return_distances``). Each split keeps the full top-k and the
+    merge reduces the S*k partials; the worst-of-K recompute is a streaming
+    scan so the per-thread top-K stays small even at k=32."""
     if x.dim() == 3:
         x = x[0]
     N, Dd = x.shape
@@ -721,8 +693,8 @@ def knn_build_cutedsl(x: torch.Tensor, k: int, *, num_splits=None,
 def knn_search_cutedsl(qx: torch.Tensor, db: torch.Tensor, k: int, *,
                        num_splits=None, q_sq=None, part_s=None, part_i=None,
                        return_distances: bool = True):
-    """Search qx:(Q,D) vs db:(M,D) bf16, D=128. Returns idx (Q,k) i32 (and
-    dist (Q,k) f32 when ``return_distances``)."""
+    """Exact search qx:(Q,D) vs db:(M,D) bf16, D=128 -> idx (Q,k) i32 (+ dist
+    f32 when ``return_distances``)."""
     if qx.dim() == 3:
         qx = qx[0]
     if db.dim() == 3:
@@ -751,9 +723,9 @@ def knn_search_cutedsl(qx: torch.Tensor, db: torch.Tensor, k: int, *,
 
 
 def blackwell_supported(x: torch.Tensor, c: torch.Tensor, k: int) -> bool:
-    """True iff the Blackwell CuteDSL KNN path can run this (already-3D)
-    workload: bf16, D=128, single batch, CUDA, and (for the build path that
-    needs N % 128 == 0) divisible query tiles or the small-Q search path."""
+    """True iff the Blackwell path can run this (3D) workload: bf16, D=128,
+    single batch, CUDA, k<=64. Build needs N % BLOCK_Q == 0; search needs a
+    db tile."""
     if not _BW_AVAILABLE:
         return False
     if x.dim() != 3 or c.dim() != 3:
@@ -775,10 +747,8 @@ def blackwell_supported(x: torch.Tensor, c: torch.Tensor, k: int) -> bool:
 
 def blackwell_flash_knn(x: torch.Tensor, c: torch.Tensor, k: int,
                         **kwargs) -> torch.Tensor:
-    """Index-only Blackwell CuteDSL KNN, matching the flash_knn backend
-    contract. ``x``/``c`` are ``(B, N, D)`` / ``(B, M, D)`` bf16 (B==1).
-    Picks the build (self-kNN) vs search kernel by shape. Returns
-    ``(B, N, k) int32`` ascending-by-distance indices."""
+    """Index-only Blackwell KNN (flash_knn contract). x/c are (B,N,D)/(B,M,D)
+    bf16, B==1; picks build vs search by shape. Returns (B, N, k) int32."""
     del kwargs
     xb = x[0]
     cb = c[0]
