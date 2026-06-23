@@ -62,7 +62,7 @@ except Exception as exc:  # noqa: BLE001 - any import problem disables the path
 BLOCK_M = 128       # points per CTA / threads per CTA (one row per thread)
 BLOCK_N = 64        # default centroids per MMA N-tile (tunable per shape)
 MMA_K = 64          # D contraction tile
-SUPPORTED_D = (64, 128, 256)
+SUPPORTED_D = (64, 128, 256, 512, 768, 1024)
 SUPPORTED_BN = (64, 128, 256)   # MMA N-tiles the kernel can be built with
 
 
@@ -1814,6 +1814,309 @@ if _BW_AVAILABLE:
             tmem.free(pool.base_ptr)
 
 
+    class BlackwellFlashKmeansAssignStream:
+        """Streaming tcgen05 assign for large D (D>256) that won't fit X-resident.
+
+        The X-resident variants (``xres``/``ws``) hold the whole 128xD point
+        tile in SMEM, which exceeds the 227 KB CTA budget past D~512 (D=1024
+        alone is 256 KB). This variant keeps cake's/ws's 3-way warp split but
+        streams **both** X and C through *bounded* depth-``S`` SMEM rings over
+        the D contraction, accumulating into a single TMEM accumulator -- so
+        SMEM is ``O(S * MMA_K)``, independent of D, and any D works. The point
+        tile is re-fetched per centroid tile (absorbed by L2; large D is
+        compute-bound, so the redundant X traffic is hidden -- this is exactly
+        what Triton's split-D and cake's large-D paths do).
+
+        * **warp 5** -- load: streams ``(X chunk, C chunk)`` for every
+          ``(centroid tile, D chunk)`` into the X / C rings.
+        * **warp 4** -- MMA: drains the rings, accumulating each centroid
+          tile's cross term over the full D contraction into TMEM.
+        * **warps 0-3** -- epilogue: one point-row per thread, drains the
+          accumulator and runs the running argmin. The accumulator is released
+          right after the TMEM->reg copy, so the next tile's MMA overlaps the
+          argmin (single-accumulator overlap, as in ``base``).
+        """
+
+        def __init__(self, acc_dtype=cutlass.Float32, block_n: int = BLOCK_N,
+                     depth: int = 4):
+            self.acc_dtype = acc_dtype
+            self.block_n = block_n
+            self.depth = depth
+            self.cta_group = tcgen05.CtaGroup.ONE
+            self.cluster_shape_mn = (1, 1)
+            self.mma_tiler_mn = (BLOCK_M, block_n)
+            self.epi_threads = BLOCK_M
+            self.threads_per_cta = BLOCK_M + 64   # + MMA warp (4) + load warp (5)
+
+        @cute.jit
+        def _consume_tile_argmin(self, best_s, best_i, frag, sCsq, base,
+                                 BN: cutlass.Constexpr):
+            for n in cutlass.range_constexpr(BN):
+                s = sCsq[n] - frag[n]
+                lt = s < best_s
+                best_s = cutlass.select_(lt, s, best_s)
+                best_i = cutlass.select_(lt, cutlass.Int32(base + n), best_i)
+            return best_s, best_i
+
+        @cute.jit
+        def __call__(self, mX: cute.Tensor, mC: cute.Tensor, mCsq: cute.Tensor,
+                     mOut: cute.Tensor, stream: cuda.CUstream):
+            self.x_dtype = mX.element_type
+            self.c_dtype_in = mC.element_type
+            a_major = utils.LayoutEnum.from_tensor(mX).mma_major_mode()
+            b_major = utils.LayoutEnum.from_tensor(mC).mma_major_mode()
+
+            tiled_mma = sm100_utils.make_trivial_tiled_mma(
+                self.x_dtype, a_major, b_major, self.acc_dtype, self.cta_group,
+                self.mma_tiler_mn)
+            self.mma_tiler = (self.mma_tiler_mn[0], self.mma_tiler_mn[1], MMA_K)
+
+            D = mX.shape[1]
+            kc = max(1, D // MMA_K)
+            # Bounded rings: never deeper than the D-chunk count, and shallow
+            # enough that SMEM stays O(depth) instead of O(D).
+            self.num_x_stage = min(self.depth, kc)
+            self.num_c_stage = min(self.depth, kc)
+
+            self.cluster_layout_vmnk = cute.tiled_divide(
+                cute.make_layout((*self.cluster_shape_mn, 1)),
+                (tiled_mma.thr_id.shape,))
+
+            a_smem_layout = sm100_utils.make_smem_layout_a(
+                tiled_mma, self.mma_tiler, self.x_dtype, self.num_x_stage)
+            b_smem_layout = sm100_utils.make_smem_layout_b(
+                tiled_mma, self.mma_tiler, self.c_dtype_in, self.num_c_stage)
+
+            a_op = sm100_utils.cluster_shape_to_tma_atom_A(
+                self.cluster_shape_mn, tiled_mma.thr_id)
+            a_smem_one = cute.slice_(a_smem_layout, (None, None, None, 0))
+            tma_atom_a, tma_x = cute.nvgpu.make_tiled_tma_atom_A(
+                a_op, mX, a_smem_one, self.mma_tiler, tiled_mma,
+                self.cluster_layout_vmnk.shape)
+            b_op = sm100_utils.cluster_shape_to_tma_atom_B(
+                self.cluster_shape_mn, tiled_mma.thr_id)
+            b_smem_one = cute.slice_(b_smem_layout, (None, None, None, 0))
+            tma_atom_b, tma_c = cute.nvgpu.make_tiled_tma_atom_B(
+                b_op, mC, b_smem_one, self.mma_tiler, tiled_mma,
+                self.cluster_layout_vmnk.shape)
+
+            elem_bytes = self.x_dtype.width // 8
+            self.num_tma_x_bytes = self.mma_tiler[0] * self.mma_tiler[2] * elem_bytes
+            self.num_tma_c_bytes = self.mma_tiler[1] * self.mma_tiler[2] * elem_bytes
+            self.num_tmem_alloc_cols = self.block_n     # single accumulator
+            self.cta_tile_shape_mnk = (self.mma_tiler[0], self.mma_tiler[1],
+                                       self.mma_tiler[2])
+            self.epi_tile = (self.mma_tiler[0], self.mma_tiler[1])
+            self.c_layout = utils.LayoutEnum.ROW_MAJOR
+
+            N = mX.shape[0]
+            grid = (N // BLOCK_M, 1, 1)
+            self.kernel(
+                tiled_mma, tma_atom_a, tma_x, tma_atom_b, tma_c,
+                mCsq, mOut, self.cluster_layout_vmnk,
+                a_smem_layout, b_smem_layout,
+            ).launch(grid=grid, block=[self.threads_per_cta, 1, 1],
+                     cluster=(*self.cluster_shape_mn, 1), stream=stream)
+
+        @cute.kernel
+        def kernel(self, tiled_mma, tma_atom_a, mX, tma_atom_b, mC,
+                   mCsq, mOut, cluster_layout_vmnk,
+                   a_smem_layout, b_smem_layout):
+            num_x_stage = self.num_x_stage
+            num_c_stage = self.num_c_stage
+            warp_idx = cute.arch.make_warp_uniform(cute.arch.warp_idx())
+            tidx, _, _ = cute.arch.thread_idx()
+            bidx, _, _ = cute.arch.block_idx()
+
+            is_load = warp_idx == 5
+            is_mma = warp_idx == 4
+            if is_load:
+                cpasync.prefetch_descriptor(tma_atom_a)
+                cpasync.prefetch_descriptor(tma_atom_b)
+
+            block_n = self.block_n
+
+            @cute.struct
+            class SharedStorage:
+                x_full: cute.struct.MemRange[cutlass.Int64, num_x_stage * 2]
+                c_full: cute.struct.MemRange[cutlass.Int64, num_c_stage * 2]
+                acc_full: cute.struct.MemRange[cutlass.Int64, 2]
+                tmem_dealloc: cutlass.Int64
+                tmem_holding: cutlass.Int32
+                sCsq: cute.struct.MemRange[cutlass.Float32, block_n]
+
+            smem = utils.SmemAllocator()
+            storage = smem.allocate(SharedStorage)
+
+            x_pipeline = pipeline.PipelineTmaUmma.create(
+                barrier_storage=storage.x_full.data_ptr(),
+                num_stages=num_x_stage,
+                producer_group=pipeline.CooperativeGroup(pipeline.Agent.Thread),
+                consumer_group=pipeline.CooperativeGroup(
+                    pipeline.Agent.Thread, 1),
+                tx_count=self.num_tma_x_bytes,
+                cta_layout_vmnk=None, defer_sync=True)
+            x_prod = pipeline.make_pipeline_state(
+                pipeline.PipelineUserType.Producer, num_x_stage)
+            x_cons = pipeline.make_pipeline_state(
+                pipeline.PipelineUserType.Consumer, num_x_stage)
+
+            c_pipeline = pipeline.PipelineTmaUmma.create(
+                barrier_storage=storage.c_full.data_ptr(),
+                num_stages=num_c_stage,
+                producer_group=pipeline.CooperativeGroup(pipeline.Agent.Thread),
+                consumer_group=pipeline.CooperativeGroup(
+                    pipeline.Agent.Thread, 1),
+                tx_count=self.num_tma_c_bytes,
+                cta_layout_vmnk=None, defer_sync=True)
+            c_prod = pipeline.make_pipeline_state(
+                pipeline.PipelineUserType.Producer, num_c_stage)
+            c_cons = pipeline.make_pipeline_state(
+                pipeline.PipelineUserType.Consumer, num_c_stage)
+
+            acc_pipeline = pipeline.PipelineUmmaAsync.create(
+                barrier_storage=storage.acc_full.data_ptr(), num_stages=1,
+                producer_group=pipeline.CooperativeGroup(pipeline.Agent.Thread),
+                consumer_group=pipeline.CooperativeGroup(
+                    pipeline.Agent.Thread, self.epi_threads),
+                cta_layout_vmnk=None, defer_sync=True)
+            acc_prod = pipeline.make_pipeline_state(
+                pipeline.PipelineUserType.Producer, 1)
+            acc_cons = pipeline.make_pipeline_state(
+                pipeline.PipelineUserType.Consumer, 1)
+
+            epi_bar = pipeline.NamedBarrier(
+                barrier_id=2, num_threads=self.epi_threads)
+            tmem_alloc_bar = pipeline.NamedBarrier(
+                barrier_id=1, num_threads=self.threads_per_cta)
+            tmem = utils.TmemAllocator(
+                storage.tmem_holding, barrier_for_retrieve=tmem_alloc_bar,
+                is_two_cta=False,
+                two_cta_tmem_dealloc_mbar_ptr=storage.tmem_dealloc)
+
+            pipeline_init_arrive(is_relaxed=True)
+
+            sX = smem.allocate_tensor(self.x_dtype, a_smem_layout.outer, 128,
+                                      swizzle=a_smem_layout.inner)
+            sC = smem.allocate_tensor(self.c_dtype_in, b_smem_layout.outer, 128,
+                                      swizzle=b_smem_layout.inner)
+            sCsq = storage.sCsq.get_tensor(cute.make_layout((block_n,)))
+
+            gX = cute.local_tile(mX, cute.slice_(self.mma_tiler, (None, 0, None)),
+                                 (None, None, None))
+            gC = cute.local_tile(mC, cute.slice_(self.mma_tiler, (0, None, None)),
+                                 (None, None, None))
+            n_db_tiles = cute.size(gC, mode=[2])
+            k_tile_cnt = cute.size(gX, mode=[3])
+
+            thr_mma = tiled_mma.get_slice(0)
+            tCgX = thr_mma.partition_A(gX)
+            tCgC = thr_mma.partition_B(gC)
+            aL = cute.make_layout(
+                cute.slice_(cluster_layout_vmnk, (0, 0, None, 0)).shape)
+            tXsX, tXgX = cpasync.tma_partition(
+                tma_atom_a, 0, aL, cute.group_modes(sX, 0, 3),
+                cute.group_modes(tCgX, 0, 3))
+            bL = cute.make_layout(
+                cute.slice_(cluster_layout_vmnk, (0, None, 0, 0)).shape)
+            tCsC, tCgC2 = cpasync.tma_partition(
+                tma_atom_b, 0, bL, cute.group_modes(sC, 0, 3),
+                cute.group_modes(tCgC, 0, 3))
+
+            tCrX = tiled_mma.make_fragment_A(sX)
+            tCrC = tiled_mma.make_fragment_B(sC)
+            acc_shape = tiled_mma.partition_shape_C(self.mma_tiler[:2])
+            tCtAcc_fake = tiled_mma.make_fragment_C(acc_shape)
+
+            pipeline_init_wait()
+            tmem.allocate(self.num_tmem_alloc_cols)
+            tmem.wait_for_alloc()
+            tmem_ptr = tmem.retrieve_ptr(self.acc_dtype)
+            tCtAcc = cute.make_tensor(tmem_ptr, tCtAcc_fake.layout)
+
+            tXgX = tXgX[(None, bidx, None, 0)]
+
+            copy_atom_t2r = sm100_utils.get_tmem_load_op(
+                self.cta_tile_shape_mnk, self.c_layout, cutlass.Float32,
+                self.acc_dtype, self.epi_tile, False)
+            tAcc_epi = cute.flat_divide(tCtAcc[((None, None), 0, 0)],
+                                        self.epi_tile)
+            tiled_copy_t2r = tcgen05.make_tmem_copy(
+                copy_atom_t2r, tAcc_epi[(None, None, 0, 0)])
+            thr_t2r = tiled_copy_t2r.get_slice(tidx)
+            tTR_tAcc = thr_t2r.partition_S(tAcc_epi)
+            tTR_rAcc = cute.make_rmem_tensor(
+                cute.make_layout(((block_n, 1), 1, 1)), self.acc_dtype)
+
+            tmem.relinquish_alloc_permit()
+
+            best_s = cutlass.Float32(INF)
+            best_i = cutlass.Int32(-1)
+            nkb = cute.size(tCrX, mode=[2])
+
+            if is_load:
+                # ---- LOAD warp: stream (X chunk, C chunk) for every centroid
+                # tile x D-chunk. X is re-fetched per centroid tile (L2 hit).
+                for dd in cutlass.range(n_db_tiles):
+                    for kk in cutlass.range(k_tile_cnt):
+                        x_pipeline.producer_acquire(x_prod)
+                        barx = x_pipeline.producer_get_barrier(x_prod)
+                        cute.copy(tma_atom_a, tXgX[(None, kk)],
+                                  tXsX[(None, x_prod.index)], tma_bar_ptr=barx,
+                                  mcast_mask=None)
+                        x_prod.advance()
+                        c_pipeline.producer_acquire(c_prod)
+                        barc = c_pipeline.producer_get_barrier(c_prod)
+                        cute.copy(tma_atom_b, tCgC2[(None, dd, kk, 0)],
+                                  tCsC[(None, c_prod.index)], tma_bar_ptr=barc,
+                                  mcast_mask=None)
+                        c_prod.advance()
+                x_pipeline.producer_tail(x_prod)
+                c_pipeline.producer_tail(c_prod)
+            elif is_mma:
+                # ---- MMA warp: accumulate each centroid tile's cross term
+                # over the D contraction into the single TMEM accumulator.
+                for dd in cutlass.range(n_db_tiles):
+                    acc_pipeline.producer_acquire(acc_prod)
+                    tiled_mma.set(tcgen05.Field.ACCUMULATE, False)
+                    for kk in cutlass.range(k_tile_cnt):
+                        x_pipeline.consumer_wait(x_cons)
+                        c_pipeline.consumer_wait(c_cons)
+                        for kb in cutlass.range(nkb, unroll_full=True):
+                            cute.gemm(tiled_mma, tCtAcc,
+                                      tCrX[(None, None, kb, x_cons.index)],
+                                      tCrC[(None, None, kb, c_cons.index)],
+                                      tCtAcc)
+                            tiled_mma.set(tcgen05.Field.ACCUMULATE, True)
+                        x_pipeline.consumer_release(x_cons)
+                        c_pipeline.consumer_release(c_cons)
+                        x_cons.advance()
+                        c_cons.advance()
+                    acc_pipeline.producer_commit(acc_prod)
+                    acc_prod.advance()
+            else:
+                # ---- epilogue: warps 0-3, one score-row per thread, argmin.
+                for dd in cutlass.range(n_db_tiles):
+                    base = dd * block_n
+                    if tidx < block_n:
+                        sCsq[tidx] = 0.5 * mCsq[base + tidx]
+                    acc_pipeline.consumer_wait(acc_cons)
+                    cute.copy(tiled_copy_t2r, tTR_tAcc[(None, None, None, 0, 0)],
+                              tTR_rAcc)
+                    acc_pipeline.consumer_release(acc_cons)
+                    acc_cons.advance()
+                    epi_bar.arrive_and_wait()
+                    frag = tTR_rAcc.load()
+                    best_s, best_i = self._consume_tile_argmin(
+                        best_s, best_i, frag, sCsq, base, block_n)
+                    epi_bar.arrive_and_wait()
+                if tidx < block_n:
+                    mOut[bidx * BLOCK_M + tidx] = best_i
+
+            cute.arch.sync_threads()
+            tmem.free(tmem_ptr)
+
+
 # ===========================================================================
 # Host driver + compiled-kernel cache.
 # ===========================================================================
@@ -1869,6 +2172,11 @@ def _pick_variant(N: int, D: int, K: int, block_n: int) -> str:
     regress (extra TMEM/register pressure without overlap) and are kept only
     for reference.
     """
+    # Large D (>256) cannot keep the 128xD point tile resident in SMEM
+    # (D=1024 alone is 256 KB > the 227 KB CTA budget), so xres/ws are out.
+    # The streaming kernel keeps SMEM O(depth*MMA_K) and handles any D.
+    if D > 256:
+        return "stream"
     n_db_tiles = K // block_n
     # ws is validated for the 128-wide MMA tile (its 2x64-col accumulator ring
     # mis-addresses TMEM); narrow (block_n=64, i.e. K<512) stays on xres.
@@ -1889,6 +2197,10 @@ def _pick_block_n(N: int, D: int, K: int) -> int:
     the bandwidth-bound large-N / small-K shapes where occupancy already
     saturates. Must divide K. Tuned on B200 against cake.
     """
+    # Large D is compute-bound: the wide 128-centroid MMA tile amortises the
+    # epilogue and there are always enough tiles (K is a multiple of 256).
+    if D > 256 and K % 128 == 0:
+        return 128
     # BN=128 wins across the board on B200 once there are enough centroid
     # tiles to amortise the wider TMEM-load/argmin epilogue (K >= 512); for
     # tiny K (256) the 64-wide tile keeps more CTAs busy. Measured vs cake.
@@ -1964,6 +2276,7 @@ def blackwell_assign_euclid(
             "dual": BlackwellFlashKmeansAssignDual,
             "paired": BlackwellFlashKmeansAssignPaired,
             "ws": BlackwellFlashKmeansAssignWS,
+            "stream": BlackwellFlashKmeansAssignStream,
             "base": BlackwellFlashKmeansAssign,
         }[variant]
         comp = cute.compile(kern_cls(block_n=block_n),
