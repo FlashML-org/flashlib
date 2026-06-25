@@ -39,6 +39,18 @@ labels, centroids, n_iter = flash_kmeans(x, n_clusters=1024, max_iters=20)
 Every primitive is exposed as a top-level `flash_*` function and as a
 sklearn-style class (`KMeans`, `PCA`, `HDBSCAN`, …).
 
+The Cake-generated Flash-KMeans assignment export is available as frozen CUDA
+source plus Python launch wrappers:
+
+```python
+from flashlib import flash_kmeans_assign_cake
+
+cluster_ids = flash_kmeans_assign_cake(points, centroids, arch="sm_100a")
+```
+
+The source-level export lives under `flashlib.kernels.cake`; it does not ship
+Cake, Loom, or Weave IR code.
+
 Index-based primitives like IVF-Flat and IVF-PQ (GPU approximate nearest
 neighbours) build an index once and query it many times:
 
