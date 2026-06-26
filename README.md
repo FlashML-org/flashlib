@@ -43,13 +43,20 @@ The Cake-generated Flash-KMeans assignment export is available as frozen CUDA
 source plus Python launch wrappers:
 
 ```python
-from flashlib import flash_kmeans_assign_cake
+from flashlib import flash_kmeans, flash_kmeans_assign_cake
 
 cluster_ids = flash_kmeans_assign_cake(points, centroids, arch="sm_100a")
+
+# Or run the KMeans dispatcher with Cake assignment kernels.
+labels, centroids, n_iter = flash_kmeans(
+    points, n_clusters=centroids.shape[1], init_centroids=centroids, backend="cake"
+)
 ```
 
-The source-level export lives under `flashlib.kernels.cake`; it does not ship
-Cake, Loom, or Weave IR code.
+The source-level export lives under `flashlib.primitives.kmeans.cake`, beside
+the `triton` and `cutedsl` KMeans backends. CUDA sources are packaged under
+`flashlib/primitives/kmeans/cake/csrc`; it does not ship Cake, Loom, or Weave
+IR code.
 
 Index-based primitives like IVF-Flat and IVF-PQ (GPU approximate nearest
 neighbours) build an index once and query it many times:

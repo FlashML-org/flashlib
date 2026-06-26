@@ -60,4 +60,4 @@ Issues = "https://github.com/FlashML-org/flashlib/issues"
 include = ["flashlib*"]
 
 [tool.setuptools.package-data]
-"flashlib.kernels.cake" = ["manifest.json", "cuda/*.cu"]
+"flashlib.primitives.kmeans.cake" = ["manifest.json", "csrc/*.cu"]

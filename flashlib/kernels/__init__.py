@@ -5,8 +5,6 @@ Submodules:
     connected_components  — edge-list union-find CC (Triton)
     flash_mst             — GPU-resident dense / sparse Boruvka MST (Triton)
     norm                  — forward LayerNorm / RMSNorm (Triton)
-    cake                  — Cake-generated frozen CUDA source exports
-
 Top-level helpers:
     cute_helpers          — small CuTeDSL utilities (dlpack wrap, jit cache,
                              stream wrap). Cross-cutting; not tied to one op.
@@ -15,7 +13,7 @@ from __future__ import annotations
 
 import importlib
 
-_SUBMODULES = {"distance", "connected_components", "flash_mst", "norm", "cake", "cute_helpers"}
+_SUBMODULES = {"distance", "connected_components", "flash_mst", "norm", "cute_helpers"}
 
 
 def __getattr__(name: str):

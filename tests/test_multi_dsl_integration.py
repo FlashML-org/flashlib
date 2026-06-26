@@ -127,7 +127,7 @@ def test_info_pareto_per_primitive():
 
 
 @pytest.mark.parametrize("alias", [
-    "flash_kmeans_triton", "flash_kmeans_cutedsl",
+    "flash_kmeans_triton", "flash_kmeans_cutedsl", "flash_kmeans_cake",
     "flash_knn_cutedsl",
     "flash_pca_cutedsl",
     "flash_dbscan_cutedsl",

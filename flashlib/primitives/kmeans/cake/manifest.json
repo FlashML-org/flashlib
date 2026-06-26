@@ -1,0 +1,1897 @@
+{
+  "export_sources": [
+    {
+      "kernel_name_prefixes": [
+        "kmeans_"
+      ],
+      "name": "flash_kmeans_assign",
+      "source_commit": "c0b6a9eb79161ae21ab642f3a553a521f3dbdc86",
+      "source_repo": "ssh://git@gitlab-master.nvidia.com:12051/cake/cake.git",
+      "upstream_merge_request": 149
+    }
+  ],
+  "format_version": 1,
+  "generated_at_utc": "2026-06-25T20:43:50.086416+00:00",
+  "generator": "loom.export.kernel_repo",
+  "kernels": [
+    {
+      "attr": "flash_kmeans_assign_cleanroom_tcgen05_v10",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_cleanroom_tcgen05_v10",
+      "launch_mode": "normal",
+      "name": "kmeans_v10",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 100352,
+      "source": "csrc/kmeans_v10.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_cleanroom_tcgen05_v10",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_cleanroom_tcgen05_v15",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_cleanroom_tcgen05_v15",
+      "launch_mode": "normal",
+      "name": "kmeans_v15",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 133120,
+      "source": "csrc/kmeans_v15.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_cleanroom_tcgen05_v15",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_d64_direct",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 51200,
+      "source": "csrc/kmeans_d64_direct.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_microdim_direct_9c0d_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_microdim_direct_9c0d_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_microdim_direct",
+      "parameters": [
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "centroids"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 51200,
+      "source": "csrc/kmeans_microdim_direct.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_microdim_direct_9c0d_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_microdim_pack_6cd2_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_microdim_pack_6cd2_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_microdim_pack",
+      "parameters": [
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "centroids"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x_pad"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "c_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_x_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_c_pad"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_microdim_pack.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_microdim_pack_6cd2_v1",
+      "threads": 256
+    },
+    {
+      "attr": "flash_kmeans_assign_microdim_6cd2_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_microdim_6cd2_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_microdim_main",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 51200,
+      "source": "csrc/kmeans_microdim_main.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_microdim_6cd2_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_lowdim_pack_e50c_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_lowdim_pack_e50c_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_lowdim_pack",
+      "parameters": [
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "centroids"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x_pad"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "c_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_x_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_c_pad"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_lowdim_pack.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_lowdim_pack_e50c_v1",
+      "threads": 256
+    },
+    {
+      "attr": "flash_kmeans_assign_lowdim_e50c_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_lowdim_e50c_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_lowdim_main",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 100352,
+      "source": "csrc/kmeans_lowdim_main.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_lowdim_e50c_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_gap_pad_pack_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_gap_pad_pack_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_gap_pad_pack",
+      "parameters": [
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "centroids"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x_pad"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "c_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D_PAD"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_x_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_c_pad"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_gap_pad_pack.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_gap_pad_pack_v1",
+      "threads": 256
+    },
+    {
+      "attr": "flash_kmeans_assign_d160_pad192_pack_f9b2_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_d160_pad192_pack_f9b2_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_pad192_pack",
+      "parameters": [
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "centroids"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x_pad"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "c_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_x_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_c_pad"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_pad192_pack.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_d160_pad192_pack_f9b2_v1",
+      "threads": 256
+    },
+    {
+      "attr": "flash_kmeans_assign_cleanroom_tcgen05_d160_pack_padded_b23d_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_cleanroom_tcgen05_d160_pack_padded_b23d_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_d160_padded_pack",
+      "parameters": [
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "centroids"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "x_pad"
+        },
+        {
+          "ctype": "__nv_bfloat16*",
+          "kind": "pointer",
+          "name": "c_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_x_pad"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "total_c_pad"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_d160_padded_pack.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_cleanroom_tcgen05_d160_pack_padded_b23d_v1",
+      "threads": 256
+    },
+    {
+      "attr": "flash_kmeans_assign_cleanroom_tcgen05_d160_splitd_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_cleanroom_tcgen05_d160_splitd_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_d160_splitd",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 165888,
+      "source": "csrc/kmeans_d160_splitd.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_cleanroom_tcgen05_d160_splitd_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_cleanroom_tcgen05_d192_single_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_cleanroom_tcgen05_d192_single_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_d192_single",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 149504,
+      "source": "csrc/kmeans_d192_single.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_cleanroom_tcgen05_d192_single_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_cleanroom_tcgen05_d192_splitd_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_cleanroom_tcgen05_d192_splitd_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_d192_splitd",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 198656,
+      "source": "csrc/kmeans_d192_splitd.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_cleanroom_tcgen05_d192_splitd_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_cleanroom_tcgen05_d256_single_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_cleanroom_tcgen05_d256_single_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_d256_single",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 198656,
+      "source": "csrc/kmeans_d256_single.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_cleanroom_tcgen05_d256_single_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_cleanroom_tcgen05_d256_splitd_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_cleanroom_tcgen05_d256_splitd_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_d256_splitd",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 264192,
+      "source": "csrc/kmeans_d256_splitd.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_cleanroom_tcgen05_d256_splitd_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_highd_splitd_6fcf_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_splitd_6fcf_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_splitd",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "x_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 51200,
+      "source": "csrc/kmeans_highd_splitd.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_splitd_6fcf_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_highd_splitk_partial_8de8_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_splitk_partial_8de8_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_splitk_partial",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "partial_scores"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "partial_indices"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 51200,
+      "source": "csrc/kmeans_highd_splitk_partial.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_splitk_partial_8de8_v1",
+      "threads": 192
+    },
+    {
+      "attr": "flash_kmeans_assign_highd_splitk_reduce_8de8_v1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_splitk_reduce_8de8_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_splitk_reduce",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "partial_scores"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "partial_indices"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_highd_splitk_reduce.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_splitk_reduce_8de8_v1",
+      "threads": 128
+    },
+    {
+      "attr": "kmeans_highd_splitk_blockn64_g2r4_partial",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_splitk_partial_blockn64_g2r4_b5a6_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_splitk_blockn64_g2r4_partial",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "partial_scores"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "partial_indices"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_slices"
+        }
+      ],
+      "shared_mem_bytes": 43008,
+      "source": "csrc/kmeans_highd_splitk_blockn64_g2r4_partial.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_splitk_partial_blockn64_g2r4_b5a6_v1",
+      "threads": 192
+    },
+    {
+      "attr": "kmeans_highd_splitk_blockn64_g2r4_reduce",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_splitk_reduce_blockn64_g2r4_b5a6_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_splitk_blockn64_g2r4_reduce",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "partial_scores"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "partial_indices"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_slices"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_highd_splitk_blockn64_g2r4_reduce.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_splitk_reduce_blockn64_g2r4_b5a6_v1",
+      "threads": 256
+    },
+    {
+      "attr": "kmeans_highd_splitk_blockn64_g1r4_partial",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_splitk_partial_blockn64_g1r4_streamdep_r63_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_splitk_blockn64_g1r4_partial",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "partial_scores"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "partial_indices"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_slices"
+        }
+      ],
+      "shared_mem_bytes": 43008,
+      "source": "csrc/kmeans_highd_splitk_blockn64_g1r4_partial.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_splitk_partial_blockn64_g1r4_streamdep_r63_v1",
+      "threads": 192
+    },
+    {
+      "attr": "kmeans_highd_splitk_blockn64_g1r4_reduce",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_splitk_reduce_blockn64_g1r4_streamdep_r63_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_splitk_blockn64_g1r4_reduce",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "partial_scores"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "partial_indices"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_slices"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_highd_splitk_blockn64_g1r4_reduce.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_splitk_reduce_blockn64_g1r4_streamdep_r63_v1",
+      "threads": 256
+    },
+    {
+      "attr": "kmeans_highd_paired_xreuse_r47_partial",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_paired_xreuse_dualtmem_producer_r47_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_paired_xreuse_r47_partial",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "uint64_t*",
+          "kind": "pointer",
+          "name": "partial_keys"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_slices"
+        }
+      ],
+      "shared_mem_bytes": 75776,
+      "source": "csrc/kmeans_highd_paired_xreuse_r47_partial.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_paired_xreuse_dualtmem_producer_r47_v1",
+      "threads": 192
+    },
+    {
+      "attr": "kmeans_highd_paired_ownerreduce_r39_reduce1",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_paired_ownerreduce_r39_reduce1_unroll_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_paired_ownerreduce_r39_reduce1",
+      "parameters": [
+        {
+          "ctype": "uint64_t*",
+          "kind": "pointer",
+          "name": "partial_keys"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_slices"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_highd_paired_ownerreduce_r39_reduce1.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_paired_ownerreduce_r39_reduce1_unroll_v1",
+      "threads": 64
+    },
+    {
+      "attr": "kmeans_highd_paired_packedpartial_r2_partial",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_paired_packedpartial_producer_7b3c_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_paired_packedpartial_r2_partial",
+      "parameters": [
+        {
+          "ctype": "float*",
+          "kind": "pointer",
+          "name": "c_sq"
+        },
+        {
+          "ctype": "uint64_t*",
+          "kind": "pointer",
+          "name": "partial_keys"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "x_tmap"
+        },
+        {
+          "ctype": "const void*",
+          "kind": "pointer",
+          "name": "c_tmap"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "D"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_slices"
+        }
+      ],
+      "shared_mem_bytes": 43008,
+      "source": "csrc/kmeans_highd_paired_packedpartial_r2_partial.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_paired_packedpartial_producer_7b3c_v1",
+      "threads": 192
+    },
+    {
+      "attr": "kmeans_highd_paired_packedpartial_r2_reduce",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "ir_name": "flash_kmeans_assign_highd_paired_packedpartial_reduce_r2_7b3c_v1",
+      "launch_mode": "normal",
+      "name": "kmeans_highd_paired_packedpartial_r2_reduce",
+      "parameters": [
+        {
+          "ctype": "uint64_t*",
+          "kind": "pointer",
+          "name": "partial_keys"
+        },
+        {
+          "ctype": "int32_t*",
+          "kind": "pointer",
+          "name": "out"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "B"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "N"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "num_n_tiles"
+        },
+        {
+          "ctype": "int",
+          "kind": "value",
+          "name": "K_slices"
+        }
+      ],
+      "shared_mem_bytes": 0,
+      "source": "csrc/kmeans_highd_paired_packedpartial_r2_reduce.cu",
+      "specializations": {},
+      "symbol": "kernel_flash_kmeans_assign_highd_paired_packedpartial_reduce_r2_7b3c_v1",
+      "threads": 128
+    }
+  ],
+  "package": "flashlib.primitives.kmeans.cake",
+  "source_commit": "c0b6a9eb79161ae21ab642f3a553a521f3dbdc86",
+  "source_repo": "ssh://git@gitlab-master.nvidia.com:12051/cake/cake.git"
+}
