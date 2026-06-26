@@ -58,3 +58,6 @@ Issues = "https://github.com/FlashML-org/flashlib/issues"
 
 [tool.setuptools.packages.find]
 include = ["flashlib*"]
+
+[tool.setuptools.package-data]
+"flashlib.primitives.kmeans.cake" = ["manifest.json", "csrc/*.cu"]

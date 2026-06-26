@@ -37,6 +37,7 @@ _OP_REGISTRY: dict[str, str] = {
     # === per-backend primitive variants (Triton vs CuteDSL) ===================
     "kmeans_triton":            "flashlib.primitives.kmeans.cost:estimate_kmeans_triton",
     "kmeans_cutedsl":           "flashlib.primitives.kmeans.cost:estimate_kmeans_cutedsl",
+    "kmeans_cake":              "flashlib.primitives.kmeans.cost:estimate_kmeans_cake",
     "knn_triton":               "flashlib.primitives.knn.cost:estimate_knn_triton",
     "knn_cutedsl_fa3":          "flashlib.primitives.knn.cost:estimate_knn_cutedsl_fa3",
     "ivf_flat_triton":          "flashlib.primitives.ivf_flat.cost:estimate_ivf_flat_triton",
@@ -128,7 +129,7 @@ _VARIANTS: dict[str, list[str]] = {
         "polar_qdwh_hybrid", "polar_express", "polar_express_warm", "polar_zolo",
     ],
     # Per-primitive Triton-vs-CuteDSL families.
-    "kmeans":               ["kmeans_triton", "kmeans_cutedsl"],
+    "kmeans":               ["kmeans_triton", "kmeans_cutedsl", "kmeans_cake"],
     # Triton (default-routed) + CuteDSL FA3 (opt-in via backend='cutedsl').
     "knn":                  ["knn_triton", "knn_cutedsl_fa3"],
     # ivf_flat / ivf_pq are single-GPU-backend (Triton only; torch is a CPU

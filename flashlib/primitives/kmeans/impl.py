@@ -9,6 +9,9 @@ Backends:
                           (H100/H200, B=1, fp16/bf16, D <= 512). Falls
                           back to Triton when the kernel cannot run
                           (B>1, large D, no CUTLASS DSL).
+    backend="cake"     -- Cake MR149 source-level CUDA assignment kernels
+                          plus torch centroid update (Blackwell, bf16,
+                          euclidean only).
     backend="torch"    -- pure-torch chunked reference (CPU-OK).
 
 Variant aliases inside Triton:
@@ -30,20 +33,15 @@ from typing import Optional, Tuple
 import torch
 
 from flashlib import _hw
-from flashlib.primitives.kmeans.cutedsl import cutedsl_kmeans_Euclid
 from flashlib.primitives.kmeans.torch_fallback import (
     batch_kmeans_Euclid_torch_native,
-)
-from flashlib.primitives.kmeans.triton.kmeans import (
-    batch_kmeans_Euclid,
-    batch_kmeans_Cosine,
-    batch_kmeans_Dot,
 )
 
 
 Backend = str
 Variant = Optional[str]
 Decision = Tuple[Backend, Variant]
+_VALID_BACKENDS = {"triton", "cutedsl", "cake", "torch"}
 
 
 def _route(
@@ -79,6 +77,9 @@ def _route(
       | 512K, 256, 16384    | 67.15   | 41.35     | 1.62x |
     """
     if backend is not None:
+        if backend not in _VALID_BACKENDS:
+            choices = "', '".join(sorted(_VALID_BACKENDS))
+            raise ValueError(f"unknown kmeans backend {backend!r}; use '{choices}'")
         return backend, variant
     hw = hw or _hw.current()
     if not hw.is_cuda:
@@ -120,7 +121,7 @@ def flash_kmeans(
         precision tol used by other flashlib dispatchers -- k-means has
         no residual concept).
     metric : {"euclidean", "cosine", "dot"}.
-    backend : {"triton", "cutedsl", "torch"}, optional.
+    backend : {"triton", "cutedsl", "cake", "torch"}, optional.
     variant : str, optional -- backend-specific.
     """
     if x.ndim == 2:
@@ -144,6 +145,8 @@ def flash_kmeans(
             init_centroids=init_centroids, verbose=verbose, **kwargs,
         )
     elif chosen == "cutedsl":
+        from flashlib.primitives.kmeans.cutedsl import cutedsl_kmeans_Euclid
+
         if metric != "euclidean":
             raise NotImplementedError(
                 f"cutedsl backend currently supports euclidean only "
@@ -153,7 +156,25 @@ def flash_kmeans(
             x_b, n_clusters, max_iters=max_iters, tol=tol,
             init_centroids=init_centroids, verbose=verbose, **kwargs,
         )
-    else:
+    elif chosen == "cake":
+        from flashlib.primitives.kmeans.cake import batch_kmeans_Euclid as batch_kmeans_Euclid_cake
+
+        if metric != "euclidean":
+            raise NotImplementedError(
+                f"cake backend currently supports euclidean only "
+                f"(got {metric!r}); fall back to backend='triton' for cosine/dot."
+            )
+        cluster_ids, centroids, n_iter = batch_kmeans_Euclid_cake(
+            x_b, n_clusters, max_iters=max_iters, tol=tol,
+            init_centroids=init_centroids, verbose=verbose, **kwargs,
+        )
+    elif chosen == "triton":
+        from flashlib.primitives.kmeans.triton.kmeans import (
+            batch_kmeans_Cosine,
+            batch_kmeans_Dot,
+            batch_kmeans_Euclid,
+        )
+
         if metric == "euclidean":
             cluster_ids, centroids, n_iter = batch_kmeans_Euclid(
                 x_b, n_clusters, max_iters=max_iters, tol=tol,
@@ -171,6 +192,8 @@ def flash_kmeans(
             )
         else:
             raise ValueError(f"unknown metric {metric!r}")
+    else:
+        raise AssertionError(f"unhandled kmeans backend {chosen!r}")
     if squeeze_out:
         cluster_ids = cluster_ids.squeeze(0)
         centroids = centroids.squeeze(0)

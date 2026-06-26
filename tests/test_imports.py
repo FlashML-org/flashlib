@@ -8,6 +8,7 @@ def test_top_level_primitives():
         # algorithm primitives
         "flash_kmeans", "batch_kmeans_Euclid", "batch_kmeans_Cosine",
         "batch_kmeans_Dot", "kmeans_largeN", "kmeans_largeN_assign",
+        "flash_kmeans_cake", "flash_kmeans_assign_cake",
         "flash_knn",
         "flash_ivf_flat", "flash_ivf_flat_build", "flash_ivf_flat_search",
         "IvfFlatIndex",

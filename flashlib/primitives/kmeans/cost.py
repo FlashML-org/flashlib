@@ -2,7 +2,8 @@
 
 ``estimate(...)`` mirrors the runtime ``flash_kmeans`` dispatcher: it picks
 a backend by ``(shape, tol, backend)`` and returns that backend's estimate.
-``estimate_kmeans_triton`` and ``estimate_kmeans_cutedsl`` are exposed
+``estimate_kmeans_triton``, ``estimate_kmeans_cutedsl``, and
+``estimate_kmeans_cake`` are exposed
 separately so ``info.variants("kmeans", ...)`` can compare the alternatives
 without running anything.
 
@@ -137,6 +138,46 @@ def estimate_kmeans_cutedsl(shape, params=None, tol=None, dtype="float32",
             f"B={B}, N={N}, D={D}, K={K}, niter={niter}",
             "Hopper TMA+WGMMA fused assign; B=1, 16<=D<=512, 16|D required.",
             note_speedup,
+        ],
+        expected_residual=None, precision_tier="exact", tol=tol,
+    )
+
+
+def estimate_kmeans_cake(shape, params=None, tol=None, dtype="bfloat16",
+                         device="B200", **_):
+    """Cake MR149 source-level CUDA assignment backend.
+
+    The runtime backend uses Cake assignment kernels plus the existing torch
+    centroid update path, so the cost model keeps two launches per Lloyd
+    iteration and marks coverage as Blackwell/bf16 focused.
+    """
+    B, N, D, K, niter = common(shape, params)
+    dtype_bytes = 2
+    flops_iter, bytes_iter = _assign_flops_bytes(B, N, D, K, dtype_bytes)
+    flops = niter * flops_iter
+    bytes_moved = niter * bytes_iter
+    n_launches = 2 * niter
+    rt, bound = roofline(flops, bytes_moved, "bf16", device, op_type="kmeans",
+                          n_launches=n_launches)
+    supported_dim = D in {
+        16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192,
+        224, 256, 288, 320, 352, 384, 416, 448, 480, 512,
+    }
+    return Estimate(
+        op_name="kmeans_cake",
+        runtime_ms=rt, flops=flops, bytes_moved=bytes_moved,
+        memory_peak_gb=B * N * D * dtype_bytes / 1e9,
+        bound=bound, confidence="measured", n_kernel_launches=n_launches,
+        suggested_config={
+            "backend": "cake",
+            "arch": "sm_100a",
+            "variant": "no_padding_r63" if B == 1 and D >= 320 and supported_dim else "cleanroom_tcgen05",
+        },
+        subops=[],
+        notes=[
+            f"B={B}, N={N}, D={D}, K={K}, niter={niter}",
+            "Cake MR149 source-level CUDA assignment backend; bf16/Blackwell focused.",
+            "Centroid update currently uses the torch path.",
         ],
         expected_residual=None, precision_tier="exact", tol=tol,
     )
