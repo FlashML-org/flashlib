@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "flashlib"
 version = "0.2.0"
-description = "High-performance ML primitives, applications, and informative cost API — Triton + CuteDSL kernels for NVIDIA GPUs."
+description = "High-performance ML primitives, applications, and informative cost API — Triton + CuteDSL kernels for NVIDIA GPUs, plus an AWS Trainium (NKI) backend."
 requires-python = ">=3.9"
 readme = "README.md"
 license = "Apache-2.0"
@@ -16,7 +16,7 @@ authors = [
 maintainers = [
     {name = "Shuo Yang", email = "andy_yang@berkeley.edu"},
 ]
-keywords = ["triton", "cutedsl", "gpu", "machine-learning", "kmeans", "knn", "pca", "dbscan", "hdbscan", "umap", "cuml"]
+keywords = ["triton", "cutedsl", "trainium", "nki", "neuron", "gpu", "machine-learning", "kmeans", "knn", "pca", "dbscan", "hdbscan", "umap", "cuml"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -41,6 +41,14 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "scikit-learn>=1.5,<1.8", "tqdm"]
+# AWS Trainium / Inferentia (NKI) backend. The Neuron SDK is NOT on PyPI --
+# install neuronx-cc (ships the `neuronxcc`/`nki` compiler) and
+# torch-neuronx from the AWS Neuron pip index, e.g.:
+#   pip install --index-url https://pip.repos.neuron.amazonaws.com \
+#       neuronx-cc torch-neuronx
+# On a Neuron DLAMI these are pre-installed in /opt/aws_neuronx_venv_*.
+# Only ml_dtypes (bf16 numpy marshalling) is a plain PyPI dep here.
+trainium = ["ml_dtypes"]
 bench = [
     "scikit-learn>=1.5,<1.8",
     "tqdm",

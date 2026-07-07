@@ -44,8 +44,14 @@ def estimate(shape, params=None, tol=None, dtype="float32", device="H100", **_):
     Triton is the default (broadest coverage: any B, any D, all metrics).
     CuteDSL is reachable only when the FA3 kernel constraints are met
     (B=1, 16 <= D <= 512, D % 16 = 0); otherwise the cost model falls
-    back to Triton.
+    back to Triton. On a Trainium device (``device`` starting ``trn``),
+    the NKI backend is modelled instead.
     """
+    if str(device).lower().startswith("trn"):
+        est = estimate_kmeans_trainium(shape, params=params, tol=tol,
+                                       dtype=dtype, device=device)
+        est.tol = tol
+        return est
     est = estimate_kmeans_triton(shape, params=params, tol=tol, dtype=dtype,
                                   device=device)
     est.op_name = "kmeans_triton"
@@ -137,6 +143,45 @@ def estimate_kmeans_cutedsl(shape, params=None, tol=None, dtype="float32",
             f"B={B}, N={N}, D={D}, K={K}, niter={niter}",
             "Hopper TMA+WGMMA fused assign; B=1, 16<=D<=512, 16|D required.",
             note_speedup,
+        ],
+        expected_residual=None, precision_tier="exact", tol=tol,
+    )
+
+
+def estimate_kmeans_trainium(shape, params=None, tol=None, dtype="bf16",
+                             device="trn2", **_):
+    """AWS Trainium NKI backend (single NeuronCore).
+
+    The flash assign is a ``2*N*K*D`` matmul on the PE array with a
+    streaming argmax epilogue; the Lloyd update is a second one-hot matmul
+    of the same order (``~2*N*K*D``), so per-iter FLOPs are modelled at
+    ``2x`` the assign. bf16 inputs / fp32 accumulate. Calibrated sustained
+    throughput lives in :data:`flashlib.info.roofline._SUSTAINED_TFLOPS`
+    under ``("kmeans", "bf16", "trn2")``; utilization is argmax-epilogue-
+    bound at small D and matmul-bound (~47% of the single-core bf16 peak)
+    at D=512.
+    """
+    B, N, D, K, niter = common(shape, params)
+    dtype_bytes = 2
+    assign_flops, bytes_iter = _assign_flops_bytes(B, N, D, K, dtype_bytes)
+    # assign matmul + one-hot-matmul update (both ~2*N*K*D on the PE array).
+    flops_iter = 2 * assign_flops
+    flops = niter * flops_iter
+    bytes_moved = niter * bytes_iter
+    n_launches = niter          # one fused assign+update kernel per iter
+    rt, bound = roofline(flops, bytes_moved, "bf16", device, op_type="kmeans",
+                          n_launches=n_launches)
+    return Estimate(
+        op_name="kmeans_trainium",
+        runtime_ms=rt, flops=flops, bytes_moved=bytes_moved,
+        memory_peak_gb=B * N * D * 2 / 1e9,
+        bound=bound, confidence="measured", n_kernel_launches=n_launches,
+        suggested_config={"MT": 128, "BK": 512},
+        subops=[],
+        notes=[
+            f"B={B}, N={N}, D={D}, K={K}, niter={niter}",
+            "Trainium NKI nc_matmul assign + one-hot-matmul update; "
+            "B=1, euclidean, D<=512, bf16. Single NeuronCore.",
         ],
         expected_residual=None, precision_tier="exact", tol=tol,
     )

@@ -49,10 +49,12 @@ _LAZY_ATTRS: dict[str, tuple[str, str]] = {
     "flash_kmeans":              ("flashlib.primitives.kmeans", "flash_kmeans"),
     "flash_kmeans_triton":       ("flashlib.primitives.kmeans", "flash_kmeans_triton"),
     "flash_kmeans_cutedsl":      ("flashlib.primitives.kmeans", "flash_kmeans_cutedsl"),
+    "flash_kmeans_trainium":     ("flashlib.primitives.kmeans", "flash_kmeans_trainium"),
     # knn -- single fused entry point (Triton default, CuteDSL FA3 opt-in).
     "flash_knn":                  ("flashlib.primitives.knn", "flash_knn"),
     "flash_knn_triton":           ("flashlib.primitives.knn", "flash_knn_triton"),
     "flash_knn_cutedsl":          ("flashlib.primitives.knn", "cutedsl_flash_knn"),
+    "flash_knn_trainium":         ("flashlib.primitives.knn", "trainium_knn"),
     "flash_knn_dispatch":         ("flashlib.primitives.knn", "flash_knn_dispatch"),
     # ivf-flat -- GPU ANN (inverted file); build once, search many.
     "flash_ivf_flat":             ("flashlib.primitives.ivf_flat", "flash_ivf_flat"),

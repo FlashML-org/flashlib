@@ -24,10 +24,36 @@ from typing import Optional
 import torch
 
 from flashlib import _hw
-from flashlib.kernels.distance.triton.knn_gather_l2sq import triton_knn_gather_sqdist
-from flashlib.primitives.knn.cutedsl import cutedsl_available, cutedsl_flash_knn
 from flashlib.primitives.knn.torch_fallback import knn_torch_naive
-from flashlib.primitives.knn.triton.dispatch import flash_knn_triton
+
+
+# ---------------------------------------------------------------------------
+# Lazy backend loaders. The CuteDSL backend imports ``cuda`` / ``cutlass`` at
+# module load (via ``cutedsl/__init__ -> hopper_impl``), and the Triton kernels
+# import ``triton``; eager top-level imports therefore make ``import
+# flashlib.primitives.knn`` fail on a CUDA-less box (e.g. an AWS Trainium
+# instance, which has neither ``cuda`` nor a usable GPU Triton). Defer them
+# until the router actually selects that backend -- mirroring
+# ``kmeans/impl.py`` -- so the package imports (and the Trainium/torch paths
+# work) everywhere.
+# ---------------------------------------------------------------------------
+def _load_flash_knn_triton():
+    from flashlib.primitives.knn.triton.dispatch import flash_knn_triton
+    return flash_knn_triton
+
+
+def _load_triton_gather():
+    from flashlib.kernels.distance.triton.knn_gather_l2sq import (
+        triton_knn_gather_sqdist,
+    )
+    return triton_knn_gather_sqdist
+
+
+def _load_cutedsl():
+    from flashlib.primitives.knn.cutedsl import (
+        cutedsl_available, cutedsl_flash_knn,
+    )
+    return cutedsl_available, cutedsl_flash_knn
 
 
 Backend = str
@@ -57,6 +83,13 @@ def _route(
             )
         return backend
     hw = hw or _hw.current()
+    if hw.is_neuron:
+        # AWS Trainium/Inferentia: the NKI backend is the only GPU-class path
+        # (no CUDA). v1 handles squared-L2, B==1, k<=64; the corpus-size limit
+        # (M<=16384) is enforced in the dispatcher, which falls back to torch.
+        if B == 1 and k <= 64:
+            return "trainium"
+        return "torch"
     if not hw.is_cuda:
         return "torch"
     return "triton"
@@ -65,11 +98,12 @@ def _route(
 # Backends are DSL-only: the hardware (Hopper vs Blackwell) is NOT a
 # backend -- the router picks the matching CuteDSL kernel by hardware
 # inside ``_cutedsl_knn``.
-_VALID_BACKENDS = ("triton", "cutedsl", "torch")
+_VALID_BACKENDS = ("triton", "cutedsl", "torch", "trainium")
 
 _OP_NAME = {
     "triton":  "knn_triton",
     "cutedsl": "knn_cutedsl_fa3",
+    "trainium": "knn_trainium",
     "torch":   "knn_torch",
 }
 
@@ -144,7 +178,7 @@ def _cutedsl_autopick(x: torch.Tensor, c: torch.Tensor, k: int,
             return False
         if N < _HOPPER_BUILD_NMIN or k > _HOPPER_BUILD_KMAX:
             return False
-        return cutedsl_available()
+        return _load_cutedsl()[0]()
 
     return False
 
@@ -157,6 +191,7 @@ def _cutedsl_knn(x: torch.Tensor, c: torch.Tensor, k: int,
         from flashlib.primitives.knn.cutedsl.blackwell_impl import (
             blackwell_flash_knn)
         return blackwell_flash_knn(x, c, k)
+    _, cutedsl_flash_knn = _load_cutedsl()
     return cutedsl_flash_knn(x, c, k, **kwargs)
 
 
@@ -251,6 +286,23 @@ def flash_knn_dispatch(
             return vals[0], idxs[0]
         return vals, idxs
 
+    if chosen == "trainium":
+        # NKI flash-knn (Trainium): fused matmul + max8/nc_match_replace8 top-k,
+        # own fp32 true-distance epilogue (no CUDA Triton gather). Falls back to
+        # the torch reference for shapes it doesn't cover (e.g. M > 16384).
+        from flashlib.primitives.knn.trainium import trainium_knn
+        try:
+            res = trainium_knn(x, c, k, return_distances=return_distances)
+        except NotImplementedError:
+            vals, idxs = knn_torch_naive(x, c, k)
+            res = idxs if not return_distances else (vals, idxs)
+        # ``x``/``c`` were unsqueezed to 3-D above; drop the batch axis if the
+        # caller passed 2-D (mirrors the torch/triton branches' convention).
+        if not return_distances:
+            return res[0] if squeeze else res
+        vals, idxs = res
+        return (vals[0], idxs[0]) if squeeze else (vals, idxs)
+
     from flashlib.linalg.gemm import storage_dtype_for
     target_dtype = storage_dtype_for(tol)
     if target_dtype is not None and x.dtype != target_dtype:
@@ -268,12 +320,12 @@ def flash_knn_dispatch(
     if use_cutedsl:
         idxs = _cutedsl_knn(x_p, c_p, k, hw, **kwargs)
     else:
-        idxs = flash_knn_triton(x_p, c_p, k, **kwargs)
+        idxs = _load_flash_knn_triton()(x_p, c_p, k, **kwargs)
 
     if not return_distances:
         return idxs[0] if squeeze else idxs
 
-    vals = triton_knn_gather_sqdist(x_p, c_p, idxs)
+    vals = _load_triton_gather()(x_p, c_p, idxs)
     if squeeze:
         return vals[0], idxs[0]
     return vals, idxs

@@ -25,6 +25,8 @@ all rules can still pattern-match on.
 
 from __future__ import annotations
 
+import glob
+import os
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Optional
@@ -92,6 +94,15 @@ class HwProps:
     def is_cuda(self) -> bool:
         return self.sm_arch > 0
 
+    @property
+    def is_neuron(self) -> bool:
+        """True on an AWS Trainium/Inferentia (NeuronDevice) host.
+
+        Used by routing rules to select the NKI (``trainium``) backend.
+        ``sm_arch`` stays 0 (no CUDA), so ``is_cuda`` is False.
+        """
+        return self.device_tag.startswith("trn") or self.device_tag.startswith("inf")
+
 
 # H200 has 60 MB L2; H100 has 50 MB; A100 has 40 MB. We use the device
 # *name* prefix to disambiguate inside the same compute capability.
@@ -130,6 +141,34 @@ def _classify(name: str, sm_arch: int) -> str:
     return "cpu"
 
 
+def _detect_neuron() -> Optional[HwProps]:
+    """Best-effort AWS NeuronDevice fingerprint (no torch/subprocess).
+
+    Detection is a cheap ``/dev/neuron*`` probe. The instance family
+    (``trn2`` vs ``trn1`` / ``inf2``) is read from the DMI product name
+    when available, else defaults to ``"trn2"`` (the primary target of the
+    NKI backends). ``sm_count`` carries the NeuronCore count.
+    """
+    devs = glob.glob("/dev/neuron*")
+    if not devs:
+        return None
+    tag = "trn2"
+    try:
+        with open("/sys/devices/virtual/dmi/id/product_name") as f:
+            product = f.read().strip().lower()
+        for family in ("trn2", "trn1", "inf2", "inf1"):
+            if family in product:
+                tag = family
+                break
+    except Exception:
+        pass
+    return HwProps(
+        device_tag=tag, sm_arch=0, sm_count=len(devs),
+        l2_bytes=0, smem_per_sm_bytes=0,
+        total_mem_bytes=0, name=f"neuron:{tag}",
+    )
+
+
 @lru_cache(maxsize=4)
 def current(device: Optional[int] = None) -> HwProps:
     """Return the cached :class:`HwProps` for the given (or default) device.
@@ -138,6 +177,9 @@ def current(device: Optional[int] = None) -> HwProps:
     routing path are free.
     """
     if not torch.cuda.is_available():
+        neuron = _detect_neuron()
+        if neuron is not None:
+            return neuron
         return HwProps(
             device_tag="cpu", sm_arch=0, sm_count=0,
             l2_bytes=0, smem_per_sm_bytes=0,

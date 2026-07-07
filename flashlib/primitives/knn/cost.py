@@ -239,6 +239,38 @@ def estimate_knn_cutedsl_fa3(shape, params=None, tol=None, dtype="float32",
     )
 
 
+def estimate_knn_trainium(shape, params=None, tol=None, dtype="bf16",
+                          device="trn2", **_):
+    """AWS Trainium (NKI) flash-knn: ``nc_matmul`` cross term + on-chip top-k
+    via ``max8`` / ``nc_match_replace8``, plus an fp32 gather for true
+    distances. Never materialises the ``(N, M)`` matrix.
+
+    v1 is single-shot (corpus resident, ``M <= 16384``); the build regime
+    shares the kmeans-assign matmul layout (calibrated ``knn_build`` sustained
+    TFLOPs for trn2), the small-Q search regime is corpus-DMA bound. The
+    baremetal path compiles once per shape (disk-cached).
+    """
+    B, N, M, D, k = common(shape, params)
+    dtype_bytes = 2 if dtype in ("fp16", "float16", "bf16", "bfloat16") else 4
+    flops, bytes_moved = _knn_compute_bytes(B, N, M, D, k, dtype_bytes)
+    rt, bound = roofline(flops, bytes_moved, dtype, device,
+                         op_type=_regime(B, N), n_launches=2)
+    res, tier = _residual(dtype, tol)
+    return Estimate(
+        op_name="knn_trainium",
+        runtime_ms=rt, flops=flops, bytes_moved=bytes_moved,
+        memory_peak_gb=(B * N * D + B * M * D) * dtype_bytes / 1e9,
+        bound=bound, confidence="roofline", n_kernel_launches=2,
+        suggested_config={"regime": _regime(B, N)}, subops=[],
+        notes=[
+            f"B={B}, N={N}, M={M}, D={D}, k={k}, dtype={dtype}",
+            "Trainium NKI: nc_matmul + max8/nc_match_replace8 top-k; v1 "
+            "M<=16384, B==1, k<=64 (else routes to torch).",
+        ],
+        expected_residual=res, precision_tier=tier, tol=tol,
+    )
+
+
 def estimate_knn_torch(shape, params=None, tol=None, dtype="float32",
                        device="H100", **_):
     """Pure-torch reference -- materialises the full ``(B, N, M)`` matrix."""

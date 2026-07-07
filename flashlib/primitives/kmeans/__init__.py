@@ -50,6 +50,16 @@ def flash_kmeans_cutedsl(x, n_clusters, **kw):
     return flash_kmeans(x, n_clusters, backend="cutedsl", **kw)
 
 
+def flash_kmeans_trainium(x, n_clusters, **kw):
+    """Force the AWS Trainium (NKI) backend.
+
+    Constraints: B=1, euclidean metric, D <= 512, bf16 matmul inputs
+    (fp32 accumulate). Runs on a NeuronDevice host (Trainium/Inferentia);
+    requires the Neuron NKI toolchain (``neuronxcc``).
+    """
+    return flash_kmeans(x, n_clusters, backend="trainium", **kw)
+
+
 cutedsl_assign_euclid = lazy_attr(
     "flashlib.primitives.kmeans.cutedsl",
     "cutedsl_assign_euclid",
@@ -58,12 +68,21 @@ cutedsl_kmeans_Euclid = lazy_attr(
     "flashlib.primitives.kmeans.cutedsl",
     "cutedsl_kmeans_Euclid",
 )
+trainium_assign_euclid = lazy_attr(
+    "flashlib.primitives.kmeans.trainium",
+    "trainium_assign_euclid",
+)
+trainium_kmeans_Euclid = lazy_attr(
+    "flashlib.primitives.kmeans.trainium",
+    "trainium_kmeans_Euclid",
+)
 
 
 __all__ = [
     "flash_kmeans",
     "flash_kmeans_triton",
     "flash_kmeans_cutedsl",
+    "flash_kmeans_trainium",
     "batch_kmeans_Euclid",
     "batch_kmeans_Cosine",
     "batch_kmeans_Dot",
@@ -79,5 +98,7 @@ __all__ = [
     "kmeans_largeN_assign",
     "cutedsl_assign_euclid",
     "cutedsl_kmeans_Euclid",
+    "trainium_assign_euclid",
+    "trainium_kmeans_Euclid",
     "cost",
 ]

@@ -55,6 +55,21 @@ _HARDWARE: dict[str, dict[str, float]] = {
         "int8_tflops": 624.0,
         "bw_tbs":       2.04,
     },
+    # AWS Trainium2 (NeuronCore-v3), *per single NeuronCore*. The flashlib
+    # NKI kmeans backend runs single-core via nki.baremetal; bf16 is the
+    # measured compute-bound matmul ceiling (128x128x512 tile, both operands
+    # resident) from benchmarks/micro/bench_kmeans_trainium.py. Other dtypes
+    # / bandwidth are approximate. Multiply by the NeuronCore count for a
+    # whole-chip figure.
+    "trn2": {
+        "fp64_tflops":  0.0,     # no fp64 matmul path
+        "fp32_tflops": 20.0,
+        "tf32_tflops": 47.0,
+        "fp16_tflops": 75.0,
+        "bf16_tflops": 75.0,     # measured achievable single-core peak
+        "int8_tflops": 150.0,
+        "bw_tbs":       1.5,     # conservative per-core effective HBM
+    },
 }
 
 
@@ -137,6 +152,12 @@ _SUSTAINED_TFLOPS: dict[tuple[str, str, str], float] = {
     # ``_SUSTAINED_BW_TBS`` handles those).
     ("kmeans", "bf16", "H200"): 400.0,
     ("kmeans", "fp32", "H200"): 200.0,
+    # ─── KMeans assign (Trainium NKI, single NeuronCore) ──────────────────
+    # Measured with benchmarks/micro/bench_kmeans_trainium.py: the flash
+    # assign is argmax-epilogue-bound at small D and matmul-bound at large D
+    # -- ~9 TF (D=128) rising to ~35 TF (D=512, ~47% of the 75 TF single-
+    # core bf16 ceiling). ~18 TF is a representative D=256 sustained value.
+    ("kmeans", "bf16", "trn2"): 18.0,
     # ─── KNN insert / sortmerge kernels (x²-free score) ───────────────────
     # Two distinct regimes -- the KNN cost.py picks the appropriate
     # op_class based on (B*N) saturating the SMs:
@@ -148,6 +169,14 @@ _SUSTAINED_TFLOPS: dict[tuple[str, str, str], float] = {
     ("knn_build",  "fp32", "H200"): 260.0,
     ("knn_search", "bf16", "H200"):  80.0,
     ("knn_search", "fp32", "H200"):  40.0,
+    # Trainium NKI flash-knn (nc_matmul cross + max8/nc_match_replace8 top-k),
+    # single NeuronCore. The build regime shares the assign kernel's matmul
+    # layout so it tracks the ~18 TF kmeans-assign sustained figure (bf16,
+    # D=256-representative); the search regime is corpus-DMA bound and reports
+    # well below peak. Conservative starting points -- re-measure with
+    # benchmarks/micro/bench_knn_trainium.py.
+    ("knn_build",  "bf16", "trn2"):  18.0,
+    ("knn_search", "bf16", "trn2"):   8.0,
     # ─── IVF-Flat fused fine-scan ─────────────────────────────────────────
     # The online path is bandwidth-bound (the ``_SUSTAINED_BW_TBS`` entry
     # below dominates the estimate); these compute numbers track the
@@ -177,6 +206,7 @@ _SUSTAINED_BW_TBS: dict[tuple[str, str], float] = {
     # from benchmarks/results/full_speedup_report.md.
     ("kmeans",      "H200"): 1.1,
     ("kmeans",      "H100"): 0.8,
+    ("kmeans",      "trn2"): 0.9,   # per-core effective; assign re-reads points
     # KNN insert at large NB shows the same L2-spill pattern.
     ("knn_build",   "H200"): 1.4,
     ("knn_build",   "H100"): 1.0,

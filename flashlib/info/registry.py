@@ -37,8 +37,10 @@ _OP_REGISTRY: dict[str, str] = {
     # === per-backend primitive variants (Triton vs CuteDSL) ===================
     "kmeans_triton":            "flashlib.primitives.kmeans.cost:estimate_kmeans_triton",
     "kmeans_cutedsl":           "flashlib.primitives.kmeans.cost:estimate_kmeans_cutedsl",
+    "kmeans_trainium":          "flashlib.primitives.kmeans.cost:estimate_kmeans_trainium",
     "knn_triton":               "flashlib.primitives.knn.cost:estimate_knn_triton",
     "knn_cutedsl_fa3":          "flashlib.primitives.knn.cost:estimate_knn_cutedsl_fa3",
+    "knn_trainium":             "flashlib.primitives.knn.cost:estimate_knn_trainium",
     "ivf_flat_triton":          "flashlib.primitives.ivf_flat.cost:estimate_ivf_flat_triton",
     "ivf_pq_triton":            "flashlib.primitives.ivf_pq.cost:estimate_ivf_pq_triton",
     "pca_triton":               "flashlib.primitives.pca.cost:estimate_pca_triton",
@@ -128,9 +130,9 @@ _VARIANTS: dict[str, list[str]] = {
         "polar_qdwh_hybrid", "polar_express", "polar_express_warm", "polar_zolo",
     ],
     # Per-primitive Triton-vs-CuteDSL families.
-    "kmeans":               ["kmeans_triton", "kmeans_cutedsl"],
+    "kmeans":               ["kmeans_triton", "kmeans_cutedsl", "kmeans_trainium"],
     # Triton (default-routed) + CuteDSL FA3 (opt-in via backend='cutedsl').
-    "knn":                  ["knn_triton", "knn_cutedsl_fa3"],
+    "knn":                  ["knn_triton", "knn_cutedsl_fa3", "knn_trainium"],
     # ivf_flat / ivf_pq are single-GPU-backend (Triton only; torch is a CPU
     # reference, not a Pareto variant) so they omit a variant-family entry.
     "pca":                  ["pca_triton", "pca_cutedsl"],

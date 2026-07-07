@@ -45,12 +45,20 @@ cutedsl_flash_knn = lazy_attr(
     "cutedsl_flash_knn",
 )
 
+# Trainium (NKI) backend -- lazy so the package imports on a CUDA-less box and
+# ``neuronxcc`` is only pulled in when the kernel actually runs.
+trainium_knn = lazy_attr(
+    "flashlib.primitives.knn.trainium",
+    "trainium_knn",
+)
+
 
 __all__ = [
     "flash_knn",
     "flash_knn_dispatch",
     "flash_knn_triton",
     "cutedsl_flash_knn",
+    "trainium_knn",
     "knn_torch_naive",
     "knn_torch_chunked",
     "cost",
