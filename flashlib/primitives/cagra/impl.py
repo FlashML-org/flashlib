@@ -9,12 +9,31 @@ Public entry points:
 * :func:`flash_cagra`        -- one-shot ``build`` then ``search``.
 
 CAGRA is an *approximate* nearest-neighbour method whose recall knob is
-``itopk`` (the traversal's priority-window size), optionally assisted
-by ``search_width``. Unlike IVF, recall is not bit-identical to a
-reference implementation at fixed parameters -- the graph and the
+``itopk_size`` (the traversal's priority-window size), optionally
+assisted by ``search_width``. Unlike IVF, recall is not bit-identical
+to a reference implementation at fixed parameters -- the graph and the
 traversal order both matter -- so flashlib reports and benchmarks the
 recall/QPS *frontier* (see ``benchmarks/vs_cuml/cagra.py``); at equal
 recall the fused traversal beats cuVS CAGRA on H100.
+
+Method choice (measured H100, 1M rows, exact GT)
+------------------------------------------------
+Graph traversal is a random-gather + register-sort workload: its cost
+per candidate scales with ``D`` and its iteration count blows up as
+recall -> 1. IVF-Flat's batched GEMM fine-scan shares each probed
+list's reads across the whole query batch on tensor cores, so *at
+high recall with batched queries* it overtakes CAGRA:
+
+* SIFT-1M (D=128, nq=10K): crossover ~recall 0.996 -- above it
+  IVF-Flat is ~1.5x (0.9991: 803K vs 513K QPS; 0.9993: 485K vs 320K).
+* GIST-960 (D=960, nq=1K): crossover ~recall 0.92 -- IVF-Flat reaches
+  0.9946 at 123K QPS where graph search tops out near 0.984.
+* Online / small batches (nq <= ~100): the list-read sharing dies and
+  CAGRA keeps a 4x+ lead at every recall.
+
+Rule of thumb: batched + recall >= 0.99 (or high-D + recall >= 0.93)
+-> ``flash_ivf_flat``; online, low-latency, or mid-recall batched
+-> ``flash_cagra``.
 
 Backends
 --------

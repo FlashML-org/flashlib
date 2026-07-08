@@ -87,6 +87,13 @@ recall). At equal recall the fused traversal outruns cuVS CAGRA on H100
 across the 0.9–0.99 recall band (see `benchmarks/vs_cuml/cagra.py` for
 the recall/QPS frontier methodology).
 
+Picking between the ANN indexes (measured H100, 1M rows): `CAGRA` wins
+online/small-batch serving at every recall and batched search up to
+~0.99 recall; `IVFFlat` wins batched search above ~0.99 (its GEMM
+fine-scan shares list reads across the batch on tensor cores — ~1.5x at
+recall 0.999 on SIFT-1M, and the gap widens with dimensionality);
+`IVFPQ` trades recall ceiling for 8–32x memory compression.
+
 
 ### Informative API
 
