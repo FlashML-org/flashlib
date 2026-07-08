@@ -238,15 +238,18 @@ def _pq_rerank_kernel(
     stride_pos_n, stride_pos_k,
     stride_out_n, stride_out_k,
     BY_RESIDUAL: tl.constexpr, MSUB: tl.constexpr, DSUB: tl.constexpr,
-    DP: tl.constexpr, KK: tl.constexpr,
+    DP: tl.constexpr, D_TILE: tl.constexpr, KK: tl.constexpr,
 ):
     """One query per program: exact ADC ``‖rq - xhat‖²`` for its ``KK``
     candidate stored-rows (``rq = q - centroid[list_of_candidate]``).
 
     Decode is done with the same codebook gather as the GEMM kernel, but
     distances are accumulated directly (no x²-free cross term) so the
-    result is ADC-exact and immune to the tf32 GEMM rounding used for
-    candidate *selection*.
+    result is ADC-exact and immune to the reduced-precision ranking used
+    for candidate *selection*. The feature dim is walked in ``D_TILE``
+    chunks so the live tile is ``(KK, D_TILE)`` regardless of ``Dp``
+    (the flat ``(KK, Dp)`` form spilled registers at e.g. GIST ``Dp=960``,
+    where it was 6x slower than this loop).
     """
     i = tl.program_id(0)
     kk = tl.arange(0, KK)
@@ -254,31 +257,36 @@ def _pq_rerank_kernel(
     clist = tl.load(clist_ptr + i * stride_pos_n + kk * stride_pos_k).to(tl.int64)
     valid = pos >= 0
 
-    d_range = tl.arange(0, DP)
-    s_of_d = d_range // DSUB
-    o_of_d = d_range % DSUB
-    d_mask = d_range < (MSUB * DSUB)
+    dist = tl.zeros([KK], dtype=tl.float32)
+    for d0 in range(0, DP, D_TILE):
+        d_range = d0 + tl.arange(0, D_TILE)
+        s_of_d = d_range // DSUB
+        o_of_d = d_range % DSUB
+        d_mask = d_range < (MSUB * DSUB)
 
-    q = tl.load(q_ptr + i * stride_q_n + d_range * stride_q_d, mask=d_mask, other=0.0)
-    if BY_RESIDUAL:
-        cent = tl.load(
-            cent_ptr + clist[:, None] * stride_cent_c + d_range[None, :] * stride_cent_d,
+        q = tl.load(q_ptr + i * stride_q_n + d_range * stride_q_d,
+                    mask=d_mask, other=0.0)
+        if BY_RESIDUAL:
+            cent = tl.load(
+                cent_ptr + clist[:, None] * stride_cent_c
+                + d_range[None, :] * stride_cent_d,
+                mask=valid[:, None] & d_mask[None, :], other=0.0,
+            )
+            rq = q[None, :] - cent
+        else:
+            rq = tl.broadcast_to(q[None, :], (KK, D_TILE))
+        code_col = tl.load(
+            codes_ptr + pos[:, None] * stride_codes_m
+            + s_of_d[None, :] * stride_codes_s,
+            mask=valid[:, None] & d_mask[None, :], other=0,
+        ).to(tl.int64)
+        xhat = tl.load(
+            cb_ptr + s_of_d[None, :] * stride_cb_m + code_col * stride_cb_j
+            + o_of_d[None, :] * stride_cb_d,
             mask=valid[:, None] & d_mask[None, :], other=0.0,
         )
-        rq = q[None, :] - cent
-    else:
-        rq = tl.broadcast_to(q[None, :], (KK, DP))
-    code_col = tl.load(
-        codes_ptr + pos[:, None] * stride_codes_m + s_of_d[None, :] * stride_codes_s,
-        mask=valid[:, None] & d_mask[None, :], other=0,
-    ).to(tl.int64)
-    xhat = tl.load(
-        cb_ptr + s_of_d[None, :] * stride_cb_m + code_col * stride_cb_j
-        + o_of_d[None, :] * stride_cb_d,
-        mask=valid[:, None] & d_mask[None, :], other=0.0,
-    )
-    diff = tl.where(d_mask[None, :], rq - xhat, 0.0)
-    dist = tl.sum(diff * diff, axis=1)
+        diff = tl.where(d_mask[None, :], rq - xhat, 0.0)
+        dist += tl.sum(diff * diff, axis=1)
     dist = tl.where(valid, dist, float("inf"))
     tl.store(out_ptr + i * stride_out_n + kk * stride_out_k, dist)
 
@@ -403,7 +411,7 @@ def ivf_pq_fine_scan_gemm(
         cand_i32.stride(0), cand_i32.stride(1),
         true_d.stride(0), true_d.stride(1),
         BY_RESIDUAL=by_residual, MSUB=m, DSUB=dsub,
-        DP=_next_pow2(Dp), KK=KK,
+        DP=_next_pow2(Dp), D_TILE=min(_next_pow2(Dp), 128), KK=KK,
         num_warps=4,
     )
 

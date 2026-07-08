@@ -1,40 +1,42 @@
-"""IVF-PQ search (Triton/GPU path). Two fine-scan strategies, one API.
+"""IVF-PQ search (Triton/GPU path). Two fine-scan roads, one API.
 
 Every stage avoids the ``(nq x candidates)`` HBM matrix; the **coarse**
 step is shared -- :func:`flashlib.primitives.knn.flash_knn` over the
 ``nlist`` centroids picks each query's ``nprobe`` nearest lists. The fine
 scan then takes one of two roads:
 
-**1. No-LUT decode + GEMM** (``"gemm"``, the default for batched search)
-   The cluster-centric path the database asks for: group queries by the
-   list they probe (inverse map), then per ``(list, query-tile)`` *decode*
-   the list's PQ codes back to sub-vectors (gathering the tiny codebook,
-   shared across the tile) and score them with a tensor-core cross term --
-   ADC as a **GEMM**, no lookup table at all. Distances are made ADC-exact
-   by an oversampled re-rank. This sidesteps the gather-throughput wall of
-   the LUT scan (3-12x faster on Hopper) *and* removes the LUT entirely, so
-   nothing scales with ``nprobe`` in memory. See
-   :mod:`...ivf_pq.triton.fine_scan_gemm`.
+**1. Decode + tensor-core GEMM** (the default for batched search)
+   ADC as a GEMM, no lookup table at all. The bulk-path kernel is the
+   **decode-once workspace** scan (``"ws"``,
+   :mod:`...ivf_pq.triton.fine_scan_ws`): decode every probed list to
+   bf16 sub-vectors *once per batch* (plus a fused per-row bias), then
+   score each ``(list, query-tile)`` with a dense pipelined bf16
+   ``tl.dot`` -- the tensor cores run against plain contiguous operands
+   instead of waiting on per-tile codebook gathers, which made it 1.5-4x
+   faster than the fused kernels everywhere it fits. When the transient
+   workspace exceeds its budget the driver falls back to the **fused**
+   decode+GEMM kernels that re-decode per query tile but materialise
+   nothing (CuTe WGMMA ``cute_gemm`` on Hopper,
+   :mod:`...ivf_pq.cutedsl.decode_gemm`; portable Triton ``gemm``,
+   :mod:`...ivf_pq.triton.fine_scan_gemm`). Distances are made ADC-exact
+   by an oversampled exact re-rank in all cases, and nothing scales with
+   ``nprobe`` in memory.
 
-**2. ADC LUT scan** (``"online"`` / ``"batch"``, best for tiny batches)
-   Build the compact ``(BQ, P, m, 256)`` asymmetric-distance tables
-   (:func:`...ivf_pq.triton.lut.pq_build_lut`) and stream the probed codes,
-   ADC-scoring each candidate against the LUT with an on-chip top-k
-   (:mod:`...ivf_pq.triton.fine_scan`). The only structure that can blow up
-   is this LUT (residual: ``(nq, nprobe, m, 256)``, e.g. 42 GB at
-   ``nq=10k, nprobe=64, m=64``), so -- flash-attention style -- queries are
-   processed in ``q_tile`` blocks, each building and consuming only a
-   ``(q_tile, P, m, 256)`` LUT (bounded by :data:`_LUT_BUDGET_BYTES`) before
-   the next tile starts. The full LUT is never materialised and results are
-   identical to the untiled computation.
+**2. ADC LUT scan** (best for tiny batches)
+   Score candidates by gathering from an asymmetric-distance table:
+   ``m`` lookups per candidate, independent of ``D``, with a per-batch
+   fixed cost of a couple of launches -- unbeatable when ``nq`` is tiny.
+   On Hopper this is the CuTe shared-memory LUT (``cute_lut``,
+   :mod:`...ivf_pq.cutedsl.shared_lut`); elsewhere the portable Triton
+   LUT kernels (``online`` / ``batch``, :mod:`...ivf_pq.triton.fine_scan`)
+   consume a compact ``(q_tile, P, m, 256)`` table built per query tile
+   (bounded by :data:`_LUT_BUDGET_BYTES`, flash-attention style, so the
+   full ``(nq, nprobe, m, 256)`` residual LUT -- 42 GB at ``nq=10k,
+   nprobe=64, m=64`` -- is never materialised).
 
-``"auto"`` (default) first picks the road -- the LUT scan for long PQ
-sub-vectors at modest batch, decode+GEMM for short sub-vectors *or* large
-batches (where it amortises each list's decode across the many queries
-probing it) -- then the implementation tier: the hand-written
-CuTe DSL kernels on Hopper (``cute_lut`` / ``cute_gemm``,
-:mod:`...ivf_pq.cutedsl`), the portable Triton kernels elsewhere
-(``online`` / ``gemm``). See :func:`_pick_variant`. At a fixed
+``"auto"`` (default) picks the road by batch size alone -- the GEMM road
+once ``nq`` and the probed work clear its fixed floor, the LUT scan below
+it -- then the implementation tier (see :func:`_pick_variant`). At a fixed
 ``(nlist, nprobe)`` and codebooks all variants return the same ADC
 ranking/distances (to fp tolerance) as a reference IVF-PQ; only the
 kernel implementation differs.
@@ -52,6 +54,7 @@ from flashlib.primitives.ivf_pq.torch_fallback import _pad_features
 from flashlib.primitives.ivf_pq.triton.fine_scan import ivf_pq_fine_scan
 from flashlib.primitives.ivf_pq.triton.fine_scan_batch import ivf_pq_fine_scan_batch
 from flashlib.primitives.ivf_pq.triton.fine_scan_gemm import ivf_pq_fine_scan_gemm
+from flashlib.primitives.ivf_pq.triton.fine_scan_ws import ivf_pq_fine_scan_ws
 from flashlib.primitives.ivf_pq.triton.lut import pq_build_lut
 from flashlib.primitives.knn import flash_knn
 
@@ -64,37 +67,30 @@ from flashlib.primitives.knn import flash_knn
 # "gemm" path builds no LUT and never needs it.)
 _LUT_BUDGET_BYTES = 1 << 31  # 2 GiB
 
-# Decode+GEMM has a higher fixed floor than the LUT scan (~0.9 ms vs
-# ~0.45 ms: a host argsort of the nq*nprobe pairs, extra launches, an
-# exact re-rank), so for *tiny* batches / little total work the LUT scan
-# wins outright regardless of geometry: nq must clear _GEMM_MIN_NQ and the
-# candidate comparisons -- nq * nprobe * (M / nlist) -- must clear
-# _GEMM_MIN_WORK before the GEMM floor can be repaid. Calibrated on Hopper.
-_GEMM_MIN_NQ = 256
+# The GEMM road has a higher fixed floor than the LUT scan (~0.9 ms vs
+# ~0.45 ms: the batch-wide workspace decode, a host sort of the nq*nprobe
+# pairs, extra launches, an exact re-rank), so for *tiny* batches /
+# little total work the LUT scan wins outright: nq must clear
+# _GEMM_MIN_NQ and the candidate comparisons -- nq * nprobe * (M / nlist)
+# -- must clear _GEMM_MIN_WORK before the GEMM floor can be repaid.
+# Calibrated on Hopper (H100): SIFT-1M nprobe=32 crossover measured at
+# nq ~= 192 (tie), LUT ahead below.
+_GEMM_MIN_NQ = 192
 _GEMM_MIN_WORK = 2_000_000
 
-# Past the floor, routing is a crossover calibrated on Hopper (D=128/256/960,
-# re-swept after the coalesced ``cute_lut`` redesign roughly doubled its
-# crossover). Per probed candidate the LUT does ``m`` gathers; decode+GEMM
-# reconstructs ``D = m*dsub`` dims on the tensor cores, decoding each list
-# once and amortising it over the queries-per-list ``qpl = nq*nprobe/nlist``.
-# The LUT wins when both hold:
-#   * sub-vectors aren't too short -- ``dsub >= _DSUB_LUT_MIN`` (tiny dsub
-#     decodes cheaply on the tensor cores; e.g. SIFT dsub<=8 -> GEMM), and
-#   * the batch per list is small enough -- ``qpl <= _QPL_LUT_SLOPE * dsub``
-#     (decode+GEMM's win region grows ~linearly in qpl).
-# Two geometries pick the LUT regardless of qpl (measured LUT-win out to the
-# swept qpl=512):
-#   * many sub-quantizers ``m >= _M_LUT_MIN`` -- decode+GEMM's reconstruction
-#     loop is unrolled over m and becomes the bottleneck (GIST m=64: cute_lut
-#     ~2.6-6x faster than cute_gemm), and
-#   * long sub-vectors ``dsub >= _DSUB_LUT_ALWAYS`` -- so few gathers per
-#     candidate that the LUT stays ahead even at large batch.
-# vs the old ``qpl<=2*dsub`` this cuts mis-routes 13->3 / 48 swept points and
-# worst-case regret 294%->31% (the 294% case was GIST m=64 routed to GEMM).
-_DSUB_LUT_MIN = 9
-_QPL_LUT_SLOPE = 4.0
-_M_LUT_MIN = 48
+# Past that floor the decode-once ``ws`` kernel wins at almost every
+# measured geometry (SIFT m=16/32/64, GIST m=60/120/240, swept
+# nq=64..10k): unlike the old fused decode+GEMM kernels -- whose
+# per-query-tile SIMT decode lost to the LUT at large ``m``, which is what
+# the old qpl/m crossover rules encoded -- the ws scan decodes each list
+# once per batch and runs a dense bf16 GEMM, so those rules collapsed to
+# the batch-size floor. The ONE geometry rule that survives is very long
+# sub-vectors: per probed candidate the LUT does ``m`` table lookups while
+# the GEMM does ``Dp = m*dsub`` MACs, so at large ``dsub`` the LUT's
+# per-candidate work is tens of times smaller and stays ahead at any
+# batch (GIST m=16/dsub=60: cute_lut 2.6x faster than ws; m=32/dsub=30:
+# ws already ahead). Crossover sits between dsub=30 and 60; 48 kept from
+# the pre-ws calibration.
 _DSUB_LUT_ALWAYS = 48
 
 
@@ -130,22 +126,17 @@ def _pick_regime(
 ) -> str:
     """Pick the fine-scan road: ``"lut"`` (ADC gather) or ``"gemm"``.
 
-    Tiny batches / low total work don't amortise the GEMM floor -> LUT.
-    Short sub-vectors (``dsub < _DSUB_LUT_MIN``) decode cheaply on the tensor
-    cores -> GEMM. Many sub-quantizers (``m >= _M_LUT_MIN``) or long
-    sub-vectors (``dsub >= _DSUB_LUT_ALWAYS``) keep the LUT ahead at any
-    batch. Otherwise the LUT wins while the batch per list is small enough
-    (``qpl <= _QPL_LUT_SLOPE * dsub``).
+    Tiny batches / low total work don't amortise the GEMM road's fixed
+    floor -> LUT; very long sub-vectors keep the LUT's ``m``-lookup
+    per-candidate cost far below the GEMM's ``m*dsub`` MACs at any batch
+    -> LUT. Everything else -> GEMM (the decode-once ``ws`` kernel). See
+    the calibration notes on :data:`_GEMM_MIN_NQ` / :data:`_DSUB_LUT_ALWAYS`.
     """
+    del m, nlist
     work = nq * nprobe * max(avg_list_len, 1.0)
     if nq < _GEMM_MIN_NQ or work < _GEMM_MIN_WORK:
         return "lut"
-    if dsub < _DSUB_LUT_MIN:
-        return "gemm"
-    if m >= _M_LUT_MIN or dsub >= _DSUB_LUT_ALWAYS:
-        return "lut"
-    qpl = nq * nprobe / max(nlist, 1)
-    if qpl <= _QPL_LUT_SLOPE * dsub:
+    if dsub >= _DSUB_LUT_ALWAYS:
         return "lut"
     return "gemm"
 
@@ -157,20 +148,30 @@ def _pick_variant(
     """Resolve ``variant`` to a concrete fine-scan kernel.
 
     Explicit names pass through; ``"auto"`` first chooses the road
-    (:func:`_pick_regime`) then the implementation tier -- the fast CuTe
-    DSL kernels on Hopper, the portable Triton kernels elsewhere.
+    (:func:`_pick_regime`) then the implementation tier. On the GEMM road
+    the first choice is the decode-once workspace kernel (``"ws"``,
+    :mod:`...ivf_pq.triton.fine_scan_ws`) -- it decodes each probed list
+    once per *batch* instead of once per query tile, so the scan itself is
+    a dense pipelined bf16 GEMM; when its transient workspace does not fit
+    the budget the driver falls back to the fused kernels (CuTe WGMMA on
+    Hopper, Triton ``tl.dot`` elsewhere) at runtime.
     """
-    if variant in ("gemm", "batch", "online", "cute_lut", "cute_gemm"):
+    if variant in ("ws", "gemm", "batch", "online", "cute_lut", "cute_gemm"):
         return variant
     if variant != "auto":
         raise ValueError(
             f"unknown variant {variant!r} "
-            "(auto|gemm|batch|online|cute_lut|cute_gemm)"
+            "(auto|ws|gemm|batch|online|cute_lut|cute_gemm)"
         )
     regime = _pick_regime(nq, nprobe, avg_list_len, dsub, m, nlist)
-    if _cutedsl_hopper():
-        return "cute_lut" if regime == "lut" else "cute_gemm"
-    return "online" if regime == "lut" else "gemm"
+    if regime == "gemm":
+        return "ws"
+    return "cute_lut" if _cutedsl_hopper() else "online"
+
+
+def _gemm_fallback_variant() -> str:
+    """Fused decode+GEMM kernel used when the ws workspace declines."""
+    return "cute_gemm" if _cutedsl_hopper() else "gemm"
 
 
 def _search_gemm(
@@ -195,6 +196,49 @@ def _search_gemm(
         Qp, centroids, codebooks, index.codes, probed, index.list_offsets, k,
         by_residual=index.by_residual,
     )                                                             # (nq, k)
+    valid = pos >= 0
+    pos_safe = pos.clamp_min(0)
+    ids = torch.where(valid, index.ids[pos_safe], torch.full_like(pos, -1))
+    return vals, ids
+
+
+def _search_ws(
+    index: IvfPqIndex,
+    Qp: torch.Tensor,
+    centroids: torch.Tensor,
+    codebooks: torch.Tensor,
+    k: int,
+    nprobe: int,
+    max_list_len: int,
+    explicit: bool,
+):
+    """Decode-once workspace + GEMM fine scan
+    (:func:`...ivf_pq.triton.fine_scan_ws.ivf_pq_fine_scan_ws`).
+
+    Decodes each probed list to bf16 sub-vectors once for the whole batch,
+    then scans with a dense pipelined tensor-core GEMM -- the fastest bulk
+    path. Returns ``None`` when the transient decoded workspace exceeds its
+    budget (the caller then falls back to the fused decode+GEMM kernels);
+    an explicitly requested ``variant="ws"`` raises instead so the caller
+    knows the budget was the reason.
+    """
+    probed = flash_knn(
+        Qp.unsqueeze(0), centroids.unsqueeze(0), nprobe,
+        return_distances=False,
+    )[0].to(torch.int32)                                          # (nq, nprobe)
+    out = ivf_pq_fine_scan_ws(
+        Qp, centroids, codebooks, index.codes, probed, index.list_offsets, k,
+        by_residual=index.by_residual, max_list_len=max_list_len,
+    )
+    if out is None:
+        if explicit:
+            raise RuntimeError(
+                "variant='ws': decoded workspace exceeds the budget for this "
+                "index/query shape; use variant='auto' (falls back to the "
+                "fused decode+GEMM kernels) or raise ws_budget_bytes."
+            )
+        return None
+    vals, pos = out
     valid = pos >= 0
     pos_safe = pos.clamp_min(0)
     ids = torch.where(valid, index.ids[pos_safe], torch.full_like(pos, -1))
@@ -300,12 +344,13 @@ def ivf_pq_search_triton(
         Q: ``(nq, D)`` query tensor on CUDA.
         k: neighbours per query.
         nprobe: lists to probe (defaults to ``index.nprobe``).
-        variant: fine-scan kernel. ``"auto"`` (default) routes by
-            sub-vector length and batch size to the best available kernel
-            (CuTe DSL on Hopper, Triton elsewhere; see
-            :func:`_pick_variant`). Explicit names: ``"cute_lut"`` /
-            ``"cute_gemm"`` are the Hopper CuTe DSL LUT / decode+GEMM
-            kernels; ``"gemm"`` is the portable Triton no-LUT decode+GEMM;
+        variant: fine-scan kernel. ``"auto"`` (default) routes by batch
+            size to the best available kernel (see :func:`_pick_variant`).
+            Explicit names: ``"ws"`` is the decode-once workspace +
+            tensor-core GEMM scan (the bulk path; raises if its workspace
+            budget is exceeded); ``"cute_lut"`` / ``"cute_gemm"`` are the
+            Hopper CuTe DSL shared-memory LUT / fused decode+WGMMA
+            kernels; ``"gemm"`` is the portable Triton fused decode+GEMM;
             ``"online"`` / ``"batch"`` are the portable Triton ADC-LUT
             gather kernels (best for tiny batches). All variants return the
             same ADC distances to fp tolerance.
@@ -332,10 +377,19 @@ def ivf_pq_search_triton(
     max_list_len = index.max_list_len or int(index.list_lengths().max().item())
     avg_list_len = index.M / max(index.nlist, 1)
 
-    # No-LUT decode+GEMM path: no LUT to materialise, so no query tiling.
+    # No-LUT decode+GEMM paths: no LUT to materialise, so no query tiling.
     chosen = _pick_variant(
         variant, nq, nprobe, avg_list_len, index.dsub, index.m, index.nlist,
     )
+    if chosen == "ws":
+        out = _search_ws(
+            index, Qp_all, centroids, codebooks, k, nprobe, max_list_len,
+            explicit=(variant == "ws"),
+        )
+        if out is not None:
+            return out
+        # Workspace over budget -> the fused decode+GEMM tier.
+        chosen = _gemm_fallback_variant()
     if chosen == "gemm":
         return _search_gemm(index, Qp_all, centroids, codebooks, k, nprobe)
     if chosen in ("cute_lut", "cute_gemm"):

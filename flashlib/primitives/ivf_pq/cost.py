@@ -155,45 +155,49 @@ def _build_subops(M, nlist, niter, pq_niter, ksub, m, dsub, Dp,
     return [km, assign, pq_train, encode, layout]
 
 
-# Mirror of triton.search._pick_regime: no-LUT decode+GEMM is chosen once
-# there are enough queries (to amortise grouping) AND candidate comparisons
-# (to repay its floor) AND the dsub/qpl/m crossover favours GEMM -- short
-# sub-vectors decode cheaply, but large dsub or large m keep the LUT ahead.
-# See that module for the sweep that calibrates these.
-_GEMM_MIN_NQ = 256
+# Mirror of triton.search._pick_regime: the GEMM road (decode-once
+# workspace + tensor-core scan) is chosen once there are enough queries
+# (to amortise the batch-wide decode + grouping) and candidate comparisons
+# (to repay its fixed floor); below that the ADC LUT scan wins, as it does
+# at very long sub-vectors (``dsub >= _DSUB_LUT_ALWAYS``), where the LUT's
+# m-lookup per-candidate cost stays far below the GEMM's m*dsub MACs. The
+# other old qpl/m geometry rules disappeared with the decode-once kernel.
+# See that module for the sweeps that calibrate these.
+_GEMM_MIN_NQ = 192
 _GEMM_MIN_WORK = 2_000_000
-_DSUB_LUT_MIN = 9
-_QPL_LUT_SLOPE = 4.0
-_M_LUT_MIN = 48
 _DSUB_LUT_ALWAYS = 48
 
 
 def _route_is_gemm(nq, nprobe, M, nlist, dsub, m):
-    """True iff search routes to no-LUT decode+GEMM (mirror of _pick_regime)."""
+    """True iff search routes to the decode-once GEMM road (mirror of
+    ``_pick_regime``)."""
+    del m
     work = nq * nprobe * (M / max(nlist, 1))
     if nq < _GEMM_MIN_NQ or work < _GEMM_MIN_WORK:
         return False
-    if dsub < _DSUB_LUT_MIN:
-        return True
-    if m >= _M_LUT_MIN or dsub >= _DSUB_LUT_ALWAYS:
-        return False
-    return nq * nprobe / max(nlist, 1) > _QPL_LUT_SLOPE * dsub
+    return dsub < _DSUB_LUT_ALWAYS
 
 
 # ── search phase ──────────────────────────────────────────────────────────
 def _search_subops_gemm(M, nlist, nprobe, k, nq, by_residual, m, dsub, Dp,
                         dtype, device):
-    """No-LUT cluster-centric decode + tensor-core GEMM (+ exact re-rank)."""
+    """Decode-once workspace + tensor-core GEMM scan (+ exact re-rank)."""
     db = _dtype_bytes(dtype)
     cand = nq * nprobe * (M / max(nlist, 1))
     topk_pad = _next_pow2(k)
     over_pad = _next_pow2(k * 2)
+    # Touched workspace rows: every list probed by >=1 query. With nq*nprobe
+    # pair draws over nlist lists, the expected touched fraction is
+    # 1 - (1 - 1/nlist)^(nq*nprobe); the workspace is that share of M.
+    touched = 1.0 - (1.0 - 1.0 / max(nlist, 1)) ** (nq * nprobe)
+    ws_rows = touched * M
+    ws_gb = ws_rows * Dp * 2 / 1e9              # bf16 workspace (transient)
 
     coarse = _est("knn", shape=(1, nq, nlist, Dp), params={"k": nprobe},
                   dtype=dtype, device=device)
     coarse.op_name = "ivf_pq.search.coarse"
 
-    # Inverse map: argsort/bincount/cumsum over the nq*nprobe (query,list) pairs.
+    # Inverse map: radix sort + searchsorted over the nq*nprobe pairs.
     P = nq * nprobe
     group_bytes = P * 4 * 4
     g_rt, g_bound = roofline(0.0, group_bytes, dtype, device,
@@ -203,26 +207,45 @@ def _search_subops_gemm(M, nlist, nprobe, k, nq, by_residual, m, dsub, Dp,
         flops=0.0, bytes_moved=group_bytes,
         memory_peak_gb=P * 4 * 2 / 1e9, bound=g_bound,
         confidence="roofline", n_kernel_launches=3,
-        notes=[f"inverse map: argsort {P} (query,list) pairs by list"],
+        notes=[f"inverse map: sort {P} (query,list) pairs by list"],
         dtype=dtype, device=device,
     )
 
-    # Fine scan: decode codes (cand*m uint8, shared across the query tile) and
-    # a WGMMA cross term (2*cand*Dp MACs). Partials are the only big alloc.
+    # Decode once: gather the codebook for every touched row, write the bf16
+    # workspace + fused per-row bias (one pass, batch-wide).
+    dec_bytes = ws_rows * (m + Dp * 2 + 4)
+    d_rt, d_bound = roofline(2 * ws_rows * Dp, dec_bytes, dtype, device,
+                             op_type="elementwise", n_launches=1)
+    decode = Estimate(
+        op_name="ivf_pq.search.decode", runtime_ms=d_rt,
+        flops=2 * ws_rows * Dp, bytes_moved=dec_bytes,
+        memory_peak_gb=ws_gb, bound=d_bound,
+        confidence="roofline", n_kernel_launches=1,
+        notes=[f"decode-once workspace: ~{ws_rows:.0f} touched rows -> "
+               f"(rows, Dp={Dp}) bf16 (~{ws_gb:.2f}GB transient) + bias"],
+        dtype=dtype, device=device,
+    )
+
+    # Fine scan: dense bf16 GEMM against the workspace (re-read once per
+    # BN-query tile probing each list) + packed on-chip top-k.
+    qpl = nq * nprobe / max(nlist, 1)
+    qtiles = max(1.0, qpl / 64.0)
     fine_flops = 2 * cand * Dp
-    fine_bytes = cand * m + nq * nprobe * Dp * db + nq * nprobe * topk_pad * 8
+    fine_bytes = ws_rows * Dp * 2 * qtiles + nq * Dp * db \
+        + nq * nprobe * topk_pad * 8
     f_rt, f_bound = roofline(fine_flops, fine_bytes, dtype, device,
-                             op_type="ivf_pq_search", n_launches=1)
+                             op_type="ivf_pq_search", n_launches=2)
     fine = Estimate(
         op_name="ivf_pq.search.fine", runtime_ms=f_rt,
         flops=fine_flops, bytes_moved=fine_bytes,
         memory_peak_gb=nq * nprobe * topk_pad * 8 / 1e9, bound=f_bound,
-        confidence="calibrated", n_kernel_launches=1,
+        confidence="calibrated", n_kernel_launches=2,
         suggested_config={"nprobe": nprobe, "k": k, "m": m},
         notes=[
-            f"no-LUT decode+GEMM: ~{cand:.0f} candidates decoded + tensor-core "
-            f"cross term (nq={nq}, nprobe={nprobe}, M/nlist={M/max(nlist,1):.0f}); "
-            "no ADC LUT, no (nq x candidates) HBM matrix",
+            f"decode-once GEMM scan: ~{cand:.0f} candidate scores as dense "
+            f"bf16 tensor-core GEMM (nq={nq}, nprobe={nprobe}, "
+            f"M/nlist={M/max(nlist,1):.0f}) under a threshold-seeded packed "
+            "top-k; no ADC LUT, no (nq x candidates) HBM matrix",
         ],
         dtype=dtype, device=device,
     )
@@ -238,10 +261,10 @@ def _search_subops_gemm(M, nlist, nprobe, k, nq, by_residual, m, dsub, Dp,
         memory_peak_gb=nq * over_pad * 4 / 1e9, bound=r_bound,
         confidence="roofline", n_kernel_launches=1,
         notes=[f"exact ADC re-rank of ~{over_pad} candidates/query "
-               "(tf32 GEMM selects, exact decode ranks)"],
+               "(bf16 GEMM selects, exact decode ranks)"],
         dtype=dtype, device=device,
     )
-    return [coarse, group, fine, rerank]
+    return [coarse, group, decode, fine, rerank]
 
 
 def _search_subops(M, nlist, nprobe, k, nq, ksub, by_residual, m, dsub, Dp,

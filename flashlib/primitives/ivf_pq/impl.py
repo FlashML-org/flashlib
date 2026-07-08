@@ -149,26 +149,28 @@ def flash_ivf_pq_search(
     than ``k`` probed candidates).
 
     ``variant`` selects the fine-scan kernel. ``"auto"`` (default) routes
-    by PQ sub-vector length and batch size to the best available kernel:
+    by batch size to the best available kernel:
 
+    * ``"ws"`` -- **decode-once workspace + tensor-core GEMM** (portable
+      Triton). Decodes every probed list to bf16 sub-vectors once per
+      batch, then scans with a dense pipelined GEMM; the bulk-path winner
+      at every measured geometry. Falls back to the fused kernels when
+      its transient workspace exceeds the internal budget.
+    * ``"cute_gemm"`` -- Hopper CuTe DSL **fused decode + WGMMA GEMM**.
+      Re-decodes per query tile (no workspace); the big-index fallback.
+    * ``"gemm"`` -- portable Triton **fused decode + tensor-core GEMM**;
+      the non-Hopper fused fallback.
     * ``"cute_lut"`` -- Hopper CuTe DSL **shared-memory ADC LUT** with
-      precomputed cross-term tables and a warp-shuffle top-k. Wins for long
-      sub-vectors (small ``m``) at modest batch.
-    * ``"cute_gemm"`` -- Hopper CuTe DSL **decode + WGMMA GEMM**. Decodes
-      each list's codes once and reuses them across the queries probing it,
-      so it wins for short sub-vectors (large ``m``) *or* large batches,
-      where tensor-core throughput beats the LUT's per-candidate gathers.
-    * ``"gemm"`` -- portable Triton **decode + tensor-core GEMM** (no ADC
-      LUT); the non-Hopper decode+GEMM fallback.
+      precomputed cross-term tables and a warp-shuffle top-k. Wins at
+      tiny batch (lowest fixed cost per launch).
     * ``"online"`` / ``"batch"`` -- portable Triton ADC-LUT gather kernels
       (per-``(query, list)`` and group-by-list); the non-Hopper LUT
-      fallback, best for tiny batches.
+      fallback for tiny batches.
 
-    On Hopper ``"auto"`` uses the CuTe DSL kernels; elsewhere the Triton
-    kernels. All variants return the same ADC squared-L2 distances (to fp
-    tol). ``q_tile`` only affects the Triton LUT variants' flash-style
-    query tiling (queries per LUT tile); ``None`` sizes it so the residual
-    LUT is never fully materialised. The decode+GEMM paths build no LUT and
+    All variants return the same ADC squared-L2 distances (to fp tol).
+    ``q_tile`` only affects the Triton LUT variants' flash-style query
+    tiling (queries per LUT tile); ``None`` sizes it so the residual LUT
+    is never fully materialised. The GEMM-road paths build no LUT and
     ignore it.
     """
     chosen = _route(backend=backend)

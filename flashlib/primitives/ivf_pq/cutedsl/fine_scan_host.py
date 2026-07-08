@@ -136,7 +136,7 @@ def reduce_rerank(
         cand_i32.stride(0), cand_i32.stride(1),
         true_d.stride(0), true_d.stride(1),
         BY_RESIDUAL=by_residual, MSUB=m, DSUB=dsub,
-        DP=_next_pow2(Dp), KK=KK,
+        DP=_next_pow2(Dp), D_TILE=min(_next_pow2(Dp), 128), KK=KK,
         num_warps=4,
     )
 

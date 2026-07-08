@@ -415,6 +415,80 @@ def test_ivf_pq_gemm_matches_oracle(by_residual):
         ), f"gemm vs online ADC distances diverge at nprobe={nprobe}"
 
 
+@cuda_only
+@pytest.mark.parametrize("by_residual", [True, False])
+def test_ivf_pq_ws_matches_oracle(by_residual):
+    """Decode-once workspace+GEMM kernel == pure-torch ADC oracle.
+
+    The ``ws`` variant decodes every probed list to a bf16 workspace once,
+    scans with a dense tensor-core GEMM under a threshold-seeded on-chip
+    top-k (per-query bound from a sample pass -- lossless pruning), and
+    exact-re-ranks an oversampled pool. Returned distances must equal the
+    reference ADC (to fp tolerance) and -- with every list probed, where
+    the coarse step is deterministic -- ids must match. Covers residual
+    and non-residual encoding.
+    """
+    from flashlib import flash_ivf_pq_build, flash_ivf_pq_search
+    from flashlib.primitives.ivf_pq import torch_fallback as tf
+
+    torch.manual_seed(0)
+    M, D, nlist, m, k = 16_000, 64, 64, 16, 10
+    X = _blobs(M, D, 12, "cuda", seed=2)
+    Q = _blobs(1024, D, 12, "cuda", seed=3)   # bulk batch -> exercises GEMM
+    index = flash_ivf_pq_build(
+        X, nlist, m=m, nprobe=16, by_residual=by_residual, niter=15, seed=0
+    )
+
+    # Exhaustive probing: identical candidate set for both paths.
+    wv, wi = flash_ivf_pq_search(index, Q, k, nprobe=nlist, variant="ws")
+    tv, ti = tf.ivf_pq_search_torch(index, Q, k, nprobe=nlist)
+    assert torch.allclose(
+        wv.sort(1).values, tv.sort(1).values, rtol=1e-3, atol=1e-1
+    ), f"ws ADC distances diverge from oracle (by_residual={by_residual})"
+    same = (wi.sort(1).values == ti.sort(1).values).float().mean().item()
+    assert same >= 0.98, f"ws vs oracle id mismatch: {same:.4f}"
+
+    # ws and online resolve to the same ADC distances on the same index.
+    for nprobe in (8, 16):
+        wv, _ = flash_ivf_pq_search(index, Q, k, nprobe=nprobe, variant="ws")
+        ov, _ = flash_ivf_pq_search(index, Q, k, nprobe=nprobe, variant="online")
+        assert torch.allclose(
+            wv.sort(1).values, ov.sort(1).values, rtol=1e-3, atol=1e-1
+        ), f"ws vs online ADC distances diverge at nprobe={nprobe}"
+
+
+@cuda_only
+def test_ivf_pq_ws_budget_fallback():
+    """Over-budget ws workspace falls back to the fused kernels (auto) or
+    raises with the budget explanation (explicit ``variant="ws"``).
+
+    The budget guard is what keeps the transient decoded workspace a
+    bounded fraction of HBM; auto must degrade gracefully, never error.
+    """
+    from flashlib import flash_ivf_pq_build, flash_ivf_pq_search
+    from flashlib.primitives.ivf_pq.triton import fine_scan_ws
+
+    torch.manual_seed(0)
+    M, D, nlist, m, k = 16_000, 64, 64, 16, 10
+    X = _blobs(M, D, 12, "cuda", seed=2)
+    Q = _blobs(512, D, 12, "cuda", seed=3)
+    index = flash_ivf_pq_build(X, nlist, m=m, nprobe=16, niter=15, seed=0)
+
+    ref_v, ref_i = flash_ivf_pq_search(index, Q, k, nprobe=16, variant="ws")
+
+    old = fine_scan_ws._WS_BUDGET_BYTES
+    fine_scan_ws._WS_BUDGET_BYTES = 1   # force the decline
+    try:
+        av, ai = flash_ivf_pq_search(index, Q, k, nprobe=16, variant="auto")
+        assert torch.allclose(
+            av.sort(1).values, ref_v.sort(1).values, rtol=1e-3, atol=1e-1
+        ), "auto fallback distances diverge from ws"
+        with pytest.raises(RuntimeError, match="workspace"):
+            flash_ivf_pq_search(index, Q, k, nprobe=16, variant="ws")
+    finally:
+        fine_scan_ws._WS_BUDGET_BYTES = old
+
+
 def _hopper_cutedsl():
     if not torch.cuda.is_available():
         return False
