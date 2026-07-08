@@ -126,8 +126,12 @@ def _cagra_traverse_kernel(
     for _it in tl.range(0, max_iters):
         if tl.max(done) == 0:
             # ── candidate distances (gather rows, fp32 accumulate) ──
+            # tl.range (not static_range): at D=128 this is one
+            # iteration either way, but at high D a static unroll keeps
+            # every (CW, BD) candidate tile live at once and spills --
+            # measured GIST-960 CW=128: 11.2 ms vs 3.6 ms pipelined.
             acc = tl.zeros([CW], dtype=tl.float32)
-            for d0 in tl.static_range(0, D, BD):
+            for d0 in tl.range(0, D, BD):
                 d_offs = d0 + tl.arange(0, BD)
                 dm = d_offs < D
                 qv = tl.load(q_ptr + pid * sq_n + d_offs.to(tl.int64) * sq_d,

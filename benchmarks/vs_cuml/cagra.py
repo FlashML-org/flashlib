@@ -205,18 +205,31 @@ def run_one(label, M, nq, D, k, Xc_np=None, Xq_np=None, gt=None):
                       f"flashlib {f_qps:11,.0f} QPS   {sp:5.2f}x")
 
 
-def run_sift(k=10):
+def run_dataset(name, k=10):
+    """Run the frontier sweep on an ann-benchmarks dataset (exact GT)."""
     from benchmarks.vs_cuml._common import load_ann_dataset
-    train, test, gt_np = load_ann_dataset("sift-128-euclidean")
+    train, test, gt_np = load_ann_dataset(name)
     gt = torch.tensor(gt_np[:, :k])
-    run_one("SIFT-1M", train.shape[0], test.shape[0], train.shape[1], k,
+    run_one(name, train.shape[0], test.shape[0], train.shape[1], k,
             Xc_np=train, Xq_np=test, gt=gt)
 
 
 def main():
     print(f"torch {torch.__version__}   GPU {torch.cuda.get_device_name(0)}")
+    ran_real = False
     if "--sift" in sys.argv:
-        run_sift()
+        run_dataset("sift-128-euclidean")
+        ran_real = True
+    if "--gist" in sys.argv:
+        run_dataset("gist-960-euclidean")
+        ran_real = True
+    if "--dataset" in sys.argv:
+        run_dataset(sys.argv[sys.argv.index("--dataset") + 1])
+        ran_real = True
+    if "--real-only" in sys.argv:
+        return
+    if ran_real and "--synthetic" not in sys.argv:
+        return
     for s in SHAPES:
         run_one(*s)
     print()
