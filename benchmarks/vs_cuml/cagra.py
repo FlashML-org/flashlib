@@ -1,223 +1,224 @@
-"""CAGRA: ``flash_cagra`` vs cuVS CAGRA at matched (graph_degree, itopk, search_width).
+"""CAGRA: ``flash_cagra`` vs cuVS CAGRA -- the recall/QPS frontier.
 
-CAGRA is a *graph* ANN method, so -- unlike IVF -- there is no
-``(nlist, nprobe)`` that reproduces an exact candidate set. The contract is
-**search throughput (QPS) at equal recall**, with both engines configured at
-the same ``graph_degree`` / ``intermediate_degree`` (graph build) and the
-same ``itopk_size`` / ``search_width`` (traversal budget). ``itopk_size`` is
-the dominant accuracy/speed knob on both sides.
+CAGRA has no iso-recall parameter pairing (the graph and the traversal
+order both shape recall), so the comparison that matters is the **Pareto
+frontier**: for each recall level, who serves more queries per second?
+Each engine builds a ``graph_degree=32`` and a ``graph_degree=64`` index
+and sweeps its search knob (``itopk``); per row we report:
 
-Two data regimes (mirrors how ANN systems are evaluated):
-
-  * **synthetic** -- Gaussian blobs; recall ground truth is exact brute
-    force (``flash_knn`` fp32). Good for shape/throughput sweeps.
-  * **real** -- ann-benchmarks datasets (default SIFT1M, 1M x 128) with the
-    dataset's own exact top-100 neighbours as ground truth.
-
-Per row we report, for flashlib and (when installed) cuVS:
-
-  * build(ms)   -- one-time graph construction (initial kNN graph + optimize).
+  * build(s)    -- one-time index construction.
+  * gd / itopk  -- the graph degree + recall-knob value for the row.
   * search(ms)  -- per-batch query latency (warm, cuda-synced).
   * QPS         -- nq / search_time.
-  * recall@k    -- vs exact ground truth.
-  * deg         -- graph out-degree.
-  * itopk       -- internal candidate-buffer size used for the search.
+  * recall@k    -- vs exact ground truth (brute force / dataset GT).
+
+Then the *iso-recall speedup* table: for every point on cuVS's combined
+(gd32 + gd64) frontier, the best flashlib QPS at equal-or-better recall
+divided by the cuVS QPS.
 
 cuVS is optional. Install out-of-band, e.g.::
 
-    pip install --extra-index-url https://pypi.nvidia.com cuvs-cu13 cupy-cuda13x
-
-Real datasets need ``h5py`` (``pip install h5py``); the file is cached under
-``~/.cache/flashlib_bench`` (override with ``FLASHLIB_BENCH_CACHE``).
+    pip install cuvs-cu12
 
 Run::
 
-    python -m benchmarks.vs_cuml.cagra                 # synthetic + real
-    python -m benchmarks.vs_cuml.cagra --synthetic-only
-    python -m benchmarks.vs_cuml.cagra --real-only --dataset gist-960-euclidean
+    python -m benchmarks.vs_cuml.cagra                # synthetic shapes
+    python -m benchmarks.vs_cuml.cagra --sift         # + SIFT-1M (download)
 """
 from __future__ import annotations
 
-import argparse
+import sys
+import time
 
 import numpy as np
 import torch
 
-from benchmarks.vs_cuml._common import (
-    fmt_table,
-    load_ann_dataset,
-    recall_at_k,
-    time_gpu,
-    title,
-)
+from benchmarks.vs_cuml._common import time_gpu, title, fmt_table
 
-
-# (label,           M,         nq,     D,   graph_degree, itopk, sw, k)
-SYNTH_SHAPES = [
-    ("1M  D=64",     1_000_000, 10_000, 64,  64,  64,  1, 10),
-    ("1M  D=128",    1_000_000, 10_000, 128, 64,  128, 1, 10),
-    ("online D=64",  1_000_000,    100, 64,  64,  64,  1, 10),
-    ("500K D=96",      500_000,  5_000, 96,  32,  64,  1, 10),
+# (label,            M,        nq,     D,  k)
+SHAPES = [
+    ("1M D=128",      1_000_000, 10_000, 128, 10),
+    ("100K D=256",      100_000, 10_000, 256, 10),
+    ("online 1M",     1_000_000,    100, 128, 10),
 ]
 
-# Real data: sweep itopk -> trade search latency for recall at fixed degree.
-# (graph_degree, intermediate_degree, itopk, search_width, k)
-REAL_CONFIGS = [
-    (32, 64,  64,  1, 10),
-    (64, 128, 128, 1, 10),
-    (64, 128, 256, 1, 10),
+# flashlib (gd, itopk, search_width) sweep. sw pairs measured on H100:
+# small windows want sw=2 (keeps CW=64 fed); gd=64 runs sw=1 up to
+# itopk 192 to keep the buffer at 256 lanes, then sw=2 (an sw=1 512-lane
+# buffer spills registers). itopk >= 160 auto-enables the bitonic-merge
+# fast path (compact_every=8).
+FLASH_GRID = [
+    (32, 32, 2), (32, 64, 2), (32, 96, 2), (32, 128, 4),
+    (32, 160, 2), (32, 192, 2),
+    (64, 48, 1), (64, 64, 1), (64, 96, 2), (64, 128, 2),
+    (64, 160, 1), (64, 192, 1), (64, 256, 2), (64, 384, 2),
 ]
-
-COLUMNS = ["engine", "build(ms)", "search(ms)", "QPS", "recall@k", "deg", "itopk"]
+CUVS_GRID = [
+    (32, 32), (32, 64), (32, 128), (32, 256),
+    (64, 64), (64, 128), (64, 256),
+]
 
 
 def _blobs(M, D, n_centers, seed):
-    """Gaussian data. ``n_centers==1`` is a single connected cloud.
-
-    Unlike IVF, graph ANN recall depends on graph *connectivity*: widely
-    separated blobs build a disconnected graph the traversal cannot cross,
-    so the synthetic regime uses one cloud (the real datasets carry their
-    own natural structure).
-    """
     rng = np.random.RandomState(seed)
-    if n_centers <= 1:
-        return rng.randn(M, D).astype(np.float32)
     centers = rng.randn(n_centers, D).astype(np.float32) * 4.0
     lab = rng.randint(0, n_centers, size=M)
     return (centers[lab] + rng.randn(M, D).astype(np.float32)).astype(np.float32)
 
 
+def _recall(pred, ref, k):
+    hit = 0
+    for p, r in zip(pred, ref):
+        hit += len(set(p[:k].tolist()) & set(r[:k].tolist()))
+    return hit / (len(pred) * k)
+
+
 def _brute_ids(Xc_t, Xq_t, k):
-    """Exact top-k ids (squared L2) via flash_knn fp32 -- recall ground truth."""
     from flashlib.primitives.knn import flash_knn
     idx = flash_knn(Xq_t.unsqueeze(0), Xc_t.unsqueeze(0), k)[1][0]
-    return idx.cpu().numpy()
+    return idx.cpu()
 
 
-def _flashlib_row(Xc_t, Xq_t, nq, gd, inter, itopk, sw, k, gt):
+def _flash_rows(Xc_t, Xq_t, k, gt, nq):
     from flashlib import flash_cagra_build, flash_cagra_search
 
-    def _build():
-        return flash_cagra_build(Xc_t, graph_degree=gd, intermediate_degree=inter,
-                                 seed=0)
+    rows = []
+    for gd in sorted({g for g, _, _ in FLASH_GRID}):
+        torch.cuda.synchronize()
+        t0 = time.time()
+        index = flash_cagra_build(Xc_t, graph_degree=gd)
+        torch.cuda.synchronize()
+        t_build = time.time() - t0
+        for g, itopk, sw in FLASH_GRID:
+            if g != gd:
+                continue
+            _, ids = flash_cagra_search(index, Xq_t, k, itopk_size=itopk,
+                                        search_width=sw)
+            r = _recall(ids.cpu(), gt, k)
+            t = time_gpu(lambda: flash_cagra_search(
+                index, Xq_t, k, itopk_size=itopk, search_width=sw),
+                repeat=10, warmup=3)
+            rows.append(("flashlib", f"{t_build:7.2f}", gd, itopk,
+                         f"{t:8.3f}", nq / t * 1000.0, r))
+        del index
+    return rows
 
-    t_build = time_gpu(_build, repeat=1, warmup=0)
-    index = _build()
 
-    def _search():
-        return flash_cagra_search(index, Xq_t, k, itopk_size=itopk,
-                                  search_width=sw)
-
-    ids = _search()[1].cpu().numpy()
-    t_search = time_gpu(_search, repeat=10, warmup=3)
-    qps = nq / (t_search / 1000.0)
-    return ("flashlib", f"{t_build:8.1f}", f"{t_search:8.3f}", f"{qps:11,.0f}",
-            f"{recall_at_k(ids, gt, k):.4f}", f"{index.graph_degree:3d}",
-            f"{itopk:5d}")
-
-
-def _cuvs_row(Xc_np, Xq_np, nq, gd, inter, itopk, sw, k, gt):
-    import cupy as cp
+def _cuvs_rows(Xc_t, Xq_t, k, gt, nq):
     from cuvs.neighbors import cagra
 
-    Xc = cp.asarray(Xc_np); Xq = cp.asarray(Xq_np)
-    # cuVS's ivf_pq graph build raises on some datasets ("too many invalid
-    # or duplicated neighbor nodes"); nn_descent is its faster default and
-    # builds cleanly. The search comparison is matched on (graph_degree,
-    # itopk, search_width) regardless of which build produced the graph.
-    def _build(algo):
-        ip = cagra.IndexParams(metric="sqeuclidean", graph_degree=gd,
-                               intermediate_graph_degree=inter, build_algo=algo)
-        return cagra.build(ip, Xc)
-
-    try:
-        index = _build("nn_descent")
-        algo = "nn_descent"
-    except Exception:
-        index = _build("ivf_pq")
-        algo = "ivf_pq"
-    t_build = time_gpu(lambda: _build(algo), repeat=1, warmup=0)
-    sp = cagra.SearchParams(itopk_size=itopk, search_width=sw)
-
-    _, I = cagra.search(sp, index, Xq, k)
-    ids = cp.asarray(I).get()
-    t_search = time_gpu(lambda: cagra.search(sp, index, Xq, k),
-                        repeat=10, warmup=3)
-    qps = nq / (t_search / 1000.0)
-    return ("cuvs", f"{t_build:8.1f}", f"{t_search:8.3f}", f"{qps:11,.0f}",
-            f"{recall_at_k(ids, gt, k):.4f}", f"{gd:3d}", f"{itopk:5d}")
+    rows = []
+    for gd in sorted({g for g, _ in CUVS_GRID}):
+        params = cagra.IndexParams(graph_degree=gd,
+                                   intermediate_graph_degree=2 * gd,
+                                   build_algo="nn_descent",
+                                   metric="sqeuclidean")
+        torch.cuda.synchronize()
+        t0 = time.time()
+        index = cagra.build(params, Xc_t)
+        torch.cuda.synchronize()
+        t_build = time.time() - t0
+        for g, itopk in CUVS_GRID:
+            if g != gd:
+                continue
+            sp = cagra.SearchParams(itopk_size=itopk)
+            _, I_ = cagra.search(sp, index, Xq_t, k)
+            ids = torch.as_tensor(I_, device="cuda").cpu()
+            r = _recall(ids, gt, k)
+            t = time_gpu(lambda: cagra.search(sp, index, Xq_t, k),
+                         repeat=10, warmup=3)
+            rows.append(("cuvs", f"{t_build:7.2f}", gd, itopk,
+                         f"{t:8.3f}", nq / t * 1000.0, r))
+        del index
+    return rows
 
 
-def run_case(label, Xc_np, Xq_np, gt, gd, inter, itopk, sw, k, with_cuvs=True):
-    """One benchmark row-group given base/query numpy arrays + exact GT ids."""
-    M, D = Xc_np.shape
-    nq = Xq_np.shape[0]
-    title(f"CAGRA  {label}  (M={M:,}, nq={nq:,}, D={D}, deg={gd}, "
-          f"inter={inter}, itopk={itopk}, sw={sw}, k={k})")
+def _frontier(rows):
+    """Pareto frontier (recall asc, QPS desc) of (engine rows)."""
+    pts = sorted(((r[6], r[5]) for r in rows), key=lambda p: (-p[0], -p[1]))
+    front = []
+    best_qps = 0.0
+    for rec, qps in pts:
+        if qps > best_qps:
+            front.append((rec, qps))
+            best_qps = qps
+    return sorted(front)
 
-    Xc_t = torch.as_tensor(Xc_np, device="cuda")
-    Xq_t = torch.as_tensor(Xq_np, device="cuda")
+
+def _iso_recall_speedup(flash_rows, cuvs_rows):
+    """For each cuVS frontier point: best flashlib QPS at >= recall."""
+    out = []
+    for c_rec, c_qps in _frontier(cuvs_rows):
+        cands = [r for r in flash_rows if r[6] >= c_rec]
+        if not cands:
+            out.append((c_rec, c_qps, None, None))
+            continue
+        best = max(cands, key=lambda r: r[5])
+        out.append((c_rec, c_qps, best[5], best[5] / c_qps))
+    return out
+
+
+def run_one(label, M, nq, D, k, Xc_np=None, Xq_np=None, gt=None):
+    title(f"CAGRA  {label}  (M={M:,}, nq={nq:,}, D={D}, k={k})")
+
+    if Xc_np is None:
+        Xc_np = _blobs(M, D, 128, seed=0)
+        Xq_np = _blobs(nq, D, 128, seed=1)
+    Xc_t = torch.tensor(Xc_np, device="cuda")
+    Xq_t = torch.tensor(Xq_np, device="cuda")
+    if gt is None:
+        gt = _brute_ids(Xc_t, Xq_t, k)
 
     rows = []
     try:
-        rows.append(_flashlib_row(Xc_t, Xq_t, nq, gd, inter, itopk, sw, k, gt))
+        flash_rows = _flash_rows(Xc_t, Xq_t, k, gt, nq)
+        rows += flash_rows
     except Exception as e:  # pragma: no cover - bench-only
-        rows.append(("flashlib", "  ERR", str(e).splitlines()[0][:24], "", "", "", ""))
-
-    if with_cuvs:
-        try:
-            rows.append(_cuvs_row(Xc_np, Xq_np, nq, gd, inter, itopk, sw, k, gt))
-        except Exception as e:  # pragma: no cover - optional dep
-            rows.append(("cuvs", "  SKIP", str(e).splitlines()[0][:24], "", "", "", ""))
-
-    print(fmt_table(rows, COLUMNS))
-    del Xc_t, Xq_t
-    torch.cuda.empty_cache()
-
-
-def run_synthetic(with_cuvs=True):
-    print("\n### synthetic (Gaussian blobs, brute-force GT) ###")
-    for label, M, nq, D, gd, itopk, sw, k in SYNTH_SHAPES:
-        # One connected cloud (separated blobs would split the graph).
-        Xc_np = _blobs(M, D, 1, seed=0)
-        Xq_np = _blobs(nq, D, 1, seed=1)
-        Xc_t = torch.as_tensor(Xc_np, device="cuda")
-        Xq_t = torch.as_tensor(Xq_np, device="cuda")
-        gt = _brute_ids(Xc_t, Xq_t, k)
-        del Xc_t, Xq_t
-        torch.cuda.empty_cache()
-        run_case(label, Xc_np, Xq_np, gt, gd, 2 * gd, itopk, sw, k,
-                 with_cuvs=with_cuvs)
-
-
-def run_real(dataset="sift-128-euclidean", with_cuvs=True):
-    print(f"\n### real ({dataset}, dataset exact GT) ###")
+        flash_rows = []
+        rows.append(("flashlib", "  ERR", "", "",
+                     str(e).splitlines()[0][:32], 0.0, 0.0))
     try:
-        train, test, gt_full = load_ann_dataset(dataset)
-    except Exception as e:  # pragma: no cover - optional / network
-        print(f"  SKIP real data ({dataset}): {e}")
-        return
-    print(f"  loaded: base {train.shape}, query {test.shape}, gt {gt_full.shape}")
-    for gd, inter, itopk, sw, k in REAL_CONFIGS:
-        run_case(dataset, train, test, gt_full[:, :k], gd, inter, itopk, sw, k,
-                 with_cuvs=with_cuvs)
+        cuvs_rows = _cuvs_rows(Xc_t, Xq_t, k, gt, nq)
+        rows += cuvs_rows
+    except Exception as e:  # pragma: no cover - optional dep
+        cuvs_rows = []
+        rows.append(("cuvs", "  SKIP", "", "",
+                     str(e).splitlines()[0][:32], 0.0, 0.0))
+
+    print(fmt_table(
+        [(r[0], r[1], str(r[2]), str(r[3]), r[4], f"{r[5]:12,.0f}",
+          f"{r[6]:.4f}") for r in rows],
+        ["engine", "build(s)", "gd", "itopk", "search(ms)", "QPS",
+         f"recall@{k}"],
+    ))
+
+    if flash_rows and cuvs_rows:
+        print("\n  iso-recall speedup (flashlib QPS at >= cuVS-frontier "
+              "recall):")
+        for c_rec, c_qps, f_qps, sp in _iso_recall_speedup(flash_rows,
+                                                           cuvs_rows):
+            if sp is None:
+                print(f"    recall>={c_rec:.4f}: cuvs {c_qps:11,.0f} QPS   "
+                      f"flashlib: not reached")
+            else:
+                print(f"    recall>={c_rec:.4f}: cuvs {c_qps:11,.0f} QPS   "
+                      f"flashlib {f_qps:11,.0f} QPS   {sp:5.2f}x")
+
+
+def run_sift(k=10):
+    from benchmarks.vs_cuml._common import load_ann_dataset
+    train, test, gt_np = load_ann_dataset("sift-128-euclidean")
+    gt = torch.tensor(gt_np[:, :k])
+    run_one("SIFT-1M", train.shape[0], test.shape[0], train.shape[1], k,
+            Xc_np=train, Xq_np=test, gt=gt)
 
 
 def main():
-    ap = argparse.ArgumentParser(description="flash_cagra vs cuVS CAGRA")
-    ap.add_argument("--synthetic-only", action="store_true")
-    ap.add_argument("--real-only", action="store_true")
-    ap.add_argument("--dataset", default="sift-128-euclidean",
-                    help="ann-benchmarks dataset for the real regime")
-    ap.add_argument("--no-cuvs", action="store_true", help="skip the cuVS rows")
-    args = ap.parse_args()
-
     print(f"torch {torch.__version__}   GPU {torch.cuda.get_device_name(0)}")
-    with_cuvs = not args.no_cuvs
-    if not args.real_only:
-        run_synthetic(with_cuvs=with_cuvs)
-    if not args.synthetic_only:
-        run_real(args.dataset, with_cuvs=with_cuvs)
+    if "--sift" in sys.argv:
+        run_sift()
+    for s in SHAPES:
+        run_one(*s)
     print()
 
 

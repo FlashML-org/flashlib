@@ -4,354 +4,295 @@ Used as
 
 * the ``backend="torch"`` fallback for :func:`flash_cagra_build` /
   :func:`flash_cagra_search` when CUDA is unavailable, and
-* the **correctness oracle** in the test-suite.
+* the correctness oracle in the test-suite: given the **same**
+  :class:`~flashlib.primitives.cagra.index.CagraIndex` and the same
+  seeds, :func:`cagra_search_torch` performs the same greedy traversal
+  as the Triton kernel -- identical packed-key buffer semantics
+  (overwrite-inject eviction tail, keep-last dedupe, top-``itopk``
+  parent window), so any material divergence is a kernel bug rather
+  than an algorithm difference. (Bit-exactness is not guaranteed: the
+  kernel accumulates distances over feature tiles, so near-ties may
+  round differently.)
 
-CAGRA is heuristic, so unlike the IVF oracles this is not a *bit-exact*
-contract: it is a clear, faithful implementation of the same algorithm
-the Triton kernels run, so that recall (vs exact brute-force ground
-truth) and graph properties can be checked against a trusted baseline,
-and the Triton search can be sanity-checked for high agreement at small
-``N``.
-
-Algorithm (mirrors :mod:`flashlib.primitives.cagra.triton`):
-
-**build**
-  1. *Initial kNN graph* — exact brute force: for each node keep its
-     ``intermediate_degree`` nearest neighbours, distance-sorted (column
-     index == "rank"). (The torch path always brute-forces; the IVF-PQ
-     build route is Triton-only.)
-  2. *Rank-based detour prune* — paper Eq. 3 with **rank as the distance
-     proxy** (no distance recompute): an edge ``X→Y`` (rank ``rw``) is
-     "detourable" by ``Z`` if ``Z`` is in ``X``'s list (rank ``rz``),
-     ``Y`` is in ``Z``'s list (rank ``rzy``) and ``max(rz, rzy) < rw``.
-     Reorder each row by ``(detour_count asc, rank asc)`` and keep the
-     top ``graph_degree``.
-  3. *Reverse edges + merge* — add incoming edges (kept by smallest
-     source-rank) and interleave ``graph_degree/2`` forward +
-     ``graph_degree/2`` reverse per node, backfilling from the forward
-     list, to a final fixed out-degree ``graph_degree``.
-
-**search**
-  Greedy best-first traversal with a sorted internal top-``itopk_size``
-  candidate buffer, an "expanded" flag per slot and a visited bitmap;
-  each iteration expands the ``search_width`` closest unexpanded nodes,
-  computes true squared-L2 to their graph neighbours, and merges.
+No Triton import; the graph optimization ops in
+:mod:`...cagra.graph_ops` are already device-agnostic torch code and
+are reused directly.
 """
 from __future__ import annotations
 
-import math
-from typing import Optional, Tuple
+from typing import Optional
 
 import torch
 
-from flashlib.primitives.cagra.index import CagraIndex, default_random_seeds
+from flashlib.primitives.cagra.graph_ops import (
+    default_compact, detour_prune, reverse_merge, router_size,
+)
+from flashlib.primitives.cagra.index import CagraIndex
+
+_INF_KEY = 0x7FFFFFFFFFFFFFFF
 
 
-# ── build building blocks ──────────────────────────────────────────────────
-def _brute_knn_graph(
-    X: torch.Tensor, d_init: int, *, chunk: int = 2048
-) -> torch.Tensor:
-    """Exact kNN graph: ``(N, d_init)`` neighbour ids, distance-sorted.
-
-    The self-match (distance 0) is dropped, so column ``j`` is the
-    ``(j+1)``-th nearest *other* node -- its "rank".
-    """
-    N = X.shape[0]
-    Xf = X.to(torch.float32)
-    ids = torch.empty(N, d_init, dtype=torch.int64, device=X.device)
-    for lo in range(0, N, chunk):
-        hi = min(lo + chunk, N)
-        d2 = torch.cdist(Xf[lo:hi], Xf) ** 2                 # (b, N)
-        # Drop self by forcing the diagonal to +inf.
-        rows = torch.arange(lo, hi, device=X.device)
-        d2[torch.arange(hi - lo, device=X.device), rows] = float("inf")
-        ids[lo:hi] = d2.topk(d_init, dim=1, largest=False, sorted=True).indices
-    return ids
+def _knn_torch(X: torch.Tensor, kk: int, *, chunk: int = 2048):
+    """Exact self-kNN via chunked cdist (fp32). Returns (vals, idxs)."""
+    Xf = X.float()
+    M = Xf.shape[0]
+    vals = torch.empty((M, kk), device=X.device, dtype=torch.float32)
+    idxs = torch.empty((M, kk), device=X.device, dtype=torch.int64)
+    for r0 in range(0, M, chunk):
+        r1 = min(M, r0 + chunk)
+        d2 = torch.cdist(Xf[r0:r1], Xf) ** 2
+        v, i = d2.topk(kk, dim=1, largest=False)
+        vals[r0:r1], idxs[r0:r1] = v, i
+    return vals, idxs
 
 
-def _detour_prune(knn_ids: torch.Tensor, graph_degree: int) -> torch.Tensor:
-    """Rank-based detour pruning → ``(N, graph_degree)`` neighbour ids.
-
-    For each node ``X`` counts, per neighbour slot ``rw``, how many
-    2-hop "shortcuts" ``X→Z→Y`` dominate the direct edge ``X→Y`` (both
-    hops at a strictly smaller rank). Edges with the fewest detours are
-    kept. O(N · d_init²) rank look-ups.
-    """
-    N, d_init = knn_ids.shape
-    keep = min(graph_degree, d_init)
-    device = knn_ids.device
-    rank_rz = torch.arange(d_init, device=device)            # rz per source slot
-    pruned = torch.empty(N, keep, dtype=torch.int64, device=device)
-
-    for x in range(N):
-        L = knn_ids[x]                                       # (d_init,) X's nbrs
-        # rank_map[id] = rank within X's list, else -1.
-        rank_map = torch.full((N,), -1, dtype=torch.int64, device=device)
-        rank_map[L] = rank_rz
-        LZ = knn_ids[L]                                      # (d_init, d_init) Z's nbrs
-        rw = rank_map[LZ]                                    # rank-in-X of each Z-neighbour
-        rzy = rank_rz[None, :].expand(d_init, d_init)        # rank within Z's list
-        rz = rank_rz[:, None].expand(d_init, d_init)         # rank within X's list (of Z)
-        hop = torch.maximum(rz, rzy)
-        cond = (rw >= 0) & (hop < rw)                        # detour dominates edge rw
-        detour = torch.bincount(
-            rw[cond], minlength=d_init
-        ).to(torch.int64)                                    # (d_init,)
-        # Stable sort by detour count keeps rank order within ties.
-        order = torch.argsort(detour, stable=True)
-        pruned[x] = L[order[:keep]]
-    return pruned
-
-
-def reverse_edges(pruned: torch.Tensor, graph_degree: int) -> torch.Tensor:
-    """Per-node ``graph_degree`` smallest-rank *incoming* sources.
-
-    Reverse edges are ranked by the source slot index (how highly the
-    source ranked this destination); each node keeps up to
-    ``graph_degree`` of them, ``-1`` padded. Fully vectorized.
-    """
-    N, keep = pruned.shape
-    device = pruned.device
-
-    # Reverse adjacency candidate: dst = pruned[x, r] gets src = x at rank r.
-    src = torch.arange(N, device=device)[:, None].expand(N, keep)
-    rnk = torch.arange(keep, device=device)[None, :].expand(N, keep)
-    flat_dst = pruned.reshape(-1)
-    flat_src = src.reshape(-1)
-    flat_rnk = rnk.reshape(-1)
-    valid = flat_dst >= 0
-
-    # Sort by (dst, rank) so each dst's sources arrive smallest-rank first.
-    comp = torch.where(valid, flat_dst * keep + flat_rnk, torch.full_like(flat_dst, N * keep))
-    order = torch.argsort(comp, stable=True)
-    s_dst = flat_dst[order]
-    s_src = flat_src[order]
-    s_valid = valid[order]
-
-    # Position within each dst group via first-index offset.
-    grp_start = torch.ones_like(s_dst, dtype=torch.bool)
-    grp_start[1:] = s_dst[1:] != s_dst[:-1]
-    grp_id = torch.cumsum(grp_start.to(torch.int64), 0) - 1
-    arangeE = torch.arange(s_dst.numel(), device=device)
-    n_groups = int(grp_id[-1].item()) + 1
-    first_idx = torch.full((n_groups,), s_dst.numel(), dtype=torch.int64, device=device)
-    first_idx.scatter_reduce_(0, grp_id, arangeE, reduce="amin", include_self=True)
-    within = arangeE - first_idx[grp_id]
-
-    rev = torch.full((N, graph_degree), -1, dtype=torch.int64, device=device)
-    sel = s_valid & (within < graph_degree) & (s_dst >= 0)
-    rev[s_dst[sel], within[sel]] = s_src[sel]
-    return rev
-
-
-def merge_graph(
-    pruned: torch.Tensor, rev: torch.Tensor, graph_degree: int, *, chunk: int = 8192
-) -> torch.Tensor:
-    """Interleave forward + reverse edges → final ``(N, graph_degree)`` int32.
-
-    Per node, ``graph_degree/2`` forward then ``graph_degree/2`` reverse
-    (with the leftovers appended), de-duplicated preserving order and
-    truncated to ``graph_degree``; self-loops and ``-1`` are dropped and
-    any underfilled rows are backfilled with self-avoiding wrap ids.
-    Chunked over nodes so the O(T²) per-row dedup never blows up memory.
-    """
-    N, keep = pruned.shape
-    device = pruned.device
-    n_rev = graph_degree // 2
-    n_fwd = graph_degree - n_rev
-    out = torch.empty(N, graph_degree, dtype=torch.int64, device=device)
-
-    for lo in range(0, N, chunk):
-        hi = min(lo + chunk, N)
-        b = hi - lo
-        seq = torch.cat(
-            [pruned[lo:hi, :n_fwd], rev[lo:hi, :n_rev],
-             pruned[lo:hi, n_fwd:], rev[lo:hi, n_rev:]],
-            dim=1,
-        )                                                # (b, T)
-        T = seq.shape[1]
-        self_b = torch.arange(lo, hi, device=device)[:, None]
-        seq = torch.where((seq < 0) | (seq == self_b), torch.full_like(seq, -1), seq)
-        # Drop entries that already appeared earlier in the row.
-        eq = seq[:, :, None] == seq[:, None, :]          # (b, T, T)
-        tri = torch.tril(torch.ones(T, T, dtype=torch.bool, device=device), diagonal=-1)
-        earlier = (eq & tri[None]).any(dim=2)            # (b, T)
-        keepmask = (~earlier) & (seq != -1)
-        pos = torch.arange(T, device=device)[None, :].expand(b, T)
-        key = torch.where(keepmask, pos, torch.full_like(pos, 2 * T))
-        sel = seq.gather(1, key.argsort(dim=1))[:, :graph_degree]
-        need = sel < 0
-        if bool(need.any()):
-            col = torch.arange(graph_degree, device=device)[None, :]
-            fb = (self_b + col + 1) % N
-            sel = torch.where(need, fb, sel)
-        out[lo:hi] = sel
-    return out
-
-
-# ── public build / search ──────────────────────────────────────────────────
 def cagra_build_torch(
     X: torch.Tensor,
     *,
-    graph_degree: int = 64,
-    intermediate_degree: Optional[int] = None,
+    graph_degree: int = 32,
+    intermediate_graph_degree: Optional[int] = None,
     build_algo: str = "auto",
     metric: str = "l2",
-    nlist: Optional[int] = None,
-    nprobe: Optional[int] = None,
-    ivf_pq_m: Optional[int] = None,
-    niter: int = 20,
-    seed: int = 0,
-):
-    """Build a :class:`CagraIndex` with pure torch ops (always brute-force kNN)."""
+    rev_ratio: float = 0.5,
+    search_dtype: Optional[torch.dtype] = None,
+) -> CagraIndex:
+    """Build a :class:`CagraIndex` with pure torch ops (CPU-OK)."""
     if metric != "l2":
-        raise NotImplementedError(f"cagra supports metric='l2' only (got {metric!r})")
+        raise NotImplementedError(
+            f"cagra torch supports metric='l2' only (got {metric!r})")
+    if build_algo not in ("auto", "bruteforce"):
+        raise NotImplementedError(
+            "the torch build supports the exact route only "
+            f"(build_algo='auto'|'bruteforce', got {build_algo!r})")
     if X.ndim != 2:
-        raise ValueError("cagra build expects a 2D (N, D) tensor")
-    del nlist, nprobe, ivf_pq_m, niter, seed  # torch path is brute-force only
+        raise ValueError("cagra build expects a 2D (M, D) tensor")
+    M, D = X.shape
+    gd = int(graph_degree)
+    if gd & (gd - 1):
+        raise ValueError(f"graph_degree must be a power of two (got {gd})")
+    if M <= gd:
+        raise ValueError(f"need M > graph_degree (M={M}, gd={gd})")
+    igd = int(intermediate_graph_degree or min(2 * gd, 96))
+    igd = max(gd, min(igd, 128, M - 1))
+    # CPU traversal gathers row-by-row; bf16 saves nothing there. Keep
+    # the caller's dtype unless asked otherwise.
+    search_dtype = search_dtype or X.dtype
 
-    N, D = X.shape
-    graph_degree = min(int(graph_degree), max(1, N - 1))
-    d_init = int(intermediate_degree or 2 * graph_degree)
-    d_init = max(graph_degree, min(d_init, max(1, N - 1)))
+    vals, idxs = _knn_torch(X, igd + 1)
+    rows = torch.arange(M, device=X.device)
+    is_self = idxs == rows[:, None]
+    key = vals + torch.where(is_self, torch.inf, 0.0)
+    order = key.argsort(dim=1, stable=True)
+    idxs = idxs.gather(1, order)[:, :igd]
+    vals = vals.gather(1, order)[:, :igd]
 
-    Xp = X.to(torch.float32).contiguous()
-    knn_ids = _brute_knn_graph(Xp, d_init)
-    pruned = _detour_prune(knn_ids, graph_degree)
-    rev = reverse_edges(pruned, graph_degree)
-    graph = merge_graph(pruned, rev, graph_degree).to(torch.int32)
+    fwd = detour_prune(X, vals, idxs, gd)
+    graph = reverse_merge(fwd, gd, rev_ratio=rev_ratio)
 
-    # Component count drives the search seed-count heuristic (a disconnected
-    # graph needs ~one seed per component). The CC kernel is Triton/GPU-only,
-    # so on CPU we leave it at 1 (connected) -- the CPU path is the reference
-    # oracle, not a throughput target.
-    n_comp = 1
-    if graph.is_cuda:
-        try:
-            from flashlib.kernels.connected_components import connected_components
-            Ng = graph.shape[0]
-            rows = torch.arange(Ng, device=graph.device, dtype=torch.int32)[:, None]
-            rows = rows.expand(Ng, graph_degree).reshape(-1).contiguous()
-            cols = graph.reshape(-1).to(torch.int32).contiguous()
-            n_comp = int(connected_components(rows, cols, Ng).unique().numel())
-        except Exception:  # pragma: no cover - diagnostics must never break build
-            n_comp = 1
-
+    data = X.to(search_dtype).contiguous()
+    R = router_size(M)
+    stride = max(1, M // R)
+    router_ids = (torch.arange(R, device=X.device, dtype=torch.int64)
+                  * stride) % M
+    router_pts = data.index_select(0, router_ids).contiguous()
     return CagraIndex(
-        dataset=Xp,
+        data=data,
         graph=graph,
-        graph_degree=int(graph_degree),
-        intermediate_degree=int(d_init),
+        data_exact=X.contiguous() if X.dtype != search_dtype else None,
+        router_ids=router_ids,
+        router_pts=router_pts,
         metric=metric,
-        D=int(D),
-        Dp=int(D),
-        build_algo="bruteforce",
-        n_components=n_comp,
+        graph_degree=gd,
+        intermediate_graph_degree=igd,
     )
 
 
-def _auto_max_iters(itopk_size: int, search_width: int) -> int:
-    """cuVS-style default iteration cap when ``max_iterations == 0``."""
-    return int(math.ceil(itopk_size / max(1, search_width)) + 16)
+def _pack_keys(dists: torch.Tensor, ids: torch.Tensor) -> torch.Tensor:
+    """Pack ``[dist_bits:32 | id:31 | visited:0]`` exactly like the kernel.
+
+    Squared-L2 is non-negative, so the fp32 bit pattern is monotone and
+    the packed int64 compares as ``(dist, id, visited)``.
+    """
+    bits = dists.float().view(torch.int32).to(torch.int64)
+    key = (bits << 32) | (ids.to(torch.int64) << 1)
+    return torch.where(ids >= 0, key, torch.full_like(key, _INF_KEY))
+
+
+def _key_ids(keys: torch.Tensor) -> torch.Tensor:
+    return torch.where(keys == _INF_KEY,
+                       torch.full_like(keys, -1),
+                       (keys >> 1) & 0x7FFFFFFF)
+
+
+def _key_dists(keys: torch.Tensor) -> torch.Tensor:
+    return ((keys >> 32) & 0xFFFFFFFF).to(torch.int32).view(torch.float32)
 
 
 def cagra_search_torch(
-    index,
+    index: CagraIndex,
     Q: torch.Tensor,
     k: int,
     *,
-    itopk_size: int = 64,
+    itopk_size: Optional[int] = None,
     search_width: int = 1,
-    max_iterations: int = 0,
-    min_iterations: int = 0,
-    num_random_seeds: int = 0,
+    max_iterations: Optional[int] = None,
+    n_seeds: int = 32,
     seed: int = 0,
+    seed_mode: str = "routed",
+    compact_every: Optional[int] = None,
+    seeds: Optional[torch.Tensor] = None,
+    rerank: bool = True,
 ):
-    """Reference greedy graph traversal over a built :class:`CagraIndex`.
+    """Reference greedy traversal over a built index.
 
-    Returns ``(vals, ids)`` with ``vals`` true squared-L2 (fp32) and
-    ``ids`` original row ids (``-1`` padded). Fully vectorized over the
-    ``nq`` queries.
+    Mirrors the Triton kernel's packed-key buffer semantics. Returns
+    ``(vals, ids)`` -- fp32 squared-L2 (exact-reranked when the index
+    kept original-precision rows) and int64 ids, ``-1`` padded.
     """
     if Q.ndim != 2:
         raise ValueError("cagra search expects a 2D (nq, D) query tensor")
-
-    dataset = index.dataset.to(torch.float32)
-    graph = index.graph.to(torch.int64)
-    N, D = dataset.shape
-    gd = index.graph_degree
-    device = dataset.device
-
     nq = Q.shape[0]
-    Qf = Q.to(torch.float32).to(device)
-    M = max(int(itopk_size), int(k))
-    R = default_random_seeds(num_random_seeds, getattr(index, "n_components", 1),
-                             M, N)
-    S = max(1, int(search_width))
-    max_iters = int(max_iterations) or _auto_max_iters(M, S)
-    max_iters = max(max_iters, int(min_iterations), 1)
+    M, GD = index.graph.shape
+    itopk = int(itopk_size or max(64, k))
+    if itopk < k:
+        raise ValueError(f"itopk_size ({itopk}) must be >= k ({k})")
 
-    def _dist(ids: torch.Tensor) -> torch.Tensor:
-        # ids: (nq, T) row ids -> (nq, T) squared-L2 to the matching query.
-        vec = dataset[ids.clamp(min=0)]                       # (nq, T, D)
-        diff = vec - Qf[:, None, :]
-        return (diff * diff).sum(-1)
+    def _pow2(v):
+        p = 1
+        while p < v:
+            p *= 2
+        return p
 
-    # ── seed the buffer with R random distinct-ish entry nodes ──────────
-    g = torch.Generator(device="cpu").manual_seed(seed)
-    seeds = torch.randint(0, N, (nq, R), generator=g).to(device)   # (nq, R)
-    buf_ids = torch.full((nq, M), -1, dtype=torch.int64, device=device)
-    buf_dist = torch.full((nq, M), float("inf"), dtype=torch.float32, device=device)
-    buf_exp = torch.zeros((nq, M), dtype=torch.bool, device=device)
-    buf_ids[:, :R] = seeds
-    buf_dist[:, :R] = _dist(seeds)
-    # Sort initial buffer ascending.
-    buf_dist, srt = buf_dist.sort(dim=1)
-    buf_ids = buf_ids.gather(1, srt)
+    ITOPK = int(max(itopk, k))       # lane bound only; pow2 not required
+    SW = max(1, int(search_width))
+    CW = _pow2(max(SW * GD, 1))
+    P2 = _pow2(ITOPK + CW)
+    if max_iterations is None:
+        max_iterations = 4 * ITOPK // SW + 16
+    if compact_every is None:
+        compact_every = default_compact(ITOPK, P2)
+    compact_every = max(1, int(compact_every))
 
-    visited = torch.zeros((nq, N), dtype=torch.bool, device=device)
-    qrange = torch.arange(nq, device=device)
-    visited[qrange[:, None], buf_ids.clamp(min=0)] = True
+    device = Q.device
+    graph = index.graph.long()
+    data = index.data
+    Qs = Q.to(data.dtype)
 
-    for _ in range(max_iters):
-        # Frontier: S closest *unexpanded* valid buffer slots.
-        masked = torch.where(buf_exp | (buf_ids < 0), float("inf"), buf_dist)
-        front_d, front_pos = masked.topk(S, dim=1, largest=False)   # (nq, S)
-        active = torch.isfinite(front_d)                            # (nq, S)
-        if not bool(active.any()):
-            break
-        # Mark expanded.
-        buf_exp.scatter_(1, front_pos, active | buf_exp.gather(1, front_pos))
+    if seeds is None:
+        n_seeds = max(1, min(int(n_seeds), M))
+        if seed_mode == "routed":
+            # nearest router points per query (exact cdist; small R)
+            rd = torch.cdist(Q.float(), index.router_pts.float()) ** 2
+            nn = rd.topk(min(n_seeds, rd.shape[1]), dim=1,
+                         largest=False).indices
+            seeds = index.router_ids[nn]
+        elif seed_mode == "random":
+            gen_device = device if device.type == "cuda" else "cpu"
+            g = torch.Generator(device=gen_device).manual_seed(int(seed))
+            seeds = torch.randint(0, M, (nq, n_seeds), generator=g,
+                                  device=gen_device,
+                                  dtype=torch.int64).to(device)
+        else:
+            raise ValueError(
+                f"unknown seed_mode {seed_mode!r} (routed|random)")
+    else:
+        seeds = seeds.long()
+    NS = min(seeds.shape[1], CW)
 
-        parents = buf_ids.gather(1, front_pos)                      # (nq, S)
-        neigh = graph[parents.clamp(min=0)].reshape(nq, S * gd)     # (nq, S*gd)
-        valid = active.repeat_interleave(gd, dim=1)                 # (nq, S*gd)
-        cand_dist = _dist(neigh)
-        # Drop invalid / already-visited candidates.
-        already = visited.gather(1, neigh.clamp(min=0))
-        drop = (~valid) | already | (neigh < 0)
-        neigh = torch.where(drop, torch.full_like(neigh, -1), neigh)
-        cand_dist = torch.where(drop, torch.full_like(cand_dist, float("inf")), cand_dist)
-        visited[qrange[:, None], neigh.clamp(min=0)] |= (neigh >= 0)
+    out_vals = torch.full((nq, k), torch.inf, device=device)
+    out_ids = torch.full((nq, k), -1, device=device, dtype=torch.int64)
 
-        # Merge buffer + candidates, resort, keep M smallest (flags follow).
-        all_ids = torch.cat([buf_ids, neigh], dim=1)
-        all_dist = torch.cat([buf_dist, cand_dist], dim=1)
-        all_exp = torch.cat([buf_exp, torch.zeros_like(neigh, dtype=torch.bool)], dim=1)
-        all_dist, srt = all_dist.sort(dim=1)
-        buf_dist = all_dist[:, :M]
-        buf_ids = all_ids.gather(1, srt)[:, :M]
-        buf_exp = all_exp.gather(1, srt)[:, :M]
+    for qi in range(nq):
+        qrow = Qs[qi].float()
+        buf = torch.full((P2,), _INF_KEY, device=device, dtype=torch.int64)
 
-    vals = buf_dist[:, :k].clone()
-    ids = buf_ids[:, :k].clone()
-    ids = torch.where(torch.isinf(vals), torch.full_like(ids, -1), ids)
-    return vals, ids
+        cand = torch.full((CW,), -1, device=device, dtype=torch.int64)
+        cand[:NS] = seeds[qi, :NS]
+
+        for _it in range(int(max_iterations)):
+            # distances of the candidate batch (fp32 math on search dtype)
+            rowsv = data[cand.clamp_min(0)].float()
+            diff = qrow[None, :] - rowsv
+            cd = (diff * diff).sum(-1)
+            keys = _pack_keys(cd, cand)
+
+            if compact_every == 1:
+                # exact path: overwrite tail, sort, punch dups to INF
+                # (hole swept out by the next iteration's sort)
+                buf[P2 - CW:] = keys
+                buf = buf.sort().values
+                ids_b = _key_ids(buf)
+                same = torch.zeros(P2, dtype=torch.bool, device=device)
+                same[:-1] = (ids_b[:-1] == ids_b[1:]) & (ids_b[:-1] >= 0)
+                buf = torch.where(same, torch.full_like(buf, _INF_KEY),
+                                  buf)
+            else:
+                # evict the tail (worst CW), merge the batch in, keep
+                # sorted (matches the kernel's bitonic merge exactly)
+                buf = torch.cat([buf[:P2 - CW], keys]).sort().values
+                ids_b = _key_ids(buf)
+                same = torch.zeros(P2, dtype=torch.bool, device=device)
+                same[:-1] = (ids_b[:-1] == ids_b[1:]) & (ids_b[:-1] >= 0)
+                if _it % compact_every == compact_every - 1:
+                    # compaction: punch clones to INF, sweep holes out
+                    buf = torch.where(same,
+                                      torch.full_like(buf, _INF_KEY), buf)
+                    buf = buf.sort().values
+                else:
+                    # dedupe-fill: clone resident copy over re-entries
+                    filled = buf.clone()
+                    filled[:-1] = torch.where(same[:-1], buf[1:], buf[:-1])
+                    buf = filled
+
+            # pick SW best unvisited parents within top-ITOPK
+            n_par = 0
+            parents = []
+            for _s in range(SW):
+                window = buf[:ITOPK]
+                unvisited = ((window & 1) == 0) & (window != _INF_KEY)
+                pos = unvisited.nonzero(as_tuple=False).flatten()
+                if pos.numel() == 0:
+                    break
+                pmin = window[pos[0]]
+                parents.append(int(_key_ids(pmin[None])[0]))
+                buf = torch.where(buf == pmin, pmin | 1, buf)
+                n_par += 1
+            if n_par == 0:
+                break
+
+            # expand; within-batch dedupe mirrors the kernel (SW>1 only)
+            nbr = graph[torch.tensor(parents, device=device)].reshape(-1)
+            if SW > 1:
+                nbr = nbr.sort().values
+                keep = torch.ones_like(nbr, dtype=torch.bool)
+                keep[1:] = nbr[1:] != nbr[:-1]
+                nbr = torch.where(keep, nbr, torch.full_like(nbr, -1))
+            cand = torch.full((CW,), -1, device=device, dtype=torch.int64)
+            cand[:min(CW, nbr.shape[0])] = nbr[:CW]
+
+        # emit: punch leftover clones (adjacent), compact, top-k cut
+        ids_b = _key_ids(buf)
+        dup = torch.zeros(P2, dtype=torch.bool, device=device)
+        dup[:-1] = (ids_b[:-1] == ids_b[1:]) & (ids_b[:-1] >= 0)
+        buf = torch.where(dup, torch.full_like(buf, _INF_KEY), buf)
+        buf = buf.sort().values
+        out_ids[qi] = _key_ids(buf[:k])
+        out_vals[qi] = _key_dists(buf[:k])
+        out_vals[qi] = torch.where(out_ids[qi] >= 0, out_vals[qi],
+                                   torch.tensor(torch.inf, device=device))
+
+    if rerank and index.data_exact is not None:
+        found = out_ids >= 0
+        rowsv = index.data_exact[out_ids.clamp_min(0)].float()
+        diff = Q.float()[:, None, :] - rowsv
+        exact = (diff * diff).sum(-1)
+        exact = torch.where(found, exact, torch.full_like(exact, torch.inf))
+        out_vals, order = exact.sort(dim=1)
+        out_ids = out_ids.gather(1, order)
+        found = found.gather(1, order)
+        out_ids = torch.where(found, out_ids, torch.full_like(out_ids, -1))
+
+    return out_vals, out_ids
 
 
-__all__ = [
-    "cagra_build_torch",
-    "cagra_search_torch",
-    "reverse_edges",
-    "merge_graph",
-]
+__all__ = ["cagra_build_torch", "cagra_search_torch"]

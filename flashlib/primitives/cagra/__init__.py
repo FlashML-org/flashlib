@@ -2,22 +2,21 @@
 
 Public API
 ----------
-    flash_cagra_build(X, *, graph_degree=, intermediate_degree=, build_algo=)
-        -> CagraIndex
-    flash_cagra_search(index, Q, k, *, itopk_size=, search_width=)
-        -> (vals, ids)
-    flash_cagra(X, Q, k, *, graph_degree=, itopk_size=)
-        -> (vals, ids)
+    flash_cagra_build(X, *, graph_degree=, ...)          -> CagraIndex
+    flash_cagra_search(index, Q, k, *, itopk_size=, ...)      -> (vals, ids)
+    flash_cagra(X, Q, k, *, graph_degree=, itopk_size=)       -> (vals, ids)
 
-CAGRA (CUDA ANN GRAph-based) builds an optimized fixed-degree proximity
-graph and answers queries by a greedy best-first traversal. The build
-**reuses** existing flashlib primitives -- ``flash_knn`` (exact brute
-force) for the small-``N`` initial kNN graph and ``flash_ivf_pq``
-(self-query) for the large-``N`` one -- then runs a rank-based,
-distance-free graph optimization (:mod:`...cagra.triton.optimize`). The
-search is a single-CTA traversal kernel that keeps a sorted internal
-top-M candidate buffer on-chip and recomputes true squared-L2 against
-the neighbours it gathers (:mod:`...cagra.triton.search`).
+The build reuses ``flash_knn`` (exact kNN graph) and adds CAGRA's two
+graph-optimization passes (rank-based detour pruning + reverse-edge
+merge, :mod:`...cagra.graph_ops`). The new kernel is the fused greedy
+graph traversal (:mod:`...cagra.triton.search`): one program per query
+walks the graph with the whole search state -- priority buffer, visited
+bits, candidate batch -- in registers, and never materialises any
+``(nq x anything)`` intermediate to HBM.
+
+Recall is governed by ``(graph_degree, itopk_size, search_width)``; the
+benchmark suite reports the recall/QPS frontier vs cuVS CAGRA
+(``benchmarks/vs_cuml/cagra.py``).
 
 Torch fallback (CPU-OK, also the correctness oracle):
     flashlib.primitives.cagra.torch_fallback.{cagra_build_torch,

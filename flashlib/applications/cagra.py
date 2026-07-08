@@ -1,14 +1,14 @@
 """CAGRA -- sklearn-style wrapper around primitives.cagra.
 
-The functional API (``flash_cagra_build`` / ``flash_cagra_search``) is the
-fast path; this class adds the familiar ``fit`` / ``kneighbors`` interface,
-caching the built graph index between queries.
+The functional API (``flash_cagra_build`` / ``flash_cagra_search``) is
+the fast path; this class adds the familiar ``fit`` / ``kneighbors``
+interface, caching the built graph index between queries.
 
 Example
 -------
     from flashlib.applications import CAGRA
-    index = CAGRA(graph_degree=64).fit(database)          # (N, D) CUDA
-    dist, idx = index.kneighbors(queries, n_neighbors=10) # squared L2
+    index = CAGRA(graph_degree=32, itopk_size=64).fit(database)  # (M, D) CUDA
+    dist, idx = index.kneighbors(queries, n_neighbors=10)   # squared L2
 """
 from __future__ import annotations
 
@@ -23,78 +23,60 @@ from flashlib.primitives.cagra import (
 
 
 class CAGRA:
-    """Approximate nearest neighbours via an optimized GPU proximity graph.
+    """Graph-based approximate nearest neighbours (CAGRA).
 
     Args:
-        graph_degree: fixed out-degree of the optimized graph (the main
-            graph memory/recall knob; clamped to ``N - 1``).
-        intermediate_degree: degree of the initial kNN graph before
-            pruning (default ``2 * graph_degree``; higher raises quality
-            and build cost).
-        build_algo: ``"auto"`` | ``"bruteforce"`` | ``"ivf_pq"`` -- how the
-            initial kNN graph is built (``"auto"`` brute-forces small ``N``
-            and IVF-PQ self-queries large ``N``).
+        graph_degree: out-degree of the search graph (power of two).
+            32 is the throughput sweet spot; 64 raises the recall
+            ceiling at ~2x per-hop cost.
+        intermediate_graph_degree: exact-kNN degree fed to the pruning
+            (default ``min(2 * graph_degree, 96)``).
+        itopk_size: traversal priority-window size -- the recall knob.
+        search_width: parents expanded per traversal iteration.
         n_neighbors: default ``k`` for :meth:`kneighbors`.
-        metric: distance metric (``"l2"`` only in v1).
-        itopk_size: internal sorted candidate-buffer size at search time
-            (the main accuracy/speed knob; higher = better recall, slower).
-        search_width: frontier nodes expanded per traversal iteration.
-        max_iterations: traversal iteration cap (``0`` auto-selects).
-        niter: Lloyd iterations for the IVF-PQ coarse quantizer (ivf_pq
-            build path only).
-        seed: RNG seed (deterministic build + search).
+        metric: distance metric (``"l2"`` only).
+        n_seeds: random start vertices per query.
+        seed: RNG seed for the start vertices (deterministic search).
         backend: ``"triton"`` | ``"torch"`` (default: auto).
 
-    Recall is governed by graph quality (``graph_degree`` /
-    ``intermediate_degree`` / build) *and* the search budget
-    (``itopk_size`` / ``search_width``); returned distances are true
-    squared-L2 to each candidate (recomputed during traversal).
+    Recall rises with ``itopk_size`` (and ``graph_degree``); tune it against
+    the recall/QPS frontier for your corpus. Unlike IVF the parameters
+    do not pin an exact candidate set, so validate recall on a held-out
+    query sample.
     """
 
     def __init__(
         self,
-        graph_degree: int = 64,
+        graph_degree: int = 32,
         *,
-        intermediate_degree: Optional[int] = None,
-        build_algo: str = "auto",
-        n_neighbors: int = 10,
-        metric: str = "l2",
+        intermediate_graph_degree: Optional[int] = None,
         itopk_size: int = 64,
         search_width: int = 1,
-        max_iterations: int = 0,
-        nlist: Optional[int] = None,
-        nprobe: Optional[int] = None,
-        ivf_pq_m: Optional[int] = None,
-        niter: int = 20,
+        n_neighbors: int = 5,
+        metric: str = "l2",
+        n_seeds: int = 32,
         seed: int = 0,
         backend: Optional[str] = None,
     ):
         self.graph_degree = int(graph_degree)
-        self.intermediate_degree = intermediate_degree
-        self.build_algo = build_algo
-        self.n_neighbors = int(n_neighbors)
-        self.metric = metric
+        self.intermediate_graph_degree = intermediate_graph_degree
         self.itopk_size = int(itopk_size)
         self.search_width = int(search_width)
-        self.max_iterations = int(max_iterations)
-        self.nlist = nlist
-        self.nprobe = nprobe
-        self.ivf_pq_m = ivf_pq_m
-        self.niter = int(niter)
+        self.n_neighbors = int(n_neighbors)
+        self.metric = metric
+        self.n_seeds = int(n_seeds)
         self.seed = int(seed)
         self.backend = backend
         self.index_ = None
 
     def fit(self, X: torch.Tensor) -> "CAGRA":
-        """Build the graph index over database ``X`` of shape ``(N, D)``."""
+        """Build the graph index over database ``X`` of shape ``(M, D)``."""
         if X.ndim != 2:
-            raise ValueError("CAGRA requires a 2D (N, D) tensor")
+            raise ValueError("CAGRA requires a 2D (M, D) tensor")
         self.index_ = flash_cagra_build(
             X, graph_degree=self.graph_degree,
-            intermediate_degree=self.intermediate_degree,
-            build_algo=self.build_algo, metric=self.metric,
-            nlist=self.nlist, nprobe=self.nprobe, ivf_pq_m=self.ivf_pq_m,
-            niter=self.niter, seed=self.seed, backend=self.backend,
+            intermediate_graph_degree=self.intermediate_graph_degree,
+            metric=self.metric, backend=self.backend,
         )
         return self
 
@@ -106,37 +88,26 @@ class CAGRA:
         *,
         itopk_size: Optional[int] = None,
         search_width: Optional[int] = None,
-        max_iterations: Optional[int] = None,
     ):
-        """Return the ``k`` nearest neighbours of each row of ``Q``.
+        """Return the ``k`` approximate nearest neighbours of each row of ``Q``.
 
         Returns ``(distances, indices)`` (squared L2) when
-        ``return_distance`` else just ``indices``. ``itopk_size`` /
-        ``search_width`` / ``max_iterations`` override the constructor
-        defaults for this query batch.
+        ``return_distance`` else just ``indices``. Per-call ``itopk_size`` /
+        ``search_width`` override the constructor defaults.
         """
         if self.index_ is None:
             raise RuntimeError("CAGRA not fitted; call fit() first.")
         k = n_neighbors if n_neighbors is not None else self.n_neighbors
         vals, ids = flash_cagra_search(
             self.index_, Q, k,
-            itopk_size=itopk_size if itopk_size is not None else self.itopk_size,
-            search_width=(search_width if search_width is not None
-                          else self.search_width),
-            max_iterations=(max_iterations if max_iterations is not None
-                            else self.max_iterations),
-            seed=self.seed, backend=self.backend,
+            itopk_size=itopk_size or self.itopk_size,
+            search_width=search_width or self.search_width,
+            n_seeds=self.n_seeds, seed=self.seed,
+            backend=self.backend,
         )
         if return_distance:
             return vals, ids
         return ids
-
-    @property
-    def graph_degree_(self) -> Optional[int]:
-        """Actual out-degree of the built graph, once fitted."""
-        if self.index_ is None:
-            return None
-        return self.index_.graph_degree
 
     # sklearn-NearestNeighbors alias.
     def fit_kneighbors(self, X, Q, n_neighbors=None, **kw):

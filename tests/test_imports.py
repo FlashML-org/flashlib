@@ -24,8 +24,7 @@ def test_top_level_primitives():
         "pairwise_l2", "pairwise_l2sq",
         # applications
         "KMeans", "FlashKMeans", "NearestNeighbors", "IVFFlat", "IVFPQ",
-        "CAGRA", "PCA",
-        "StandardScaler", "DBSCAN",
+        "CAGRA", "PCA", "StandardScaler", "DBSCAN",
         # diagnostics + info
         "diagnose", "info",
     ]
