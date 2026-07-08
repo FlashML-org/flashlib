@@ -98,6 +98,10 @@ _DEFAULT_EFFICIENCY: dict[str, float] = {
     "ivf_pq":           0.50,
     "ivf_pq_search":    0.55,  # LUT-gather + top-K epilogue derate
     "ivf_pq_build":     0.45,
+    # CAGRA greedy traversal: random row gathers (one 128-512B row per
+    # candidate) + register sort epilogue -> well below streaming HBM
+    # efficiency. Measured H100 bf16 SIFT-1M: ~0.25 of peak.
+    "cagra_search":     0.25,
 }
 
 

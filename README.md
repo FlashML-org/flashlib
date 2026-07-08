@@ -69,6 +69,31 @@ distances, indices = index.kneighbors(queries, n_neighbors=10)  # ADC squared L2
 print(index.compression_ratio)  # 32.0
 ```
 
+For maximum search throughput, `CAGRA` builds a proximity graph
+(exact kNN graph + detour pruning + reverse edges) and answers queries
+with a fused greedy traversal — one Triton program per query, the whole
+priority buffer in registers, bf16 candidate reads with an exact fp32
+re-rank of the final top-k:
+
+```python
+from flashlib import CAGRA
+
+index = CAGRA(graph_degree=32, itopk_size=64).fit(db)
+distances, indices = index.kneighbors(queries, n_neighbors=10)  # squared L2
+```
+
+`itopk_size` is the recall knob (raise it — and `graph_degree` — for higher
+recall). At equal recall the fused traversal outruns cuVS CAGRA on H100
+across the 0.9–0.99 recall band (see `benchmarks/vs_cuml/cagra.py` for
+the recall/QPS frontier methodology).
+
+Picking between the ANN indexes (measured H100, 1M rows): `CAGRA` wins
+online/small-batch serving at every recall and batched search up to
+~0.99 recall; `IVFFlat` wins batched search above ~0.99 (its GEMM
+fine-scan shares list reads across the batch on tensor cores — ~1.5x at
+recall 0.999 on SIFT-1M, and the gap widens with dimensionality);
+`IVFPQ` trades recall ceiling for 8–32x memory compression.
+
 
 ### Informative API
 
@@ -92,12 +117,12 @@ per-primitive benchmarks.
 
 ## Coverage
 
-The current release ships **17 high-level primitives** across the following families:
+The current release ships **18 high-level primitives** across the following families:
 
 | family         | primitives                                                                       |
 | -------------- | -------------------------------------------------------------------------------- |
 | Clustering     | `flash_kmeans`, `flash_dbscan`, `flash_hdbscan`, `flash_spectral_clustering`     |
-| Nearest nbrs   | `flash_knn`, `flash_ivf_flat` (IVF-Flat ANN), `flash_ivf_pq` (IVF-PQ ANN)        |
+| Nearest nbrs   | `flash_knn`, `flash_ivf_flat` (IVF-Flat ANN), `flash_ivf_pq` (IVF-PQ ANN), `flash_cagra` (graph ANN) |
 | Decomposition  | `flash_pca`, `flash_truncated_svd`                                               |
 | Manifold       | `flash_umap`, `flash_tsne`                                                       |
 | Regression     | `flash_linear_regression`, `flash_ridge`, `flash_logistic_regression`            |
