@@ -1,0 +1,141 @@
+typedef unsigned char      uint8_t;
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+typedef unsigned long long uint64_t;
+typedef signed int         int32_t;
+typedef short int          int16_t;
+
+#include <cuda_bf16.h>
+
+__device__ __forceinline__ int make_warp_uniform(int x) {
+    int result;
+    asm volatile("shfl.sync.idx.b32 %0, %1, 0, 0x1F, 0xFFFFFFFF;"
+                 : "=r"(result) : "r"(x));
+    return result;
+}
+
+#define LOOM_INF CUDART_INF_F
+#define NUM_MAIN_STAGES 1
+#define SMEM_GROUP_DISTS_OFF 0
+#define SMEM_GROUP_DISTS_STAGE_BYTES 512
+#define SMEM_GROUP_DISTS_STRIDE 512
+#define SMEM_GROUP_INDICES_OFF 512
+#define SMEM_GROUP_INDICES_STAGE_BYTES 512
+#define SMEM_GROUP_INDICES_STRIDE 512
+#define SMEM_TOTAL 1024
+#define THREADS 32
+#define TOP_K_MAX 10
+#define GROUP_COUNT 8
+#define GROUP_SPLITS 17
+
+#include <math_constants.h>
+
+extern "C" {
+
+__global__ __launch_bounds__(32, 1) void
+kernel_knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s136g8_4a72_v1(float* __restrict__ partial_dists, int* __restrict__ partial_indices, float* __restrict__ out_dists, int* __restrict__ out_indices, int total_queries)
+{
+    const int tid = threadIdx.x;
+    const int warp = make_warp_uniform(tid / 32);
+    const int lane = tid % 32;
+
+    extern __shared__ __align__(1024) char smem_raw[];
+    int smem;
+    smem = (int)(unsigned long long)__cvta_generic_to_shared(smem_raw);
+
+    const int bid = blockIdx.x;
+    const int num_bids = gridDim.x;
+
+    // Kernel setup ops
+    float* group_dists = reinterpret_cast<float*>(smem_raw + 0);
+    const int group_dists_addr = smem + 0;
+    int* group_indices = reinterpret_cast<int*>(smem_raw + 512);
+    const int group_indices_addr = smem + 512;
+
+    // === Task calls (dependency order) ===
+    int split_pos[GROUP_SPLITS];
+    int split_base[GROUP_SPLITS];
+    float group_cand_d[GROUP_SPLITS];
+    int group_cand_i[GROUP_SPLITS];
+    int final_pos[GROUP_COUNT];
+    float final_cand_d[GROUP_COUNT];
+    int final_cand_i[GROUP_COUNT];
+    #pragma unroll 1
+    for (int row = bid; row < total_queries; row += num_bids) {
+        int base_row = row * TOP_K_MAX;
+        int split_stride = total_queries * TOP_K_MAX;
+        if (tid < GROUP_COUNT) {
+            int group_idx = tid;
+            int source_split0 = group_idx * GROUP_SPLITS;
+            int shared_base = group_idx * TOP_K_MAX;
+            #pragma unroll
+            for (int local_split = 0; local_split < GROUP_SPLITS; local_split++) {
+                split_pos[local_split] = 0;
+                int split_id = source_split0 + local_split;
+                split_base[local_split] = base_row + split_id * split_stride;
+                group_cand_d[local_split] = partial_dists[split_base[local_split]];
+                group_cand_i[local_split] = partial_indices[split_base[local_split]];
+            }
+            #pragma unroll
+            for (int out_k = 0; out_k < TOP_K_MAX; out_k++) {
+                float best_d = group_cand_d[0];
+                int best_i = group_cand_i[0];
+                int best_split = 0;
+                #pragma unroll
+                for (int local_split_1 = 1; local_split_1 < GROUP_SPLITS; local_split_1++) {
+                    if (best_d > group_cand_d[local_split_1]) {
+                        best_d = group_cand_d[local_split_1];
+                        best_i = group_cand_i[local_split_1];
+                        best_split = local_split_1;
+                    }
+                }
+                group_dists[shared_base + out_k] = best_d;
+                group_indices[shared_base + out_k] = best_i;
+                split_pos[best_split] = split_pos[best_split] + 1;
+                if (out_k + 1 < TOP_K_MAX) {
+                    int next_pos = split_pos[best_split];
+                    int next_addr = split_base[best_split] + next_pos;
+                    group_cand_d[best_split] = partial_dists[next_addr];
+                    group_cand_i[best_split] = partial_indices[next_addr];
+                }
+            }
+        }
+        __syncthreads();
+        if (tid == 0) {
+            #pragma unroll
+            for (int group_idx_1 = 0; group_idx_1 < GROUP_COUNT; group_idx_1++) {
+                final_pos[group_idx_1] = 0;
+                int group_base = group_idx_1 * TOP_K_MAX;
+                final_cand_d[group_idx_1] = group_dists[group_base];
+                final_cand_i[group_idx_1] = group_indices[group_base];
+            }
+            #pragma unroll
+            for (int out_k_1 = 0; out_k_1 < TOP_K_MAX; out_k_1++) {
+                float best_d_1 = final_cand_d[0];
+                int best_i_1 = final_cand_i[0];
+                int best_group = 0;
+                #pragma unroll
+                for (int group_idx_2 = 1; group_idx_2 < GROUP_COUNT; group_idx_2++) {
+                    if (best_d_1 > final_cand_d[group_idx_2]) {
+                        best_d_1 = final_cand_d[group_idx_2];
+                        best_i_1 = final_cand_i[group_idx_2];
+                        best_group = group_idx_2;
+                    }
+                }
+                *((float*)(out_dists + (base_row + out_k_1))) = best_d_1;
+                *((int*)(out_indices + (base_row + out_k_1))) = best_i_1;
+                final_pos[best_group] = final_pos[best_group] + 1;
+                if (out_k_1 + 1 < TOP_K_MAX) {
+                    int next_pos_1 = final_pos[best_group];
+                    int next_addr_1 = best_group * TOP_K_MAX + next_pos_1;
+                    final_cand_d[best_group] = group_dists[next_addr_1];
+                    final_cand_i[best_group] = group_indices[next_addr_1];
+                }
+            }
+        }
+        __syncthreads();
+    }
+}
+
+} // extern "C"
+

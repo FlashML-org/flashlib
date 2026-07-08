@@ -1,0 +1,129 @@
+typedef unsigned char      uint8_t;
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+typedef unsigned long long uint64_t;
+typedef signed int         int32_t;
+typedef short int          int16_t;
+
+#include <cuda_bf16.h>
+
+__device__ __forceinline__ int make_warp_uniform(int x) {
+    int result;
+    asm volatile("shfl.sync.idx.b32 %0, %1, 0, 0x1F, 0xFFFFFFFF;"
+                 : "=r"(result) : "r"(x));
+    return result;
+}
+
+#define LOOM_INF CUDART_INF_F
+#define NUM_MAIN_STAGES 1
+#define THREADS 128
+#define TOP_K_MAX 10
+#define SPLIT_COUNT 48
+
+#include <math_constants.h>
+
+extern "C" {
+
+__global__ __launch_bounds__(128, 1) void
+kernel_knn_build_d128_rag_q128_k10_s74_warp_merge_d320_s48_f556_v2(float* __restrict__ partial_dists, int* __restrict__ partial_indices, float* __restrict__ out_dists, int* __restrict__ out_indices, int total_queries)
+{
+    const int tid = threadIdx.x;
+    const int warp = make_warp_uniform(tid / 32);
+    const int lane = tid % 32;
+
+
+    const int bid = blockIdx.x;
+    const int num_bids = gridDim.x;
+
+    // === Task calls (dependency order) ===
+    int row = bid * 4 + warp;
+    int base_row = row * TOP_K_MAX;
+    int split_stride = total_queries * TOP_K_MAX;
+    int lane_idx = lane;
+    if (row < total_queries) {
+        int split0 = lane_idx;
+        int base0 = base_row + split0 * split_stride;
+        int pos0 = 0;
+        float d0 = partial_dists[base0];
+        int i0 = partial_indices[base0];
+        int split1 = lane_idx + 32;
+        int base1 = base_row + split1 * split_stride;
+        int pos1 = 0;
+        float d1 = 3.4e+38f;
+        int i1 = -1;
+        if (split1 < SPLIT_COUNT) {
+            d1 = partial_dists[base1];
+            i1 = partial_indices[base1];
+        }
+        int split2 = lane_idx + 64;
+        int base2 = base_row + split2 * split_stride;
+        int pos2 = 0;
+        float d2 = 3.4e+38f;
+        int i2 = -1;
+        if (split2 < SPLIT_COUNT) {
+            d2 = partial_dists[base2];
+            i2 = partial_indices[base2];
+        }
+        #pragma unroll
+        for (int out_k = 0; out_k < TOP_K_MAX; out_k++) {
+            float winner_d = d0;
+            int winner_i = i0;
+            int winner_src = 0;
+            if (d1 < winner_d) {
+                winner_d = d1;
+                winner_i = i1;
+                winner_src = 1;
+            }
+            if (d2 < winner_d) {
+                winner_d = d2;
+                winner_i = i2;
+                winner_src = 2;
+            }
+            float warp_min = winner_d;
+            float _warp_reduce_0 = warp_min;
+            #pragma unroll
+            for (int offset = 16; offset > 0; offset >>= 1)
+                _warp_reduce_0 = fminf(_warp_reduce_0, __shfl_xor_sync(0xFFFFFFFF, _warp_reduce_0, offset));
+            warp_min = _warp_reduce_0;
+            unsigned int _vote_0 = __ballot_sync(0xFFFFFFFF, winner_d == warp_min);
+            int owner_ballot = _vote_0;
+            int _ffs_0 = __ffs(owner_ballot);
+            int winner_lane = _ffs_0 - 1;
+            int _shfl_0 = __shfl_sync(0xFFFFFFFF, winner_i, winner_lane);
+            winner_i = _shfl_0;
+            int _shfl_1 = __shfl_sync(0xFFFFFFFF, winner_src, winner_lane);
+            winner_src = _shfl_1;
+            if (lane == 0) {
+                *((float*)(out_dists + (base_row + out_k))) = warp_min;
+                *((int*)(out_indices + (base_row + out_k))) = winner_i;
+            }
+            if (lane == winner_lane) {
+                if (winner_src == 0) {
+                    pos0 = pos0 + 1;
+                    if (out_k + 1 < TOP_K_MAX) {
+                        int next_addr0 = base0 + pos0;
+                        d0 = partial_dists[next_addr0];
+                        i0 = partial_indices[next_addr0];
+                    }
+                } else if (winner_src == 1) {
+                    pos1 = pos1 + 1;
+                    if (out_k + 1 < TOP_K_MAX) {
+                        int next_addr1 = base1 + pos1;
+                        d1 = partial_dists[next_addr1];
+                        i1 = partial_indices[next_addr1];
+                    }
+                } else {
+                    pos2 = pos2 + 1;
+                    if (out_k + 1 < TOP_K_MAX) {
+                        int next_addr2 = base2 + pos2;
+                        d2 = partial_dists[next_addr2];
+                        i2 = partial_indices[next_addr2];
+                    }
+                }
+            }
+        }
+    }
+}
+
+} // extern "C"
+
