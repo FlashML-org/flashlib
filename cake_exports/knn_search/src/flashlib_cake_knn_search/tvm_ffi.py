@@ -1,0 +1,179 @@
+"""Optional Apache TVM FFI adapters for the exported kernel package."""
+
+from __future__ import annotations
+
+import contextlib
+import importlib
+import json
+from pathlib import Path
+from typing import Any
+
+from .kernels import get_kernel
+
+
+_PACKAGE = 'flashlib_cake_knn_search'
+_KERNEL_ALIASES = ['dispatch_kernel_0000', 'dispatch_kernel_0001', 'dispatch_kernel_0002', 'dispatch_kernel_0003', 'dispatch_kernel_0004', 'dispatch_kernel_0005', 'dispatch_kernel_0006', 'dispatch_kernel_0007', 'dispatch_kernel_0008', 'dispatch_kernel_0009', 'dispatch_kernel_0010', 'dispatch_kernel_0011', 'dispatch_kernel_0012', 'dispatch_kernel_0013', 'dispatch_kernel_0014', 'dispatch_kernel_0015', 'dispatch_kernel_0016', 'dispatch_kernel_0017', 'dispatch_kernel_0018', 'dispatch_kernel_0019', 'dispatch_kernel_0020', 'dispatch_kernel_0021', 'dispatch_kernel_0022', 'dispatch_kernel_0023', 'dispatch_kernel_0024', 'dispatch_kernel_0025', 'dispatch_kernel_0026', 'dispatch_kernel_0027', 'dispatch_kernel_0028', 'dispatch_kernel_0029', 'dispatch_kernel_0030', 'dispatch_kernel_0031', 'dispatch_kernel_0032', 'dispatch_kernel_0033', 'dispatch_kernel_0034', 'dispatch_kernel_0035', 'dispatch_kernel_0036', 'dispatch_kernel_0037', 'dispatch_kernel_0038', 'dispatch_kernel_0039', 'dispatch_kernel_0040', 'dispatch_kernel_0041', 'dispatch_kernel_0042', 'dispatch_kernel_0043', 'dispatch_kernel_0044', 'dispatch_kernel_0045', 'dispatch_kernel_0046', 'dispatch_kernel_0047', 'dispatch_kernel_0048', 'dispatch_kernel_0049', 'dispatch_kernel_0050', 'dispatch_kernel_0051', 'dispatch_kernel_0052', 'dispatch_kernel_0053', 'dispatch_kernel_0054', 'dispatch_kernel_0055', 'dispatch_kernel_0056', 'dispatch_kernel_0057', 'dispatch_kernel_0058', 'dispatch_kernel_0059', 'dispatch_kernel_0060', 'dispatch_kernel_0061', 'dispatch_kernel_0062', 'dispatch_kernel_0063', 'dispatch_kernel_0064', 'dispatch_kernel_0065', 'dispatch_kernel_0066', 'dispatch_kernel_0067', 'dispatch_kernel_0068', 'dispatch_kernel_0069', 'dispatch_kernel_0070', 'dispatch_kernel_0071', 'dispatch_kernel_0072', 'dispatch_kernel_0073', 'dispatch_kernel_0074', 'dispatch_kernel_0075', 'dispatch_kernel_0076', 'dispatch_kernel_0077', 'dispatch_kernel_0078', 'dispatch_kernel_0079', 'dispatch_kernel_0080', 'dispatch_kernel_0081', 'dispatch_kernel_0082', 'dispatch_kernel_0083', 'dispatch_kernel_0084', 'dispatch_kernel_0085', 'dispatch_kernel_0086', 'dispatch_kernel_0087', 'dispatch_kernel_0088', 'dispatch_kernel_0089', 'dispatch_kernel_0090', 'dispatch_kernel_0091', 'dispatch_kernel_0092', 'dispatch_kernel_0093', 'dispatch_kernel_0094', 'dispatch_kernel_0095', 'dispatch_kernel_0096', 'dispatch_kernel_0097', 'dispatch_kernel_0098', 'dispatch_kernel_0099', 'dispatch_kernel_0100', 'dispatch_kernel_0101', 'dispatch_kernel_0102', 'dispatch_kernel_0103', 'dispatch_kernel_0104', 'dispatch_kernel_0105', 'dispatch_kernel_0106', 'dispatch_kernel_0107', 'dispatch_kernel_0108', 'dispatch_kernel_0109', 'dispatch_kernel_0110', 'dispatch_kernel_0111', 'dispatch_kernel_0112', 'dispatch_kernel_0113', 'dispatch_kernel_0114', 'dispatch_kernel_0115', 'dispatch_kernel_0116', 'dispatch_kernel_0117', 'dispatch_kernel_0118', 'dispatch_kernel_0119', 'dispatch_kernel_0120', 'dispatch_kernel_0121', 'dispatch_kernel_0122', 'dispatch_kernel_0123', 'dispatch_kernel_0124', 'dispatch_kernel_0125', 'dispatch_kernel_0126', 'dispatch_kernel_0127', 'dispatch_kernel_0128', 'dispatch_kernel_0129', 'dispatch_kernel_0130', 'dispatch_kernel_0131', 'dispatch_kernel_0132', 'dispatch_kernel_0133', 'dispatch_kernel_0134', 'dispatch_kernel_0135', 'dispatch_kernel_0136', 'dispatch_kernel_0137', 'dispatch_kernel_0138', 'dispatch_kernel_0139', 'dispatch_kernel_0140', 'dispatch_kernel_0141', 'dispatch_kernel_0142', 'dispatch_kernel_0143', 'dispatch_kernel_0144', 'dispatch_kernel_0145', 'dispatch_kernel_0146', 'dispatch_kernel_0147', 'dispatch_kernel_0148', 'dispatch_kernel_0149', 'dispatch_kernel_0150', 'dispatch_kernel_0151', 'dispatch_kernel_0152', 'dispatch_kernel_0153', 'dispatch_kernel_0154', 'dispatch_kernel_0155', 'dispatch_kernel_0156', 'dispatch_kernel_0157', 'dispatch_kernel_0158', 'dispatch_kernel_0159', 'dispatch_kernel_0160', 'dispatch_kernel_0161', 'dispatch_kernel_0162', 'dispatch_kernel_0163', 'dispatch_kernel_0164', 'dispatch_kernel_0165', 'dispatch_kernel_0166', 'dispatch_kernel_0167', 'dispatch_kernel_0168', 'dispatch_kernel_0169', 'dispatch_kernel_0170', 'dispatch_kernel_0171', 'dispatch_kernel_0172', 'dispatch_kernel_0173', 'dispatch_kernel_0174', 'dispatch_kernel_0175', 'dispatch_kernel_0176', 'dispatch_kernel_0177', 'dispatch_kernel_0178', 'dispatch_kernel_0179', 'dispatch_kernel_0180', 'dispatch_kernel_0181', 'dispatch_kernel_0182', 'dispatch_kernel_0183', 'dispatch_kernel_0184', 'dispatch_kernel_0185', 'dispatch_kernel_0186', 'dispatch_kernel_0187', 'dispatch_kernel_0188', 'dispatch_kernel_0189', 'dispatch_kernel_0190', 'dispatch_kernel_0191', 'dispatch_kernel_0192', 'dispatch_kernel_0193', 'dispatch_kernel_0194', 'dispatch_kernel_0195', 'dispatch_kernel_0196', 'dispatch_kernel_0197', 'dispatch_kernel_0198', 'dispatch_kernel_0199', 'dispatch_kernel_0200', 'dispatch_kernel_0201', 'dispatch_kernel_0202', 'dispatch_kernel_0203', 'dispatch_kernel_0204', 'dispatch_kernel_0205', 'dispatch_kernel_0206', 'dispatch_kernel_0207', 'dispatch_kernel_0208', 'dispatch_kernel_0209', 'dispatch_kernel_0210', 'dispatch_kernel_0211', 'dispatch_kernel_0212', 'dispatch_kernel_0213', 'dispatch_kernel_0214', 'dispatch_kernel_0215', 'dispatch_kernel_0216', 'dispatch_kernel_0217', 'dispatch_kernel_0218', 'dispatch_kernel_0219', 'dispatch_kernel_0220', 'dispatch_kernel_0221', 'dispatch_kernel_0222', 'dispatch_kernel_0223', 'dispatch_kernel_0224', 'dispatch_kernel_0225', 'dispatch_kernel_0226', 'dispatch_kernel_0227', 'dispatch_kernel_0228', 'dispatch_kernel_0229', 'dispatch_kernel_0230', 'dispatch_kernel_0231', 'dispatch_kernel_0232', 'dispatch_kernel_0233', 'dispatch_kernel_0234', 'dispatch_kernel_0235', 'dispatch_kernel_0236', 'dispatch_kernel_0237', 'dispatch_kernel_0238', 'dispatch_kernel_0239', 'dispatch_kernel_0240', 'dispatch_kernel_0241', 'dispatch_kernel_0242', 'dispatch_kernel_0243', 'dispatch_kernel_0244', 'dispatch_kernel_0245', 'dispatch_kernel_0246', 'dispatch_kernel_0247', 'dispatch_kernel_0248', 'dispatch_kernel_0249', 'dispatch_kernel_0250', 'dispatch_kernel_0251', 'dispatch_kernel_0252', 'dispatch_kernel_0253', 'dispatch_kernel_0254', 'dispatch_kernel_0255', 'dispatch_kernel_0256', 'dispatch_kernel_0257', 'dispatch_kernel_0258', 'dispatch_kernel_0259', 'dispatch_kernel_0260', 'dispatch_kernel_0261', 'dispatch_kernel_0262', 'dispatch_kernel_0263', 'dispatch_kernel_0264', 'dispatch_kernel_0265', 'dispatch_kernel_0266', 'dispatch_kernel_0267', 'dispatch_kernel_0268', 'dispatch_kernel_0269', 'dispatch_kernel_0270', 'dispatch_kernel_0271', 'dispatch_kernel_0272', 'dispatch_kernel_0273', 'dispatch_kernel_0274', 'dispatch_kernel_0275', 'dispatch_kernel_0276', 'dispatch_kernel_0277', 'dispatch_kernel_0278', 'dispatch_kernel_0279', 'dispatch_kernel_0280', 'dispatch_kernel_0281', 'dispatch_kernel_0282', 'dispatch_kernel_0283', 'dispatch_kernel_0284', 'dispatch_kernel_0285', 'dispatch_kernel_0286', 'dispatch_kernel_0287', 'dispatch_kernel_0288', 'dispatch_kernel_0289', 'dispatch_kernel_0290', 'dispatch_kernel_0291', 'dispatch_kernel_0292', 'dispatch_kernel_0293', 'dispatch_kernel_0294', 'dispatch_kernel_0295', 'dispatch_kernel_0296', 'dispatch_kernel_0297', 'dispatch_kernel_0298', 'dispatch_kernel_0299', 'dispatch_kernel_0300', 'dispatch_kernel_0301', 'dispatch_kernel_0302', 'dispatch_kernel_0303', 'dispatch_kernel_0304', 'dispatch_kernel_0305', 'dispatch_kernel_0306', 'dispatch_kernel_0307', 'dispatch_kernel_0308', 'dispatch_kernel_0309', 'dispatch_kernel_0310', 'dispatch_kernel_0311', 'dispatch_kernel_0312', 'dispatch_kernel_0313', 'dispatch_kernel_0314', 'dispatch_kernel_0315', 'dispatch_kernel_0316', 'dispatch_kernel_0317', 'dispatch_kernel_0318', 'dispatch_kernel_0319', 'dispatch_kernel_0320', 'dispatch_kernel_0321', 'dispatch_kernel_0322', 'dispatch_kernel_0323', 'dispatch_kernel_0324', 'dispatch_kernel_0325', 'dispatch_kernel_0326', 'dispatch_kernel_0327', 'dispatch_kernel_0328', 'dispatch_kernel_0329', 'dispatch_kernel_0330', 'dispatch_kernel_0331', 'dispatch_kernel_0332', 'dispatch_kernel_0333', 'dispatch_kernel_0334', 'dispatch_kernel_0335', 'dispatch_kernel_0336', 'dispatch_kernel_0337', 'dispatch_kernel_0338', 'dispatch_kernel_0339', 'dispatch_kernel_0340', 'dispatch_kernel_0341', 'dispatch_kernel_0342', 'dispatch_kernel_0343', 'dispatch_kernel_0344', 'dispatch_kernel_0345', 'dispatch_kernel_0346', 'dispatch_kernel_0347', 'dispatch_kernel_0348', 'dispatch_kernel_0349', 'dispatch_kernel_0350', 'dispatch_kernel_0351', 'dispatch_kernel_0352', 'dispatch_kernel_0353', 'dispatch_kernel_0354', 'dispatch_kernel_0355', 'dispatch_kernel_0356', 'dispatch_kernel_0357', 'dispatch_kernel_0358', 'dispatch_kernel_0359', 'dispatch_kernel_0360', 'dispatch_kernel_0361', 'dispatch_kernel_0362', 'dispatch_kernel_0363', 'dispatch_kernel_0364', 'dispatch_kernel_0365', 'dispatch_kernel_0366', 'dispatch_kernel_0367', 'dispatch_kernel_0368', 'dispatch_kernel_0369', 'dispatch_kernel_0370', 'dispatch_kernel_0371', 'dispatch_kernel_0372', 'dispatch_kernel_0373', 'dispatch_kernel_0374', 'dispatch_kernel_0375', 'dispatch_kernel_0376', 'dispatch_kernel_0377', 'dispatch_kernel_0378', 'dispatch_kernel_0379', 'dispatch_kernel_0380', 'dispatch_kernel_0381', 'dispatch_kernel_0382', 'dispatch_kernel_0383', 'dispatch_kernel_0384', 'dispatch_kernel_0385', 'dispatch_kernel_0386', 'dispatch_kernel_0387', 'dispatch_kernel_0388', 'dispatch_kernel_0389', 'dispatch_kernel_0390', 'dispatch_kernel_0391', 'dispatch_kernel_0392', 'dispatch_kernel_0393', 'dispatch_kernel_0394', 'dispatch_kernel_0395', 'dispatch_kernel_0396', 'dispatch_kernel_0397', 'dispatch_kernel_0398', 'dispatch_kernel_0399', 'dispatch_kernel_0400', 'dispatch_kernel_0401', 'dispatch_kernel_0402', 'dispatch_kernel_0403', 'dispatch_kernel_0404', 'dispatch_kernel_0405', 'dispatch_kernel_0406', 'dispatch_kernel_0407', 'dispatch_kernel_0408', 'dispatch_kernel_0409', 'dispatch_kernel_0410', 'dispatch_kernel_0411', 'dispatch_kernel_0412', 'dispatch_kernel_0413', 'dispatch_kernel_0414', 'dispatch_kernel_0415', 'dispatch_kernel_0416', 'dispatch_kernel_0417', 'dispatch_kernel_0418', 'dispatch_kernel_0419', 'dispatch_kernel_0420', 'dispatch_kernel_0421', 'dispatch_kernel_0422', 'dispatch_kernel_0423', 'dispatch_kernel_0424', 'dispatch_kernel_0425', 'dispatch_kernel_0426', 'dispatch_kernel_0427', 'dispatch_kernel_0428', 'dispatch_kernel_0429', 'dispatch_kernel_0430', 'dispatch_kernel_0431', 'dispatch_kernel_0432', 'dispatch_kernel_0433', 'dispatch_kernel_0434', 'dispatch_kernel_0435', 'dispatch_kernel_0436', 'dispatch_kernel_0437', 'dispatch_kernel_0438', 'dispatch_kernel_0439', 'dispatch_kernel_0440', 'dispatch_kernel_0441', 'dispatch_kernel_0442', 'dispatch_kernel_0443', 'dispatch_kernel_0444', 'dispatch_kernel_0445', 'dispatch_kernel_0446', 'dispatch_kernel_0447', 'dispatch_kernel_0448', 'dispatch_kernel_0449', 'dispatch_kernel_0450', 'dispatch_kernel_0451', 'dispatch_kernel_0452', 'dispatch_kernel_0453', 'dispatch_kernel_0454', 'dispatch_kernel_0455', 'dispatch_kernel_0456', 'dispatch_kernel_0457', 'dispatch_kernel_0458', 'dispatch_kernel_0459', 'dispatch_kernel_0460', 'dispatch_kernel_0461', 'dispatch_kernel_0462', 'dispatch_kernel_0463', 'dispatch_kernel_0464', 'dispatch_kernel_0465', 'dispatch_kernel_0466', 'dispatch_kernel_0467', 'dispatch_kernel_0468', 'dispatch_kernel_0469', 'dispatch_kernel_0470', 'dispatch_kernel_0471', 'dispatch_kernel_0472', 'dispatch_kernel_0473', 'dispatch_kernel_0474', 'dispatch_kernel_0475', 'dispatch_kernel_0476', 'dispatch_kernel_0477', 'dispatch_kernel_0478', 'dispatch_kernel_0479', 'dispatch_kernel_0480', 'dispatch_kernel_0481', 'dispatch_kernel_0482', 'dispatch_kernel_0483', 'dispatch_kernel_0484', 'dispatch_kernel_0485', 'dispatch_kernel_0486', 'dispatch_kernel_0487', 'dispatch_kernel_0488', 'dispatch_kernel_0489', 'dispatch_kernel_0490', 'dispatch_kernel_0491', 'dispatch_kernel_0492', 'dispatch_kernel_0493', 'dispatch_kernel_0494', 'dispatch_kernel_0495', 'dispatch_kernel_0496', 'dispatch_kernel_0497', 'dispatch_kernel_0498', 'dispatch_kernel_0499', 'dispatch_kernel_0500', 'dispatch_kernel_0501', 'dispatch_kernel_0502', 'dispatch_kernel_0503', 'dispatch_kernel_0504', 'dispatch_kernel_0505', 'dispatch_kernel_0506', 'dispatch_kernel_0507', 'dispatch_kernel_0508', 'dispatch_kernel_0509', 'dispatch_kernel_0510', 'dispatch_kernel_0511', 'dispatch_kernel_0512', 'dispatch_kernel_0513', 'dispatch_kernel_0514', 'dispatch_kernel_0515', 'dispatch_kernel_0516', 'dispatch_kernel_0517', 'dispatch_kernel_0518', 'dispatch_kernel_0519', 'dispatch_kernel_0520', 'dispatch_kernel_0521', 'dispatch_kernel_0522', 'dispatch_kernel_0523', 'dispatch_kernel_0524', 'dispatch_kernel_0525', 'dispatch_kernel_0526', 'dispatch_kernel_0527', 'dispatch_kernel_0528', 'dispatch_kernel_0529', 'dispatch_kernel_0530', 'dispatch_kernel_0531', 'dispatch_kernel_0532', 'dispatch_kernel_0533', 'dispatch_kernel_0534', 'dispatch_kernel_0535', 'dispatch_kernel_0536', 'dispatch_kernel_0537', 'dispatch_kernel_0538', 'dispatch_kernel_0539', 'dispatch_kernel_0540', 'dispatch_kernel_0541', 'dispatch_kernel_0542', 'dispatch_kernel_0543', 'dispatch_kernel_0544', 'dispatch_kernel_0545', 'dispatch_kernel_0546', 'dispatch_kernel_0547', 'dispatch_kernel_0548', 'dispatch_kernel_0549', 'dispatch_kernel_0550', 'dispatch_kernel_0551', 'dispatch_kernel_0552', 'dispatch_kernel_0553', 'dispatch_kernel_0554', 'dispatch_kernel_0555', 'dispatch_kernel_0556', 'dispatch_kernel_0557', 'dispatch_kernel_0558', 'dispatch_kernel_0559', 'dispatch_kernel_0560', 'dispatch_kernel_0561', 'dispatch_kernel_0562', 'dispatch_kernel_0563', 'dispatch_kernel_0564', 'dispatch_kernel_0565', 'dispatch_kernel_0566', 'dispatch_kernel_0567', 'dispatch_kernel_0568', 'dispatch_kernel_0569', 'dispatch_kernel_0570', 'dispatch_kernel_0571', 'dispatch_kernel_0572', 'dispatch_kernel_0573', 'dispatch_kernel_0574', 'dispatch_kernel_0575', 'dispatch_kernel_0576', 'dispatch_kernel_0577', 'dispatch_kernel_0578', 'dispatch_kernel_0579', 'dispatch_kernel_0580', 'dispatch_kernel_0581', 'dispatch_kernel_0582', 'dispatch_kernel_0583', 'dispatch_kernel_0584', 'dispatch_kernel_0585', 'dispatch_kernel_0586', 'dispatch_kernel_0587', 'dispatch_kernel_0588', 'dispatch_kernel_0589', 'dispatch_kernel_0590', 'dispatch_kernel_0591']
+_REGISTERED: dict[str, tuple[str, ...]] = {}
+
+
+class _RawCUDAStream:
+    def __init__(self, handle: int):
+        self.cuda_stream = int(handle)
+
+
+def _manifest() -> dict[str, Any]:
+    return json.loads(Path(__file__).with_name("manifest.json").read_text(encoding="utf-8"))
+
+
+def _planned_public_exports() -> dict[str, str] | None:
+    export_plan = _manifest().get("export_plan", {})
+    if "tvm_ffi_exports" in export_plan:
+        return dict(export_plan["tvm_ffi_exports"])
+    if "package_exports" in export_plan:
+        return dict(export_plan["package_exports"])
+    return None
+
+
+def _public_export_names() -> tuple[str, ...]:
+    planned = _planned_public_exports()
+    if planned is not None:
+        return tuple(planned)
+    package = importlib.import_module(__package__)
+    excluded = {
+        "KERNELS",
+        "ExportedKernel",
+        "get_kernel",
+        "register_tvm_ffi",
+        "tvm_ffi_function_names",
+        *(_KERNEL_ALIASES),
+        *(f"launch_{name}" for name in _KERNEL_ALIASES),
+    }
+    return tuple(
+        name
+        for name in getattr(package, "__all__", ())
+        if name not in excluded and callable(getattr(package, name, None))
+    )
+
+
+def tvm_ffi_function_names(namespace: str | None = None) -> tuple[str, ...]:
+    """Return the deterministic TVM FFI global names this package registers."""
+
+    prefix = namespace or _PACKAGE
+    public_names = [f"{prefix}.{name}" for name in _public_export_names()]
+    kernel_names = [f"{prefix}.launch_{name}" for name in _KERNEL_ALIASES]
+    return tuple(public_names + kernel_names)
+
+
+def _tensor_stream(arg: Any, tvm_ffi: Any) -> tuple[int, int] | None:
+    if not isinstance(arg, tvm_ffi.Tensor):
+        return None
+    device = arg.device
+    device_type = getattr(device, "type", None) or str(device).split(":", 1)[0]
+    if str(device_type) != "cuda":
+        return None
+    device_id = int(getattr(device, "index", 0))
+    return device_id, int(tvm_ffi.get_raw_stream(device))
+
+
+def _convert_arg(arg: Any, tvm_ffi: Any) -> Any:
+    if not isinstance(arg, tvm_ffi.Tensor):
+        return arg
+    import torch
+
+    return torch.from_dlpack(arg)
+
+
+def _torch_stream_context(stream: tuple[int, int] | None):
+    if stream is None:
+        return contextlib.nullcontext()
+    import torch
+
+    device_id, handle = stream
+    return torch.cuda.stream(torch.cuda.ExternalStream(handle, device=device_id))
+
+
+def _semantic_target(public_name: str):
+    planned = _planned_public_exports()
+    target = None if planned is None else planned.get(public_name)
+    if target is None:
+        return getattr(importlib.import_module(__package__), public_name)
+    module_name, separator, attr = target.partition(":")
+    if not separator:
+        raise ValueError(f"invalid package export target: {target!r}")
+    module = importlib.import_module(module_name, package=__package__)
+    return getattr(module, attr)
+
+
+def _semantic_wrapper(public_name: str, tvm_ffi: Any):
+    function = _semantic_target(public_name)
+
+    def call(*args):
+        stream = next((item for arg in args if (item := _tensor_stream(arg, tvm_ffi)) is not None), None)
+        converted = tuple(_convert_arg(arg, tvm_ffi) for arg in args)
+        with _torch_stream_context(stream):
+            return function(*converted)
+
+    return call
+
+
+def _kernel_wrapper(alias: str, tvm_ffi: Any):
+    kernel = get_kernel(alias)
+    parameter_count = len(kernel.parameters)
+
+    def call(*args):
+        expected = parameter_count + 7
+        if len(args) != expected:
+            raise TypeError(
+                f"{alias} TVM FFI launch expects {expected} positional arguments "
+                f"({parameter_count} kernel + grid xyz + block xyz + shared_mem), got {len(args)}"
+            )
+        kernel_args = args[:parameter_count]
+        config = tuple(int(value) for value in args[parameter_count:])
+        grid = config[:3]
+        block = config[3:6]
+        shared_mem = config[6]
+        stream = next(
+            (item for arg in kernel_args if (item := _tensor_stream(arg, tvm_ffi)) is not None),
+            None,
+        )
+        converted = tuple(_convert_arg(arg, tvm_ffi) for arg in kernel_args)
+        return kernel.launch(
+            *converted,
+            grid=grid,
+            block=block,
+            shared_mem=shared_mem,
+            stream=_RawCUDAStream(stream[1]) if stream is not None else None,
+        )
+
+    return call
+
+
+def register_tvm_ffi(namespace: str | None = None, *, override: bool = False) -> tuple[str, ...]:
+    """Register semantic and low-level launch functions in Apache TVM FFI."""
+
+    try:
+        import tvm_ffi
+    except ImportError as exc:
+        raise ImportError(
+            'TVM FFI support requires `python -m pip install -e ".[tvm-ffi]"`'
+        ) from exc
+
+    prefix = namespace or _PACKAGE
+    if prefix in _REGISTERED and not override:
+        return _REGISTERED[prefix]
+
+    registered: list[str] = []
+    for public_name in _public_export_names():
+        name = f"{prefix}.{public_name}"
+        tvm_ffi.register_global_func(
+            name, _semantic_wrapper(public_name, tvm_ffi), override=override
+        )
+        registered.append(name)
+    for alias in _KERNEL_ALIASES:
+        name = f"{prefix}.launch_{alias}"
+        tvm_ffi.register_global_func(name, _kernel_wrapper(alias, tvm_ffi), override=override)
+        registered.append(name)
+    result = tuple(registered)
+    _REGISTERED[prefix] = result
+    return result
+

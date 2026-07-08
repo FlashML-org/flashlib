@@ -1,0 +1,66 @@
+typedef unsigned char      uint8_t;
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+typedef unsigned long long uint64_t;
+typedef signed int         int32_t;
+typedef short int          int16_t;
+
+#include <cuda_bf16.h>
+
+__device__ __forceinline__ int make_warp_uniform(int x) {
+    int result;
+    asm volatile("shfl.sync.idx.b32 %0, %1, 0, 0x1F, 0xFFFFFFFF;"
+                 : "=r"(result) : "r"(x));
+    return result;
+}
+
+#define LOOM_INF CUDART_INF_F
+#define NUM_MAIN_STAGES 1
+#define THREADS 256
+#define D_ORIG_ 257
+#define D_PAD_ 512
+
+#include <math_constants.h>
+
+extern "C" {
+
+__global__ __launch_bounds__(256) void
+kernel_knn_search_dynamic_d_tiny_pack_bf16_0618_c8b9_v1(__nv_bfloat16* __restrict__ queries, __nv_bfloat16* __restrict__ database, __nv_bfloat16* __restrict__ padded_queries, __nv_bfloat16* __restrict__ padded_database, int B, int Q, int M)
+{
+    const int tid = threadIdx.x;
+    const int warp = make_warp_uniform(tid / 32);
+    const int lane = tid % 32;
+
+
+    const int bid = blockIdx.x;
+    const int num_bids = gridDim.x;
+
+    // === Task calls (dependency order) ===
+    int linear = bid * 256 + tid;
+    int total_q = B * Q * D_PAD_;
+    int total_db = B * M * D_PAD_;
+    int total = total_q + total_db;
+    if (linear < total) {
+        if (linear < total_q) {
+            int d_col = linear - linear / D_PAD_ * D_PAD_;
+            int row = linear / D_PAD_;
+            float value = 0.0f;
+            if (d_col < D_ORIG_) {
+                value = queries[row * D_ORIG_ + d_col];
+            }
+            *((__nv_bfloat16*)(padded_queries + linear)) = __float2bfloat16_rn(value);
+        } else {
+            int db_linear = linear - total_q;
+            int d_col_1 = db_linear - db_linear / D_PAD_ * D_PAD_;
+            int row_1 = db_linear / D_PAD_;
+            float value_1 = 0.0f;
+            if (d_col_1 < D_ORIG_) {
+                value_1 = database[row_1 * D_ORIG_ + d_col_1];
+            }
+            *((__nv_bfloat16*)(padded_database + db_linear)) = __float2bfloat16_rn(value_1);
+        }
+    }
+}
+
+} // extern "C"
+

@@ -1,0 +1,1586 @@
+[
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_self_k5_q1024_split8_0616_q1024split8_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round_selfk5direct0616_q256_q512_direct_k5",
+    "shape": "flashml_self_b1_q256_m256_d128_k5"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_q1_tile_reduce",
+    "shape": "rag_q1_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "rag_q128_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_qbucket_split4_codex0616_v2:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "codex0616_q4096_k10_split4_exact_m16384_20000_32768_65536",
+    "shape": "rag_q4096_m20000_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_q1_tile_reduce",
+    "shape": "rag_online_q1_m100000_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_q1_tile_reduce",
+    "shape": "rag_online_q1_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q247_m131072_exact_0617_cc76_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "roundcc76_lowq_q2q4q7_m131072_blockm640_exact",
+    "shape": "rag_lowq_q2_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q247_m131072_exact_0617_cc76_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "roundcc76_lowq_q2q4q7_m131072_blockm640_exact",
+    "shape": "rag_lowq_q4_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round55_lowq_q8q16q32q64_row16_registered",
+    "shape": "rag_lowq_q8_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round55_lowq_q8q16q32q64_row16_registered",
+    "shape": "rag_lowq_q16_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round55_lowq_q8q16q32q64_row16_registered",
+    "shape": "rag_lowq_q32_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round55_lowq_q8q16q32q64_row16_registered",
+    "shape": "rag_lowq_q64_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "rag_batch_q128_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_qbucket_split4_codex0616_v2:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "codex0616_q4096_k10_split4_exact_m16384_20000_32768_65536",
+    "shape": "rag_batch_q4096_m20000_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "dispatch_q128_m8192_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "dispatch_q128_m16384_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "dispatch_q128_m32768_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_midtail_current_dispatch0610_b08d_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round_b08d_q128_midtail_e2eb_split_m",
+    "shape": "dispatch_q128_m65536_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "dispatch_q128_m262144_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_highq_midm_qbucket_0611_r19_4e96_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "codex0616_v2_highq_qbucket_exact_q256_q512_q1024_q2048_m65536_k10",
+    "shape": "dispatch_q256_m65536_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_highq_midm_qbucket_0611_r19_4e96_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "codex0616_v2_highq_qbucket_exact_q256_q512_q1024_q2048_m65536_k10",
+    "shape": "dispatch_q512_m65536_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_highq_midm_qbucket_0611_r19_4e96_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "codex0616_v2_highq_qbucket_exact_q256_q512_q1024_q2048_m65536_k10",
+    "shape": "dispatch_q1024_m65536_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_highq_midm_qbucket_0611_r19_4e96_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "codex0616_v2_highq_qbucket_exact_q256_q512_q1024_q2048_m65536_k10",
+    "shape": "dispatch_q2048_m65536_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_qbucket_split4_codex0616_v2:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "codex0616_q4096_k10_split4_exact_m16384_20000_32768_65536",
+    "shape": "dispatch_q4096_m16384_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_qbucket_split4_codex0616_v2:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "codex0616_q4096_k10_split4_exact_m16384_20000_32768_65536",
+    "shape": "dispatch_q4096_m32768_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "ksweep_q128_m131072_d128_k1"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "ksweep_q128_m131072_d128_k2"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "ksweep_q128_m131072_d128_k5"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "ksweep_q128_m131072_d128_k8"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_highq_midq_q128_qbucket_split4_codex0616_v4:launch_q128_e2eb_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round20c7_22d9_q128_e2eb_guard_miss_kle10",
+    "shape": "ksweep_q128_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_extendedk_dispatch_0613_r39_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round14_k12_tcgen05_capacity",
+    "shape": "ksweep_q128_m131072_d128_k11"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_extendedk_dispatch_0613_r39_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round14_k12_tcgen05_capacity",
+    "shape": "ksweep_q128_m131072_d128_k12"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_extendedk_dispatch_0613_r39_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20_k20_k30_tcgen05_capacity",
+    "shape": "ksweep_q128_m131072_d128_k20"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_extendedk_dispatch_0613_r39_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20_k20_k30_tcgen05_capacity",
+    "shape": "ksweep_q128_m131072_d128_k30"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_m131072_k64_prefix8_0624_3363_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round147_3363_q128_m131072_k64_prefix8",
+    "shape": "ksweep_q128_m131072_d128_k64"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_k1_top1_pairq_0622_598a_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round127_598a_k1_top1_pairq_split9_merge16",
+    "shape": "ksweep_q4096_m20000_d128_k1"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round46_q4096_lowk_k2partial_split9",
+    "shape": "ksweep_q4096_m20000_d128_k2"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_k64_q4096split79_localprefix6_certfallback_0615_245d_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round20_245d_q4096_m20000_k64_prefix6cert",
+    "shape": "ksweep_q4096_m20000_d128_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_7ce1_plus_ann_split7_dispatch_0615_b72b_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "roundb72b_ann_q10000_m100000_split7",
+    "shape": "ann_sift_like_q10000_m100000_d128_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_extendedk_lowd_d256_dispatch0610_r3_extk_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round36_d256_k10_k64_tcgen05",
+    "shape": "glm5_rag_q128_m131072_d256_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "residual_full198_d256_k64_fused_hier8x64_ownership_e92c_tcgen05",
+    "shape": "glm5_rag_q128_m131072_d256_k64"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_scalar_capacity_0611_r22_4e96_v1:launch_scalar_capacity_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "afe6_dynamic_d_scalar_capacity",
+    "shape": "ivf_like_q8_m10_d32_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_scalar_capacity_0611_r22_4e96_v1:launch_scalar_capacity_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "afe6_dynamic_d_scalar_capacity",
+    "shape": "ivf_like_q8_m20_d48_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_extendedk_lowd_d256_dispatch0610_r3_extk_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round56_d2_dbscan_t128_m1536_cd72",
+    "shape": "dbscan_lowd_self_q1500_m1500_d2_k32"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_extendedk_lowd_d256_dispatch0610_r3_extk_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round56_d2_dbscan_t128_m1536_cd72",
+    "shape": "dbscan_lowd_self_q1500_m1500_d2_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_midtail_current_dispatch0610_b08d_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round_b08d_q128_midtail_e2eb_split_m",
+    "shape": "blind_tail_q128_m65535_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_midtail_current_dispatch0610_b08d_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round_b08d_q128_midtail_e2eb_split_m",
+    "shape": "blind_tail_q128_m65537_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_k64_m262144_portfolio_0614_r19_6389_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round2_6389_blind_k64_portfolio",
+    "shape": "blind_k64_q64_m131072_d128_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_k64_m262144_portfolio_0614_r19_6389_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round2_6389_blind_k64_portfolio",
+    "shape": "blind_k64_q128_m65536_d128_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_k64_m262144_portfolio_0614_r19_6389_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round2_6389_blind_k64_portfolio",
+    "shape": "blind_k64_q128_m262144_d128_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_k64_m262144_portfolio_0614_r19_6389_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round2_6389_blind_k64_portfolio",
+    "shape": "blind_k64_q512_m65536_d128_k64"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0624_3c6e_k32k64_prefix_tie_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round149_3c6e_q4096_m32768_k64_prefix8_emitted_tie",
+    "shape": "blind_k64_q4096_m32768_d128_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_lowd_non_d128_tcgen05_dispatch0610_r99_ec7c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round99_blind_lowd_non_d128_padded_tcgen05",
+    "shape": "blind_d64_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_lowd_non_d128_tcgen05_dispatch0610_r99_ec7c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round99_blind_lowd_non_d128_padded_tcgen05",
+    "shape": "blind_d320_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_highq_q4096_m65536_k10_fulltile_0615_a7f3_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "rounda7f3_q4096_m65536_k10_split4_fulltile",
+    "shape": "blind_highq_q4096_m65536_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_midq0e99_0615_r98_7b4c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round98_7b4c_midq_0e99_blind_split",
+    "shape": "blind_midq_q96_m98304_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_midq0e99_0615_r98_7b4c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round98_7b4c_midq_0e99_blind_split",
+    "shape": "blind_midq_q192_m98304_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round43_highq_midm_qbucket",
+    "shape": "blind_midq_q384_m49152_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round43_highq_midm_qbucket",
+    "shape": "blind_midq_q768_m49152_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_midtail_current_dispatch0610_b08d_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round_b08d_q128_midtail_e2eb_split_m",
+    "shape": "blind_midbucket_q128_m98304_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0610_midq0e99_0615_r98_7b4c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round98_7b4c_midq_0e99_blind_split",
+    "shape": "blind_midbucket_q512_m98304_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q128_extendedk_dispatch_0613_r39_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round20_k20_k30_tcgen05_capacity",
+    "shape": "blind_k16_q128_m131072_d128_k16"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_k48_q128split512_truek48_kexact_0615_2d9eee_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round2d9eee_q128_k48_split512_truek48_kexact",
+    "shape": "blind_k48_q128_m131072_d128_k48"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_k48_q4096_m32768_prefix8_0623_e36b_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round147_e36b_q4096_m32768_k48_prefix8",
+    "shape": "blind_k48_q4096_m32768_d128_k48"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_lowd_non_d128_tcgen05_dispatch0610_r99_ec7c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round99_blind_lowd_non_d128_padded_tcgen05",
+    "shape": "blind_d96_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_lowd_non_d128_tcgen05_dispatch0610_r99_ec7c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round99_blind_lowd_non_d128_padded_tcgen05",
+    "shape": "blind_d192_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round34_application_wrapper",
+    "shape": "blind_self_q4096_m4096_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_self_k5_q1024_split8_0616_q1024split8_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round_selfk5direct0616_q256_q512_direct_k5",
+    "shape": "flashml_self_b1_q512_m512_d128_k5"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_self_k5_q1024_split8_0616_q1024split8_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round_q1024split8_self_k5_q1024_m1024_split8_partial",
+    "shape": "flashml_self_b1_q1024_m1024_d128_k5"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_q1_tile_reduce",
+    "shape": "blind_b2_q1_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_b2_q128_blind_dispatch0616_54ff_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round5_54ff_b2_q128_qbucket_exact_m65536",
+    "shape": "blind_b2_q128_m65536_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q3_m131072_exact_0617_b2fb_r8_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "roundb2fb_r8_lowq_q3_m131072_exact_blockm640",
+    "shape": "blind_lowq_q3_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q247_m131072_exact_0617_cc76_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "roundcc76_lowq_q2q4q7_m131072_blockm640_exact",
+    "shape": "blind_lowq_q7_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0628_d128_q4096_m20000_k3_e8f1_k3partial_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target0628_d128_q4096_m20000_k3_104b_k3partial_split4",
+    "shape": "blind_lowk_q4096_m20000_d128_k3"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q4096_split4_tiestable_0612_r15_4e2c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "codex0616_q4096_lowk_k3_k7_split4_exact_m20000",
+    "shape": "blind_lowk_q4096_m20000_d128_k7"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round34_application_wrapper",
+    "shape": "ksweep_q128_m131072_d128_k32"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0624_3c6e_k32k64_prefix_tie_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round149_3c6e_q4096_m32768_k32_prefix8_emitted_tie",
+    "shape": "blind_k32_q4096_m32768_d128_k32"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_d384_tcgen05_dispatch0610_r2_f94e_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "dispatch0610_r2_f94e_blind_d384_exact_tcgen05",
+    "shape": "blind_d384_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_80a5_blocker_q1_m262144_54ff_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round80a5_q1_m262144_k10_flashdecode",
+    "shape": "blind_q1_m262144_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_lowq_tile_reduce",
+    "shape": "blind_post6912_lowq_q5_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_lowq_tile_reduce",
+    "shape": "blind_post6912_lowq_q6_m262144_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_lowq_tcgen05_mma_split",
+    "shape": "blind_post6912_lowq_q24_m196608_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round40_q4096_split8",
+    "shape": "blind_post6912_batch_b2_q4096_m20000_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_lowq_tcgen05_mma_split",
+    "shape": "blind_post6912_batch_b2_q64_m262144_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_80a5_blocker_d256_q512_m65536_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round80a5_d256_q512_m65536_k10_tcgen05",
+    "shape": "blind_post6912_d256_q512_m65536_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_80a5_blocker_d384_q256_tcgen05_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round80a5_d384_q256_m32768_k10_tcgen05_split148",
+    "shape": "blind_post6912_d384_q256_m32768_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_80a5_blocker_k64_q256_m65536_twotileproducer_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round115_80a5_q256_m65536_k64_split256_twotileproducer_hiermerge16",
+    "shape": "blind_post6912_k64_q256_m65536_d128"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_80a5_blocker_k64_b2_twotile_74f4_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round80a5_b2_q128_m65536_k64_twotile_hiermerge16",
+    "shape": "blind_post6912_k64_b2_q128_m65536_d128"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_self_k10_q1024_split8_0622_f4bc_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round125_f4bc_self_q1024_m1024_d128_k10_split8",
+    "shape": "blind_post6912_self_q1024_m1024_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_self_k5_q2048_split16_0617_80a5_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round80a5_self_k5_q2048_m2048_split16_partial",
+    "shape": "blind_post6912_self_q2048_m2048_d128_k5"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round43_highq_midm_qbucket",
+    "shape": "blind_post6912_midq_q1536_m49152_d128_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d3d5_bucket_tile_reduce_0625_7e60_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round157_7e60_dynamic_lowd_d3d5_tile_reduce",
+    "shape": "blind_dyn_d3_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d_residual_0621_r123_ffc4_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "ffc4_dynamic_d7_q128_m65536_no_pack_tcgen05",
+    "shape": "blind_dyn_d7_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d_priority_4832_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "c8b9_tiny_dynamic_d_no_pack_guarded_tcgen05",
+    "shape": "blind_dyn_d63_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d_residual_0621_r123_ffc4_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "ffc4_dynamic_d129d257d511_q128_m65536_directstride_tcgen05",
+    "shape": "blind_dyn_d129_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d_residual_0621_r123_ffc4_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "ffc4_dynamic_d129d257d511_q128_m65536_directstride_tcgen05",
+    "shape": "blind_dyn_d257_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d_residual_0621_r123_ffc4_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "ffc4_dynamic_d129d257d511_q128_m65536_directstride_tcgen05",
+    "shape": "blind_dyn_d511_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d_residual_0621_r123_ffc4_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "5847_dynamic_d384_q32_m131072_exact_tcgen05",
+    "shape": "blind_dyn_d384_q32_m131072_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d_residual_0621_r123_ffc4_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "ccef_dynamic_d257_q64_m65536_k64_tcgen05_v2",
+    "shape": "blind_dyn_d257_k64_q64_m65536"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d_residual_0621_r123_ffc4_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "ffc4_dynamic_b2_q64_m65536_d129_tcgen05",
+    "shape": "blind_dyn_b2_q64_m65536_d129_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_self_d3_single_tile_0625_199f_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round157_199f_self_d3_single_tile",
+    "shape": "blind_dyn_self_q2048_m2048_d3_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d1_bucket_tile_reduce_0625_7e60_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round156_7e60_dynamic_lowd_d1_tile_reduce",
+    "shape": "expanded_d1_guard_boundary_q127_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d1_bucket_tile_reduce_0625_7e60_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round156_7e60_dynamic_lowd_d1_tile_reduce",
+    "shape": "expanded_d1_guard_boundary_q129_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d1_tail_tile_reduce_0625_1b18_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round156_1b18_dynamic_lowd_d1_tail_tile_reduce",
+    "shape": "expanded_d1_tail_q128_m65535_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d1_tail_tile_reduce_0625_1b18_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round156_1b18_dynamic_lowd_d1_tail_tile_reduce",
+    "shape": "expanded_d1_tail_q128_m65537_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d1_bucket_tile_reduce_0625_7e60_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round156_7e60_dynamic_lowd_d1_tile_reduce",
+    "shape": "expanded_d1_heldout_q64_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d1_bucket_tile_reduce_0625_7e60_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round156_7e60_dynamic_lowd_d1_tile_reduce",
+    "shape": "expanded_d1_heldout_q256_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d3d5_bucket_tile_reduce_0625_7e60_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round157_7e60_dynamic_lowd_d3d5_tile_reduce",
+    "shape": "expanded_lowd_guard_overlap_d3_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0624_full133_eacf_lowd_cd65_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round156_7e60_dynamic_lowd_d1_tile_reduce_forced_fallback",
+    "shape": "expanded_forced_fallback_d1_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_d128_k10_subfloor_455f_r116_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round116_455f_q127_m131071_split148",
+    "shape": "blind_ext_tail_q127_m131071_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round34_application_wrapper",
+    "shape": "blind_ext_tail_q129_m131073_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round34_application_wrapper",
+    "shape": "blind_ext_tail_q255_m262143_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round34_application_wrapper",
+    "shape": "blind_ext_tail_q257_m262145_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0618_d128_k10_c08b_f828_synth_9d5c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round455f_d128_k10_q513_m98304_full_split32_f828",
+    "shape": "blind_ext_q513_m98304_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_d128_k10_subfloor_455f_r116_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round116_455f_q3072_m49152_split6_full",
+    "shape": "blind_ext_highq_q3072_m49152_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round34_application_wrapper",
+    "shape": "blind_ext_highq_q4096_m49152_d128_k5"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_lowq_tcgen05_mma_split",
+    "shape": "blind_ext_lowq_q9_m196608_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_lowq_tcgen05_mma_split",
+    "shape": "blind_ext_lowq_q17_m196608_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round39_lowq_tile_reduce",
+    "shape": "blind_ext_b2_q3_m131072_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round43_highq_midm_qbucket",
+    "shape": "blind_ext_b2_q257_m65536_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_d128_k10_subfloor_455f_r116_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round116_455f_self_q3072_m3072_split6_full",
+    "shape": "blind_ext_self_q3072_m3072_d128_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d1_bucket_tile_reduce_0625_7e60_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round156_7e60_dynamic_lowd_d1_tile_reduce",
+    "shape": "blind_ext_dyn_d1_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_lowd_d3d5_bucket_tile_reduce_0625_7e60_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round157_7e60_dynamic_lowd_d3d5_tile_reduce",
+    "shape": "blind_ext_dyn_d5_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0618_c492_ext_dynamic_highd_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_ext_dynamic_d_highd_generated_variants",
+    "shape": "blind_ext_dyn_d15_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0618_c492_ext_dynamic_highd_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_ext_dynamic_d_highd_generated_variants",
+    "shape": "blind_ext_dyn_d31_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0618_c492_ext_dynamic_highd_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_ext_dynamic_d_highd_generated_variants",
+    "shape": "blind_ext_dyn_d65_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0618_c492_ext_dynamic_highd_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_ext_dynamic_d_highd_generated_variants",
+    "shape": "blind_ext_dyn_d127_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0618_c492_ext_dynamic_highd_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_ext_dynamic_d_highd_generated_variants",
+    "shape": "blind_ext_dyn_d130_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0618_c492_ext_dynamic_highd_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_ext_dynamic_d_highd_generated_variants",
+    "shape": "blind_ext_dyn_d255_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0618_c492_ext_dynamic_highd_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_ext_dynamic_d_highd_generated_variants",
+    "shape": "blind_ext_dyn_d258_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d512_q64_tcgen05_0618_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_d512_q64_row16_directstride_tcgen05",
+    "shape": "blind_ext_dyn_d512_q64_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d768d1024_q32q16_tcgen05_0618_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_dynamic_d768d1024_q32q16_directstride_tcgen05",
+    "shape": "blind_ext_dyn_d768_q32_m32768_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d768d1024_q32q16_tcgen05_0618_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_dynamic_d768d1024_q32q16_directstride_tcgen05",
+    "shape": "blind_ext_dyn_d1024_q16_m32768_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round34_application_wrapper",
+    "shape": "blind_ext_k24_q128_m131072_d128"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_ext_k_capacity_0618_28ec_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round7_28ec_q128_m131072_k40_via_k64_truncate",
+    "shape": "blind_ext_k40_q128_m131072_d128"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_ext_k_capacity_0618_28ec_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round7_28ec_q128_m65536_k56_via_k64_truncate",
+    "shape": "blind_ext_k56_q128_m65536_d128"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_ext_k64_highq_prefix8_0618_c2e0_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round113_c2e0_q4096_m49152_k64_prefix8",
+    "shape": "blind_ext_k64_q4096_m49152_d128"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d130_k64_q64_m65536_directpad_0625_4b95_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "4b95_d130_q64_m65536_k64_direct_d256pad_tcgen05",
+    "shape": "blind_ext_dyn_d130_k64_q64_m65536"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d512_k64_q32_6bea_r121_177e_distonlymerge_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "177e_r121_d512_q32_k64_distonlymerge_tcgen05",
+    "shape": "blind_ext_dyn_d512_k64_q32_m32768"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d512_ivf_6bea_r118_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "6bea_r118_ivf_q12_m100_d64_k20_direct",
+    "shape": "blind_ext_ivf_q12_m100_d64_k20"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d3_k32_self_tile_0620_9d5c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round117_9d5c_d3_k32_self_tile",
+    "shape": "blind_ext_dbscan_self_q4096_m4096_d3_k32"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0622_current_portfolio_e472_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round131_f3ce_q96_m131072_k64_twotile_hiermerge32",
+    "shape": "blind_0622_k64_q96_m131072_d128"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0622_current_portfolio_e472_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round131_f3ce_q384_m98304_k64_prefix8",
+    "shape": "blind_0622_k64_q384_m98304_d128"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0622_current_portfolio_e472_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round132_f3ce_floor13_k80_prefix8",
+    "shape": "blind_0622_k80_q128_m65536_d128"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dispatch0622_current_portfolio_e472_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round132_f3ce_floor13_k80_prefix8",
+    "shape": "blind_0622_k80_q4096_m32768_d128"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "cf73_legacy_dyn_d33_scalar_directstride_tcgen05",
+    "shape": "blind_0622_dyn_d33_q128_m131072_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "cf73_legacy_dyn_d80_alignedvec_directstride_tcgen05",
+    "shape": "blind_0622_dyn_d80_q256_m65536_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "cf73_legacy_dyn_d160_alignedvec_directstride_tcgen05",
+    "shape": "blind_0622_dyn_d160_q64_m131072_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "0268_high_d_low_q_d640_q32_directstride_tcgen05",
+    "shape": "blind_0622_dyn_d640_q32_m32768_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "dbbe_irregular_b2_q96_m196608_split_wave_fullm_tcgen05",
+    "shape": "blind_0622_b2_q96_m196608_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_floor13_k64_prefix8_0622_f3ce_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round131_f3ce_floor13_k64_prefix8",
+    "shape": "blind_0622_b2_q256_m98304_d128_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round34_application_wrapper",
+    "shape": "blind_0622_self_q1536_m1536_d128_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "dbbe_irregular_q1025_m65537_split16_masked_tail_tcgen05",
+    "shape": "blind_0622_tail_q1025_m65537_d128_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_blind_lowd_non_d128_tcgen05_dispatch0610_r99_ec7c_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round99_blind_lowd_non_d128_padded_tcgen05",
+    "shape": "target_d64_q128_m65536_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target_d64_q128_m131072_k64_split512_d64_tcgen05",
+    "shape": "target_d64_q128_m131072_k64"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "dbbe_irregular_q768_m98304_split24_fullm_tcgen05",
+    "shape": "target_d128_q768_m98304_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_extendedk_lowd_d256_dispatch0610_r3_extk_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round36_d256_k10_k64_tcgen05",
+    "shape": "target_d256_q128_m131072_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_80a5_blocker_d256_q512_m65536_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "round80a5_d256_q512_m65536_k10_tcgen05",
+    "shape": "target_d256_q512_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d512_q64_tcgen05_0618_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_d512_q64_row16_directstride_tcgen05",
+    "shape": "target_d512_q64_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d768d1024_q32q16_tcgen05_0618_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_dynamic_d768d1024_q32q16_directstride_tcgen05",
+    "shape": "target_d768_q32_m32768_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "0268_high_d_low_q_d768_q64_n256_tcgen05",
+    "shape": "target_d768_q64_m65536_k10"
+  },
+  {
+    "composite_branch": "restored_full133",
+    "launch_entrypoint": "loom.examples.weave.knn_search_dynamic_d768d1024_q32q16_tcgen05_0618_9286_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "9286_dynamic_d768d1024_q32q16_directstride_tcgen05",
+    "shape": "target_d1024_q16_m32768_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "f561_v2_d1024_q32_k64_hiermerge8_tcgen05",
+    "shape": "target_d1024_q32_m32768_k64"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "0268_high_d_low_q_d2048_q8_directstride_tcgen05",
+    "shape": "target_d2048_q8_m16384_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "0268_high_d_low_q_d4096_q4_directstride_tcgen05",
+    "shape": "target_d4096_q4_m8192_k10"
+  },
+  {
+    "composite_branch": "portfolio_09a4",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "0268_high_d_low_q_d4096_q8_directstride_tcgen05",
+    "shape": "target_d4096_q8_m16384_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0628_d64_q256_m131072_k10_885d_hmerge8_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target0628_d64_q256_m131072_k10_split512_hmerge8_d64_tcgen05_885d",
+    "shape": "target0627_d64_q256_m131072_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0628_d64_q512_m65536_k64_dbaf_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target0628_d64_q512_m65536_k64_6c60_split256_d64_tcgen05_8group",
+    "shape": "target0627_d64_q512_m65536_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0628_d128_q4096_m20000_k3_e8f1_k3partial_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target0628_d128_q4096_m20000_k3_104b_k3partial_split4",
+    "shape": "target0627_d128_q4096_m20000_k3_floor14"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round46_q4096_lowk_k2partial_split9",
+    "shape": "target0627_d128_q4096_m20000_k2_floor14"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0628_d256_q1024_m65536_k10_2165_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target0628_d256_q1024_m65536_k10_split64_tcgen05_2165",
+    "shape": "target0627_d256_q1024_m65536_k10"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual_convergence_q128_stability_then_kernel_round301_a8f5_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual_q128_stability_split304_fullwaves_a8f5_tcgen05",
+    "shape": "target0627_d256_q128_m262144_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0627_d768_q16_m65536_k10_4950_split2_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target0628_d768_q16_m65536_k10_4950_directstride_n256_split2_tcgen05",
+    "shape": "target0627_d768_q16_m65536_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0627_d768_q64_m65536_k64_6472_v2:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target0627_d768_q64_m65536_k64_6472_v2_direct_tcgen05",
+    "shape": "target0627_d768_q64_m65536_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0629_d768_q128_m32768_k10_c3bc_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "c3bc_target0629_d768_q128_m32768_k10_directstride_tcgen05",
+    "shape": "target0627_d768_q128_m32768_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_q8_d1024_repair_q8_d1024_seed_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "q8_d1024_exact_tcgen05_seed_repair_v1",
+    "shape": "target0627_d1024_q8_m65536_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0629_d1024_q64_m32768_k10_974f_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "974f_target0629_d1024_q64_m32768_k10_directstride_tcgen05",
+    "shape": "target0627_d1024_q64_m32768_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0628_d1024_q32_m65536_k64_9571_hiermerge16_v2:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target0628_d1024_q32_m65536_k64_9571_hiermerge16_tcgen05",
+    "shape": "target0627_d1024_q32_m65536_k64"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0630_d4096_q1_m65536_k10_restore296_92e6_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "target0630_d4096_q1_m65536_k10_restore296_tcgen05",
+    "shape": "target0627_d4096_q1_m65536_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0630_d4096_q4_m32768_k10_profiled_weave_evolve_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "profiled_target0630_d4096_q4_m32768_k10_qreuse_tcgen05",
+    "shape": "target0627_d4096_q4_m32768_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0627_d4096_q16_m8192_k10_4bc1_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "4bc1_target0627_d4096_q16_m8192_k10_directstride_tcgen05",
+    "shape": "target0627_d4096_q16_m8192_k10"
+  },
+  {
+    "composite_branch": "compat0701",
+    "launch_entrypoint": "loom.examples.weave.knn_search_target0629_d4096_q4_m8192_k64_f939_n64_g8_final8_grid132_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": false,
+    "selected_route": "f939_target0629_d4096_q4_m8192_k64_native_n64_g8_final8_grid132_tcgen05",
+    "shape": "target0627_d4096_q4_m8192_k64"
+  },
+  {
+    "composite_branch": "d256_q64_7ad3",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0707_d256_q64_split152_warp_state_7ad3_tcgen05",
+    "shape": "residual0701_d256_q64_m262144_k64"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual0705_q64_tail_split152_full_wave_3dee_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0705_q64_tail_split152_full_wave_3dee_tcgen05",
+    "shape": "residual0701_d256_q64_m262143_k64"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual0705_q64_tail_plus_812c_sentinel_warp_state_361b_v2:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0705_q64_tail_plus_812c_sentinel_warp_state_361b_tcgen05",
+    "shape": "residual0701_d256_q64_m262145_k64"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual0705_q63_masked_query_structural_reset_f392_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0705_q63_masked_query_structural_reset_f392_tcgen05",
+    "shape": "residual0701_d256_q63_m262144_k64"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual0705_q65_distinct_topology_structural_reset_d436_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0705_q65_distinct_topology_structural_reset_d436_tcgen05",
+    "shape": "residual0701_d256_q65_m262144_k64"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual_convergence_q128_stability_then_kernel_round301_a8f5_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual_q128_stability_split304_fullwaves_a8f5_tcgen05",
+    "shape": "residual0701_d256_q128_m262144_k64_variance"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round51_registered_q4096_lowk_k5partial_split9",
+    "shape": "ksweep_q4096_m20000_d128_k5"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round47_registered_q4096_lowk_k8_stride10_out8_split4",
+    "shape": "ksweep_q4096_m20000_d128_k8"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round54_q4096_m16384_lowk_k8_stride10_out8_split4",
+    "shape": "round54_q4096_m16384_d128_k8"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_lowq_q8q16q32q64_row16_registered_0613_r55_48e9_v1:launch_for_eval",
+    "registry_contract_shape": true,
+    "residual_convergence_shape": false,
+    "selected_route": "round54_q4096_m32768_lowk_k8_stride10_out8_split4",
+    "shape": "round54_q4096_m32768_d128_k8"
+  },
+  {
+    "composite_branch": "d256_q64_7ad3",
+    "launch_entrypoint": "loom.examples.weave.knn_search_registry_b653_compat0701_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0707_d256_q64_split152_warp_state_7ad3_tcgen05",
+    "shape": "residual_q64_exact"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual0705_q64_tail_split152_full_wave_3dee_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0705_q64_tail_split152_full_wave_3dee_tcgen05",
+    "shape": "residual_q64_m_tail_minus"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual0705_q64_tail_plus_812c_sentinel_warp_state_361b_v2:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0705_q64_tail_plus_812c_sentinel_warp_state_361b_tcgen05",
+    "shape": "residual_q64_m_tail_plus"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual0705_q63_masked_query_structural_reset_f392_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0705_q63_masked_query_structural_reset_f392_tcgen05",
+    "shape": "residual_q63_guard"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual0705_q65_distinct_topology_structural_reset_d436_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual0705_q65_distinct_topology_structural_reset_d436_tcgen05",
+    "shape": "residual_q65_guard"
+  },
+  {
+    "composite_branch": "registered_b653",
+    "launch_entrypoint": "loom.examples.weave.knn_search_residual_convergence_q128_stability_then_kernel_round301_a8f5_v1:launch_for_eval",
+    "registry_contract_shape": false,
+    "residual_convergence_shape": true,
+    "selected_route": "residual_q128_stability_split304_fullwaves_a8f5_tcgen05",
+    "shape": "residual_q128_stability"
+  }
+]
