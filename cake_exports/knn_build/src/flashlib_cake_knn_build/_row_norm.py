@@ -50,8 +50,31 @@ def _validate(input_tensor: Any, output: Any) -> tuple[int, int, int]:
     return bsz * rows, dim, 0 if input_tensor.dtype is torch.bfloat16 else 1
 
 
-def _threads_for_dim(dim: int) -> int:
-    return min(256, max(32, 1 << (int(dim) - 1).bit_length()))
+_GRID_CAP = 4096
+
+
+def _launch_geometry(rows: int, dim: int) -> tuple[int, int]:
+    """Throughput-hint grid/block for ``cake_row_squared_norm``.
+
+    Mirrors the kernel's (rows, dim)-keyed path selection: block-per-row for
+    few wide rows, otherwise one power-of-two lane group per row with eight
+    warps per block. The kernel grid-strides its row space, so this geometry
+    only affects throughput — any grid is correct, which keeps prepared
+    launches safe under pointer rebinds.
+    """
+
+    if dim % 8 == 0:
+        chunks = dim // 8
+        if chunks >= 33 and rows <= 512:
+            return max(1, min(rows, _GRID_CAP)), 256
+        lanes = 1
+        while lanes < chunks and lanes < 32:
+            lanes <<= 1
+    else:
+        lanes = 32
+    rows_per_block = 8 * (32 // lanes)
+    blocks = (rows + rows_per_block - 1) // rows_per_block
+    return max(1, min(blocks, _GRID_CAP)), 256
 
 
 @dataclass
@@ -121,14 +144,15 @@ def prepare_row_squared_norm(
     stream: Any = None,
 ) -> PreparedRowSquaredNorm:
     rows, dim, dtype_code = _validate(input_tensor, output)
+    grid_x, threads = _launch_geometry(rows, dim)
     launch_plan = _ROW_NORM_KERNEL.prepare_launch(
         input_tensor,
         output,
         rows,
         dim,
         dtype_code,
-        grid=(rows, 1, 1),
-        block=(_threads_for_dim(dim), 1, 1),
+        grid=(grid_x, 1, 1),
+        block=(threads, 1, 1),
         stream=stream,
         arch=arch,
     )

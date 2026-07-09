@@ -24,7 +24,7 @@
       "knn_build_prepared": ".interface:knn_build_prepared",
       "prepare_knn_build": ".interface:prepare_knn_build"
     },
-    "sha256": "6e33fa086ed3d22afa61421587c1b0188b519384766ea93bffeffddb33aefb1d",
+    "sha256": "ccd01365307c500436e0f020a2ed62702d2d75a14d0e380638e9c08b5c8aa940",
     "tvm_ffi_exports": {
       "knn_build": ".interface:knn_build"
     },
@@ -558,6 +558,7 @@
         "rag_online_irregular_b1_q1_m131071_d128_k10",
         "rag_online_large_m_b1_q1_m250000_d128_k10",
         "rag_online_irregular_b1_q1_m262143_d128_k10",
+        "rag_online_irregular_b1_q1_m524287_d128_k10",
         "rag_stream_b1_q128_m100000_d128_k10",
         "rag_offline_largek_b1_q4096_m100000_d128_k20",
         "rag_offline_large_m_b1_q8192_m250000_d128_k20",
@@ -571,14 +572,17 @@
         "rag_microbatch_common_d64_b1_q16_m50000_k10",
         "rag_microbatch_common_d256_b1_q16_m50000_k10",
         "rag_microbatch_common_d1024_b1_q8_m50000_k10",
+        "rag_microbatch_common_d4096_b1_q4_m32768_k10",
         "rag_microbatch_b1_q32_m100000_d128_k10",
         "rag_microbatch_largek_b1_q8_m100000_d128_k32",
         "rag_microbatch_largek_b1_q16_m100000_d128_k32",
         "rag_microbatch_largek_b1_q24_m100000_d128_k32",
+        "rag_microbatch_largek_b1_q16_m250000_d128_k32",
         "rag_microbatch_largek_b1_q32_m100000_d128_k32",
         "rag_microbatch_largek_b1_q16_m131071_d128_k32",
         "rag_microbatch_b1_q64_m100000_d128_k10",
         "rag_stream_largek_b1_q128_m100000_d128_k32",
+        "rag_stream_largek_b1_q128_m131071_d128_k32",
         "rag_batch_b2_q256_m50000_d128_k10",
         "rag_irregular_b1_q512_m131071_d128_k10",
         "search_rect_b1_q2048_m32768_d128_k10",
@@ -592,9 +596,11 @@
         "rag_microbatch_common_d256_b1_q4_m100000_k10",
         "rag_stream_common_d256_b1_q128_m100000_k10",
         "rag_microbatch_common_d768_b1_q8_m100000_k10",
+        "rag_microbatch_common_d1024_b1_q4_m100000_k10",
         "search_rect_common_d1024_b1_q256_m8192_k10",
         "search_rect_common_d4096_b1_q128_m4096_k10",
         "rag_microbatch_largek_common_d256_b1_q8_m100000_k32",
+        "rag_stream_largek_common_d256_b1_q128_m100000_k32",
         "rag_microbatch_over32_d128_b1_q16_m100000_k48"
       ],
       "performance_speedup_denominator_metric": "compute_synchronized_e2e_ms",
@@ -636,7 +642,7 @@
     }
   },
   "format_version": 1,
-  "generated_at_utc": "2026-07-08T22:59:03.900884+00:00",
+  "generated_at_utc": "2026-07-09T04:26:31.953052+00:00",
   "generator": "loom.export.kernel_repo",
   "kernels": [
     {
@@ -16514,7 +16520,7 @@
     "module_count": 267,
     "route_decision_count": 0
   },
-  "source_commit": "41ef33b039321b50bfeb6aa0b2d82c400de76e2e",
+  "source_commit": "42070e96d0734cb580854baef60f17625ba33bb5",
   "source_repo": "ssh://git@gitlab-master.nvidia.com:12051/cake/cake.git",
   "tvm_ffi": {
     "adapter": "tvm_ffi.py",
