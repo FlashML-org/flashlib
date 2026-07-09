@@ -25,7 +25,7 @@
       "init": ".interface:init",
       "prepare_flash_kmeans_assign": ".interface:prepare_flash_kmeans_assign"
     },
-    "sha256": "21acf8461227184f0debdf147a5e70a37c52ce2e3b051178b8e906a5316621a2",
+    "sha256": "e5f7cbc5c8b6b666b8c9c546f06e82c94b8dff7049032332ea0b936a5df4eac1",
     "tvm_ffi_exports": {
       "flash_kmeans_assign": ".interface:flash_kmeans_assign"
     },
@@ -65,11 +65,11 @@
         "shared_preprocess": {
           "implementation_entrypoint": "flashlib_cake_kmeans._row_norm:PreparedBF16PairRowNorm",
           "result_source_sha256_field": "preprocess_source_sha256",
-          "source_sha256": "de4410a1b997eaa64847f05e4af5e37f44b001409717c9923b1610d21f2c4104"
+          "source_sha256": "aa67813cf1cc39b8ae96970a737e926f7b3a65dac63dbeb6362f2dacf066e26e"
         }
       },
       "benchmark_registry_baseline_key": "triton_h200_07cf_dual_lane_v1",
-      "benchmark_registry_baseline_sha256": "b0f66fe825e6e1aed7c85dc95c4f3e55c02f762e4251d2a4e21f12c87c5a486c",
+      "benchmark_registry_baseline_sha256": "bdfd30338aa614f09817af1498c1115a0b1732a3340a1acbc172d0e4dd4674c4",
       "benchmark_registry_candidate_entrypoint": "loom.examples.weave.flash_kmeans_assign_dispatcher:launch_for_eval",
       "benchmark_registry_key": "flash_kmeans_assign_dispatch_full_contract",
       "benchmark_registry_shape_labels_sha256": "172741a45af34837224b4005e0b6ba45637a07c7a4cabc88ed85ec95670e6290",
@@ -741,7 +741,7 @@
     }
   },
   "format_version": 1,
-  "generated_at_utc": "2026-07-08T23:26:07.392069+00:00",
+  "generated_at_utc": "2026-07-09T04:26:21.680464+00:00",
   "generator": "loom.export.kernel_repo",
   "kernels": [
     {
@@ -27774,7 +27774,7 @@
     "module_count": 52,
     "route_decision_count": 0
   },
-  "source_commit": "a03428fc8362e2785d2e6a657fd70a74c8ed1c0d",
+  "source_commit": "42070e96d0734cb580854baef60f17625ba33bb5",
   "source_repo": "ssh://git@gitlab-master.nvidia.com:12051/cake/cake.git",
   "tvm_ffi": {
     "adapter": "tvm_ffi.py",

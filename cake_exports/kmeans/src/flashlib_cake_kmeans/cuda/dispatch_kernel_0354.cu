@@ -268,10 +268,10 @@ kernel_flash_kmeans_assign_d112_k512_two_owner_peer_only_mma_f826_v1(__nv_bfloat
             int row = i / 112;
             int col = i % 112;
             {
-                __nv_bfloat16 _bval_3856035760 = __float2bfloat16_rn(x_raw[i]);
-                uint16_t _bits_3856035760 = *(uint16_t*)&_bval_3856035760;
-                uint32_t _addr_3856035760 = static_cast<uint32_t>((sx_addr + (unsigned int)(row * 224 + col * 2)));
-                asm volatile("st.shared.b16 [%0], %1;" :: "r"(_addr_3856035760), "h"(_bits_3856035760) : "memory");
+                __nv_bfloat16 _bval_3404602512 = __float2bfloat16_rn(x_raw[i]);
+                uint16_t _bits_3404602512 = *(uint16_t*)&_bval_3404602512;
+                uint32_t _addr_3404602512 = static_cast<uint32_t>((sx_addr + (unsigned int)(row * 224 + col * 2)));
+                asm volatile("st.shared.b16 [%0], %1;" :: "r"(_addr_3404602512), "h"(_bits_3404602512) : "memory");
             }
         }
         asm volatile("barrier.sync 3, %0;" :: "r"(256));
@@ -455,8 +455,8 @@ kernel_flash_kmeans_assign_d112_k512_two_owner_peer_only_mma_f826_v1(__nv_bfloat
                     int rr = lane / 4 + rp * 8;
                     int cc = lane % 4 * 2 + cp;
                     {
-                        uint32_t _addr_3856021056 = static_cast<uint32_t>((ss_addr + (unsigned int)((group * 64 + row_base + rr) * 32 + cc * 4)));
-                        asm volatile("st.shared.f32 [%0], %1;" :: "r"(_addr_3856021056), "f"(acc[rp * 2 + cp]) : "memory");
+                        uint32_t _addr_3405267776 = static_cast<uint32_t>((ss_addr + (unsigned int)((group * 64 + row_base + rr) * 32 + cc * 4)));
+                        asm volatile("st.shared.f32 [%0], %1;" :: "r"(_addr_3405267776), "f"(acc[rp * 2 + cp]) : "memory");
                     }
                 }
             }

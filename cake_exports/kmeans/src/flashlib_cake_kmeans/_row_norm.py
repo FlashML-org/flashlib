@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from .kernels import ExportedKernel, KernelSpec
@@ -78,6 +78,7 @@ class PreparedBF16PairRowNorm:
     dim: int
     compute_x: bool
     compute_c: bool
+    _input_carriers: Any = field(default=None, repr=False)
 
     def rebind(
         self,
@@ -98,6 +99,43 @@ class PreparedBF16PairRowNorm:
 
     def launch(self, *, stream: Any = None, timeout_ms: float | None = None) -> None:
         self.launch_plan.launch(stream=stream, timeout_ms=timeout_ms)
+
+    def bind_hot(self, x: Any, centroids: Any) -> None:
+        """Overwrite both input pointer carriers in place without submitting.
+
+        Graph-captured runtimes bind here and replay the captured kernel
+        chain themselves; the carriers target the same persistent packed
+        argument buffer the captured node's parameter update reads. The
+        prepared norm outputs stay bound (slot-owned scratch with stable
+        pointers), so the caller's signature cache must guarantee the tensor
+        topology matches the preparation.
+        """
+
+        carriers = self._input_carriers
+        if carriers is None:
+            prevent_gc = self.launch_plan._packed._prevent_gc
+            carriers = (prevent_gc[0], prevent_gc[1])
+            self._input_carriers = carriers
+        carriers[0].value = x.data_ptr()
+        carriers[1].value = centroids.data_ptr()
+
+    def launch_hot(self, x: Any, centroids: Any) -> None:
+        """Overwrite both input pointer carriers and submit the launch.
+
+        The launch goes to its preparation-time stream — no re-marshal, no
+        per-launch stream query.
+        """
+
+        self.bind_hot(x, centroids)
+        self.launch_plan.launch(stream=None, timeout_ms=None)
+
+    def record_stream(self, stream: Any) -> None:
+        """Tie every prepared launch argument to ``stream`` before release."""
+
+        for value in self.launch_plan._keepalive:
+            record_stream = getattr(value, "record_stream", None)
+            if callable(record_stream):
+                record_stream(stream)
 
     def release_bound_callers(self, keepalive: Any, *, stream: Any = None) -> None:
         """Drop caller tensors while retaining one slot-owned scratch tensor."""

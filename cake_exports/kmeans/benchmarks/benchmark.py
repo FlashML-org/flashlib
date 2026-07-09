@@ -80,7 +80,7 @@ SEMANTIC_ENTRYPOINT = "loom.examples.weave.flash_kmeans_assign_dispatcher:launch
 PRECOMPUTED_BASELINE_NAME = "triton_h200_07cf_precomputed"
 BASELINE_REGISTRY_KEY = "triton_h200_07cf_dual_lane_v1"
 # Updated together with benchmark_data.json by the registry sync gate.
-BASELINE_REGISTRY_SHA256 = "b0f66fe825e6e1aed7c85dc95c4f3e55c02f762e4251d2a4e21f12c87c5a486c"
+BASELINE_REGISTRY_SHA256 = "bdfd30338aa614f09817af1498c1115a0b1732a3340a1acbc172d0e4dd4674c4"
 REGISTRY_CANDIDATE_ENTRYPOINT = SEMANTIC_ENTRYPOINT
 MEASURED_CANDIDATE_ENTRYPOINT = "flashlib_cake_kmeans.interface:FlashKMeansAssignRuntime.compute"
 BASELINE_ENTRYPOINT = "benchmarks.flash_kmeans_triton_h200_raw_adapter:TritonH20007cfRawAdapter.compute"
@@ -99,7 +99,7 @@ BASELINE_REGISTRY_PROFILE = {
     "registry_candidate_entrypoint": REGISTRY_CANDIDATE_ENTRYPOINT,
     "shared_preprocess": {
         "implementation_entrypoint": PREPROCESS_IMPL,
-        "source_sha256": "de4410a1b997eaa64847f05e4af5e37f44b001409717c9923b1610d21f2c4104",
+        "source_sha256": "aa67813cf1cc39b8ae96970a737e926f7b3a65dac63dbeb6362f2dacf066e26e",
         "result_source_sha256_field": "preprocess_source_sha256",
     },
     "official": {
@@ -901,6 +901,14 @@ def _run_shape(
         raise RuntimeError("fresh-pointer runtime.compute call did not reuse the shape/stream launch plan")
     if not baseline_public_raw_fresh_info["runtime_cache_hit"]:
         raise RuntimeError("fresh-pointer 07cf raw-adapter call did not reuse the shape/stream norm plan")
+    if candidate_public_raw_info.get("hot_launch_path") != "cuda_graph":
+        raise RuntimeError(
+            "Flash-KMeans signature did not capture into a CUDA graph: "
+            f"hot_launch_path={candidate_public_raw_info.get('hot_launch_path')!r}, "
+            f"graph_capture_error={candidate_public_raw_info.get('graph_capture_error')!r}; "
+            "every contract signature freezes to a LaunchPlan today, so a "
+            "prepared-path fallback means the graph runtime silently degraded"
+        )
     candidate_shape_norm_fields = tuple(candidate_public_raw_shape_info.get("norm_compute_fields", ()))
     candidate_fresh_norm_fields = tuple(candidate_public_raw_info.get("norm_compute_fields", ()))
     if candidate_shape_norm_fields != candidate_fresh_norm_fields:
@@ -997,6 +1005,9 @@ def _run_shape(
         "candidate_public_raw_fresh_pointer_cache_hit": bool(candidate_public_raw_info["runtime_cache_hit"]),
         "baseline_public_raw_fresh_pointer_cache_hit": bool(baseline_public_raw_fresh_info["runtime_cache_hit"]),
         "fresh_pointer_rebind_verified": True,
+        "candidate_hot_launch_path": candidate_public_raw_info.get("hot_launch_path"),
+        "candidate_graph_kernel_count": candidate_public_raw_info.get("graph_kernel_count"),
+        "candidate_graph_capture_error": candidate_public_raw_info.get("graph_capture_error"),
         "candidate_public_raw_cold_first_call_activity": candidate_public_raw_shape_info[
             "cold_first_call_activity"
         ],
