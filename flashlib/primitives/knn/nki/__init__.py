@@ -1,6 +1,6 @@
-"""Trainium (NKI) flash-knn backend.
+"""KNN NKI backend for AWS Trainium.
 
-Fused brute-force exact k-NN on AWS Trainium: the cross term is a
+Fused exhaustive k-NN on AWS Trainium: the cross term is a
 ``nc_matmul`` on the PE array and the top-k reduction uses the NeuronCore DVE
 ``max8`` / ``nc_match_replace8`` primitives, never materialising the
 ``(Nq, M)`` distance matrix. See :mod:`knn_kernel` (the NKI kernel) and
@@ -11,9 +11,9 @@ package imports cleanly on a CUDA-less box.
 """
 from __future__ import annotations
 
-from flashlib.primitives.knn.trainium.knn import (
-    trainium_knn,
-    trainium_knn_available,
+from flashlib.primitives.knn.nki.knn import (
+    nki_knn,
+    nki_knn_available,
 )
 
-__all__ = ["trainium_knn", "trainium_knn_available"]
+__all__ = ["nki_knn", "nki_knn_available"]

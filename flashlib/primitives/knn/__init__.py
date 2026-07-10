@@ -1,4 +1,4 @@
-"""KNN primitive -- fused (Triton + CuteDSL FA3) brute-force exact top-K.
+"""KNN primitive -- fused Triton, CuteDSL, and NKI exhaustive top-K.
 
 Public API
 ----------
@@ -21,6 +21,7 @@ Direct backend entry points (callable but normally accessed through
     cutedsl_flash_knn(x, c, k)               -- Hopper FA3 fused (Hopper-
                                                 only; opt-in). Returns
                                                 indices only.
+    flash_knn_nki(x, c, k)                   -- NKI backend for NeuronDevice.
 
 Torch fallback
 --------------
@@ -47,10 +48,15 @@ cutedsl_flash_knn = lazy_attr(
 
 # Trainium (NKI) backend -- lazy so the package imports on a CUDA-less box and
 # ``neuronxcc`` is only pulled in when the kernel actually runs.
-trainium_knn = lazy_attr(
-    "flashlib.primitives.knn.trainium",
-    "trainium_knn",
+nki_knn = lazy_attr(
+    "flashlib.primitives.knn.nki",
+    "nki_knn",
 )
+
+
+def flash_knn_nki(x, c, k, **kw):
+    """Force the NKI backend (``flash_knn(..., backend='nki')``)."""
+    return flash_knn(x, c, k, backend="nki", **kw)
 
 
 __all__ = [
@@ -58,7 +64,8 @@ __all__ = [
     "flash_knn_dispatch",
     "flash_knn_triton",
     "cutedsl_flash_knn",
-    "trainium_knn",
+    "flash_knn_nki",
+    "nki_knn",
     "knn_torch_naive",
     "knn_torch_chunked",
     "cost",

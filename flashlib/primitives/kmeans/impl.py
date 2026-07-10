@@ -9,7 +9,7 @@ Backends:
                           (H100/H200, B=1, fp16/bf16, D <= 512). Falls
                           back to Triton when the kernel cannot run
                           (B>1, large D, no CUTLASS DSL).
-    backend="trainium" -- AWS Trainium NKI flash assign (nc_matmul PE
+    backend="nki"      -- AWS Trainium NKI flash assign (nc_matmul PE
                           array + streaming argmax) with one-hot-matmul
                           Lloyd update (B=1, euclidean, D <= 512, bf16).
                           Auto-selected on a NeuronDevice host.
@@ -47,9 +47,9 @@ from flashlib.primitives.kmeans.triton.kmeans import (
 # ---------------------------------------------------------------------------
 # Lazy backend loaders.
 #
-# The CuteDSL and Trainium backends pull in heavy, device-specific runtimes
+# The CuteDSL and NKI backends pull in heavy, device-specific runtimes
 # at import time (``cuda`` / ``cutlass`` for CuteDSL, ``neuronxcc`` /
-# ``torch-neuronx`` for Trainium). Importing them eagerly makes
+# ``torch-neuronx`` for NKI). Importing them eagerly makes
 # ``import flashlib.primitives.kmeans`` fail on any box that lacks the other
 # vendor's toolchain (e.g. a CUDA-less Trainium instance cannot ``import
 # cuda``). We therefore defer both imports until the router actually selects
@@ -60,14 +60,15 @@ def _load_cutedsl_kmeans_euclid():
     return cutedsl_kmeans_Euclid
 
 
-def _load_trainium_kmeans_euclid():
-    from flashlib.primitives.kmeans.trainium import trainium_kmeans_Euclid
-    return trainium_kmeans_Euclid
+def _load_nki_kmeans_euclid():
+    from flashlib.primitives.kmeans.nki import nki_kmeans_Euclid
+    return nki_kmeans_Euclid
 
 
 Backend = str
 Variant = Optional[str]
 Decision = Tuple[Backend, Variant]
+_VALID_BACKENDS = ("triton", "cutedsl", "nki", "torch")
 
 
 def _route(
@@ -103,6 +104,10 @@ def _route(
       | 512K, 256, 16384    | 67.15   | 41.35     | 1.62x |
     """
     if backend is not None:
+        if backend not in _VALID_BACKENDS:
+            raise ValueError(
+                f"backend must be one of {_VALID_BACKENDS} or None, "
+                f"got {backend!r}")
         return backend, variant
     hw = hw or _hw.current()
     if hw.is_neuron:
@@ -110,7 +115,7 @@ def _route(
         # path (no CUDA). v1 handles euclidean, B=1, D<=512; anything else
         # falls back to the pure-torch reference.
         if metric == "euclidean" and B == 1 and D <= 512:
-            return "trainium", variant
+            return "nki", variant
         return "torch", None
     if not hw.is_cuda:
         return "torch", None
@@ -151,7 +156,7 @@ def flash_kmeans(
         precision tol used by other flashlib dispatchers -- k-means has
         no residual concept).
     metric : {"euclidean", "cosine", "dot"}.
-    backend : {"triton", "cutedsl", "torch"}, optional.
+    backend : {"triton", "cutedsl", "nki", "torch"}, optional.
     variant : str, optional -- backend-specific.
     """
     if x.ndim == 2:
@@ -185,14 +190,14 @@ def flash_kmeans(
             x_b, n_clusters, max_iters=max_iters, tol=tol,
             init_centroids=init_centroids, verbose=verbose, **kwargs,
         )
-    elif chosen == "trainium":
+    elif chosen == "nki":
         if metric != "euclidean":
             raise NotImplementedError(
-                f"trainium backend currently supports euclidean only "
+                f"NKI backend currently supports euclidean only "
                 f"(got {metric!r}); fall back to backend='triton' for cosine/dot."
             )
-        trainium_kmeans_Euclid = _load_trainium_kmeans_euclid()
-        cluster_ids, centroids, n_iter = trainium_kmeans_Euclid(
+        nki_kmeans_Euclid = _load_nki_kmeans_euclid()
+        cluster_ids, centroids, n_iter = nki_kmeans_Euclid(
             x_b, n_clusters, max_iters=max_iters, tol=tol,
             init_centroids=init_centroids, verbose=verbose, **kwargs,
         )

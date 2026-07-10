@@ -57,10 +57,18 @@ def common(shape, params):
 
 def estimate(shape, params=None, tol=None, dtype="float32", device="H100", **_):
     B, N, M, D, k = common(shape, params)
-    chosen = _route_op_name(B=B, N=N, M=M, D=D, k=k)
+    if str(device).lower().startswith("trn"):
+        chosen = (
+            "knn_nki"
+            if B == 1 and M <= 16384 and D <= 512 and k <= 64
+            else "knn_torch"
+        )
+    else:
+        chosen = _route_op_name(B=B, N=N, M=M, D=D, k=k)
     fn = {
         "knn_triton":      estimate_knn_triton,
         "knn_cutedsl_fa3": estimate_knn_cutedsl_fa3,
+        "knn_nki":         estimate_knn_nki,
         "knn_torch":       estimate_knn_torch,
     }[chosen]
     est = fn(shape, params=params, tol=tol, dtype=dtype, device=device)
@@ -239,32 +247,82 @@ def estimate_knn_cutedsl_fa3(shape, params=None, tol=None, dtype="float32",
     )
 
 
-def estimate_knn_trainium(shape, params=None, tol=None, dtype="bf16",
+def estimate_knn_nki(shape, params=None, tol=None, dtype="bf16",
                           device="trn2", **_):
     """AWS Trainium (NKI) flash-knn: ``nc_matmul`` cross term + on-chip top-k
     via ``max8`` / ``nc_match_replace8``, plus an fp32 gather for true
     distances. Never materialises the ``(N, M)`` matrix.
 
-    v1 is single-shot (corpus resident, ``M <= 16384``); the build regime
-    shares the kmeans-assign matmul layout (calibrated ``knn_build`` sustained
-    TFLOPs for trn2), the small-Q search regime is corpus-DMA bound. The
-    baremetal path compiles once per shape (disk-cached).
+    The production route is the measured full-score variant for ``M<=16384``.
+    Ranking and true-distance recovery are fused into one device-resident NKI
+    call on one LNC2; the latter indirectly gathers ``N*k*D`` fp32 values. No
+    ``N*M`` HBM matrix or NumPy round-trip is allocated.
     """
     B, N, M, D, k = common(shape, params)
-    dtype_bytes = 2 if dtype in ("fp16", "float16", "bf16", "bfloat16") else 4
-    flops, bytes_moved = _knn_compute_bytes(B, N, M, D, k, dtype_bytes)
-    rt, bound = roofline(flops, bytes_moved, dtype, device,
-                         op_type=_regime(B, N), n_launches=2)
-    res, tier = _residual(dtype, tol)
+    base_pad = ((k + 7) // 8) * 8
+    score_bf16 = 32 <= base_pad <= 56
+    rank_kpad = ((k + 15) // 8) * 8 if score_bf16 else base_pad
+    candidate_k = rank_kpad if score_bf16 else k
+    rank_flops = 2 * B * N * M * D
+    distance_flops = 3 * B * N * candidate_k * D
+    flops = rank_flops + distance_flops
+    # fp32/TF32 rank operands + int32 candidates; fp32 indirect gather +
+    # distances.
+    bytes_moved = (
+        (B * N * D + B * M * D) * 4
+        + B * N * candidate_k * 4
+        + B * N * candidate_k * D * 4
+        + B * N * candidate_k * 4
+    )
+    op_class = "knn_build" if B * N >= 1024 else "knn_search"
+    # Warm one-LNC2 calibration: rank throughput rises with query occupancy
+    # (~2.0 TF at Q=1024, 4.7 TF at Q=4096, approaching 8-13 TF at Q>=8192).
+    rank_tf = min(13.0, max(2.0, 1.1 + 0.00088 * B * N))
+    rank_ms = rank_flops / (rank_tf * 1e12) * 1e3
+    # The fused epilogue is indirect-gather limited; the calibrated fixed term
+    # includes XLA dispatch/output synchronization at the reference shape.
+    gather_rate = 6.5e9 if score_bf16 else 5.5e9
+    distance_ms = distance_flops / 3.0 / gather_rate * 1e3 + 0.85
+    # fp32 max8/match-replace rescans the full score row once per 8 results.
+    rounds = rank_kpad // 8
+    scan_ms_per_round = 0.19 if score_bf16 else 0.70
+    score_scan_ms = (
+        max(rounds - 2, 0) * scan_ms_per_round
+        * (B * N / 4096.0) * (M / 8192.0)
+    )
+    rt = max(rank_ms + distance_ms + score_scan_ms, 0.15)
+    bound = (
+        "memory" if distance_ms + score_scan_ms > rank_ms else "compute"
+    )
+    # Exhaustive scan with FP32 distance recovery, but TF32/BF16 rank scores
+    # can change the candidate set for exact near ties.
+    res, tier = 1e-4, "fast"
     return Estimate(
-        op_name="knn_trainium",
+        op_name="knn_nki",
         runtime_ms=rt, flops=flops, bytes_moved=bytes_moved,
-        memory_peak_gb=(B * N * D + B * M * D) * dtype_bytes / 1e9,
-        bound=bound, confidence="roofline", n_kernel_launches=2,
-        suggested_config={"regime": _regime(B, N)}, subops=[],
+        memory_peak_gb=(
+            (B * N * D + B * M * D) * 4
+            + B * N * candidate_k * 8
+        ) / 1e9,
+        bound=bound, confidence="calibrated", n_kernel_launches=1,
+        suggested_config={
+            "regime": op_class,
+            "variant": "full_score",
+            "score_dtype": (
+                "bf16" if 32 <= ((k + 7) // 8) * 8 <= 56 else "fp32"
+            ),
+            "candidate_k": (
+                ((k + 15) // 8) * 8
+                if 32 <= ((k + 7) // 8) * 8 <= 56
+                else k
+            ),
+            "lnc_width": 2,
+        },
+        subops=[],
         notes=[
             f"B={B}, N={N}, M={M}, D={D}, k={k}, dtype={dtype}",
-            "Trainium NKI: nc_matmul + max8/nc_match_replace8 top-k; v1 "
+            "Trainium NKI on one LNC2: TF32 rank + fp32 indirect "
+            "gather-distance; "
             "M<=16384, B==1, k<=64 (else routes to torch).",
         ],
         expected_residual=res, precision_tier=tier, tol=tol,
@@ -301,7 +359,29 @@ def estimate_knn_torch(shape, params=None, tol=None, dtype="float32",
 
 def recommend(shape, params=None, tol=None, dtype="float32", device="H100", **_):
     B, N, M, D, k = common(shape, params)
-    chosen = _route_op_name(B=B, N=N, M=M, D=D, k=k)
+    if str(device).lower().startswith("trn"):
+        chosen = (
+            "knn_nki"
+            if B == 1 and M <= 16384 and D <= 512 and k <= 64
+            else "knn_torch"
+        )
+    else:
+        chosen = _route_op_name(B=B, N=N, M=M, D=D, k=k)
+    if chosen == "knn_nki":
+        return {
+            "variant": "full_score",
+            "score_dtype": (
+                "bf16" if 32 <= ((k + 7) // 8) * 8 <= 56 else "fp32"
+            ),
+            "candidate_k": (
+                ((k + 15) // 8) * 8
+                if 32 <= ((k + 7) // 8) * 8 <= 56
+                else k
+            ),
+            "rank_input": "tf32",
+            "lnc_width": 2,
+            "regime": "build" if B * N >= 1024 else "search",
+        }
     return {
         "variant": chosen,
         "BN": _heuristic_BN(B, N, M, k),

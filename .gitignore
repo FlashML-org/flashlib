@@ -37,6 +37,11 @@ coverage.xml
 .nv_cache/
 .cuda_cache/
 
+# ── AWS Neuron / NKI compiler artifacts ──────────────────────────────
+PostSPMDPassesExecutionDuration.txt
+*.neff
+*.ntff
+
 # ── Notebooks ────────────────────────────────────────────────────────
 .ipynb_checkpoints/
 

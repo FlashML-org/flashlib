@@ -55,20 +55,47 @@ _HARDWARE: dict[str, dict[str, float]] = {
         "int8_tflops": 624.0,
         "bw_tbs":       2.04,
     },
-    # AWS Trainium2 (NeuronCore-v3), *per single NeuronCore*. The flashlib
-    # NKI kmeans backend runs single-core via nki.baremetal; bf16 is the
-    # measured compute-bound matmul ceiling (128x128x512 tile, both operands
-    # resident) from benchmarks/micro/bench_kmeans_trainium.py. Other dtypes
-    # / bandwidth are approximate. Multiply by the NeuronCore count for a
-    # whole-chip figure.
-    "trn2": {
+    # AWS Trainium2 / NeuronCore-v3. Keep physical NC, one LNC2 execution
+    # scope, and full-chip denominators distinct. flashlib's default custom
+    # call runs on one LNC2 (two physical cores), not all four LNC2 devices on
+    # the chip. 667 BF16 TF/chip and 2.9 TB/s are official dense peaks; the
+    # calibrated tables below contain measured sustained operator rates.
+    "trn2_nc": {
         "fp64_tflops":  0.0,     # no fp64 matmul path
         "fp32_tflops": 20.0,
         "tf32_tflops": 47.0,
-        "fp16_tflops": 75.0,
-        "bf16_tflops": 75.0,     # measured achievable single-core peak
-        "int8_tflops": 150.0,
-        "bw_tbs":       1.5,     # conservative per-core effective HBM
+        "fp16_tflops": 83.375,
+        "bf16_tflops": 83.375,
+        "int8_tflops": 158.0,
+        "bw_tbs":       0.3625,
+    },
+    "trn2_lnc2": {
+        "fp64_tflops":  0.0,
+        "fp32_tflops": 40.0,
+        "tf32_tflops": 94.0,
+        "fp16_tflops": 166.75,
+        "bf16_tflops": 166.75,
+        "int8_tflops": 316.0,
+        "bw_tbs":       0.725,
+    },
+    # Backward-compatible device key: runtime estimates are one-LNC2 scoped.
+    "trn2": {
+        "fp64_tflops":  0.0,
+        "fp32_tflops": 40.0,
+        "tf32_tflops": 94.0,
+        "fp16_tflops": 166.75,
+        "bf16_tflops": 166.75,
+        "int8_tflops": 316.0,
+        "bw_tbs":       0.725,
+    },
+    "trn2_chip": {
+        "fp64_tflops":  0.0,
+        "fp32_tflops": 160.0,
+        "tf32_tflops": 376.0,
+        "fp16_tflops": 667.0,
+        "bf16_tflops": 667.0,
+        "int8_tflops": 1264.0,
+        "bw_tbs":       2.9,
     },
 }
 
@@ -152,12 +179,19 @@ _SUSTAINED_TFLOPS: dict[tuple[str, str, str], float] = {
     # ``_SUSTAINED_BW_TBS`` handles those).
     ("kmeans", "bf16", "H200"): 400.0,
     ("kmeans", "fp32", "H200"): 200.0,
-    # ─── KMeans assign (Trainium NKI, single NeuronCore) ──────────────────
-    # Measured with benchmarks/micro/bench_kmeans_trainium.py: the flash
-    # assign is argmax-epilogue-bound at small D and matmul-bound at large D
-    # -- ~9 TF (D=128) rising to ~35 TF (D=512, ~47% of the 75 TF single-
-    # core bf16 ceiling). ~18 TF is a representative D=256 sustained value.
-    ("kmeans", "bf16", "trn2"): 18.0,
+    # ─── KMeans Lloyd loop (Trainium NKI, one LNC2) ───────────────────────
+    # Measured warm at N=262144,D=128,K=4096: assign ~17.5 TF aggregate and
+    # transposed one-hot update ~26 TF, ~21 TF effective across both stages.
+    ("kmeans", "bf16", "trn2_nc"):   10.5,
+    ("kmeans", "bf16", "trn2_lnc2"): 21.0,
+    ("kmeans", "bf16", "trn2"):      21.0,
+    # Four synchronized device-resident workers at N=32768,D=128,K=1024
+    # sustain ~31 TF aggregate (2.15-2.25 ms/Lloyd iteration per worker).
+    ("kmeans", "bf16", "trn2_chip"): 31.0,
+    # Exact K=65536 bounded-residency assign at N=10M,D=256. D=128/512
+    # measure ~67.6/259.3 TF/chip because max/find-index cost is D-invariant.
+    ("kmeans_large_assign", "bf16", "trn2_lnc2"): 32.6,
+    ("kmeans_large_assign", "bf16", "trn2_chip"): 130.4,
     # ─── KNN insert / sortmerge kernels (x²-free score) ───────────────────
     # Two distinct regimes -- the KNN cost.py picks the appropriate
     # op_class based on (B*N) saturating the SMs:
@@ -169,14 +203,25 @@ _SUSTAINED_TFLOPS: dict[tuple[str, str, str], float] = {
     ("knn_build",  "fp32", "H200"): 260.0,
     ("knn_search", "bf16", "H200"):  80.0,
     ("knn_search", "fp32", "H200"):  40.0,
-    # Trainium NKI flash-knn (nc_matmul cross + max8/nc_match_replace8 top-k),
-    # single NeuronCore. The build regime shares the assign kernel's matmul
-    # layout so it tracks the ~18 TF kmeans-assign sustained figure (bf16,
-    # D=256-representative); the search regime is corpus-DMA bound and reports
-    # well below peak. Conservative starting points -- re-measure with
-    # benchmarks/micro/bench_knn_trainium.py.
-    ("knn_build",  "bf16", "trn2"):  18.0,
-    ("knn_search", "bf16", "trn2"):   8.0,
+    # Trainium NKI flash-knn, one LNC2. Measured rank-kernel rates are ~13 TF
+    # for Q=8192,M=16384,D=128 and ~1.7-2 TF for Q=128 search.
+    ("knn_build",  "bf16", "trn2_nc"):    6.5,
+    ("knn_search", "bf16", "trn2_nc"):    1.0,
+    ("knn_build",  "bf16", "trn2_lnc2"): 13.0,
+    ("knn_search", "bf16", "trn2_lnc2"):  2.0,
+    ("knn_build",  "bf16", "trn2"):      13.0,
+    ("knn_search", "bf16", "trn2"):       2.0,
+    # Production KNN ranks with fp32 operands (TF32 PE path), then computes
+    # true fp32 distances. Q=4096,M=8192,D=128 measures ~4.7 TF rank work per
+    # LNC2; four queued device-resident workers sustain ~18 TF aggregate.
+    ("knn_build",  "tf32", "trn2_nc"):     2.35,
+    ("knn_search", "tf32", "trn2_nc"):     0.8,
+    ("knn_build",  "tf32", "trn2_lnc2"):   4.7,
+    ("knn_search", "tf32", "trn2_lnc2"):   1.6,
+    ("knn_build",  "tf32", "trn2"):        4.7,
+    ("knn_search", "tf32", "trn2"):        1.6,
+    ("knn_build",  "tf32", "trn2_chip"):  18.0,
+    ("knn_search", "tf32", "trn2_chip"):   6.0,
     # ─── IVF-Flat fused fine-scan ─────────────────────────────────────────
     # The online path is bandwidth-bound (the ``_SUSTAINED_BW_TBS`` entry
     # below dominates the estimate); these compute numbers track the
@@ -206,7 +251,9 @@ _SUSTAINED_BW_TBS: dict[tuple[str, str], float] = {
     # from benchmarks/results/full_speedup_report.md.
     ("kmeans",      "H200"): 1.1,
     ("kmeans",      "H100"): 0.8,
-    ("kmeans",      "trn2"): 0.9,   # per-core effective; assign re-reads points
+    ("kmeans",      "trn2_nc"): 0.35,
+    ("kmeans",      "trn2_lnc2"): 0.70,
+    ("kmeans",      "trn2"): 0.70,
     # KNN insert at large NB shows the same L2-spill pattern.
     ("knn_build",   "H200"): 1.4,
     ("knn_build",   "H100"): 1.0,

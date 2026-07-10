@@ -43,6 +43,15 @@ axis, so the caller passes:
 Lloyd iteration; only the (small) centroid set is re-streamed.
 
 Output: ``out_idx`` ``[N, 1]`` int32 -- nearest-centroid index per point.
+
+Large-K path
+------------
+At K=65536 the complete centroid matrix no longer fits one NC's 28 MiB SBUF
+for D>=256. ``flash_assign_chunked_body`` keeps 4096 centroids resident and
+interleaves four independent point tiles. At rank-local N=2.5M it sustains
+16.9/32.6/64.8 TFLOP/s for D=128/256/512; four
+synchronized LNC2 workers retain essentially linear aggregate scaling
+(about 67.6/130.4/259.3 TFLOP/s).
 """
 from __future__ import annotations
 
@@ -59,7 +68,8 @@ _NEG = -3.0e38     # sentinel below any real similarity
 
 
 def flash_assign_body(xT, cT, c_sq, out_idx, *, MT: int = _MT, BK: int = _BK,
-                      n_shards: int = 1):
+                      n_shards: int = 1, fold_csq: bool = False,
+                      score_bf16: bool = False):
     """Emit the flash-assign NKI ops (reusable inside larger kernels).
 
     Shapes (all HBM tensors, pre-padded by the caller):
@@ -94,8 +104,10 @@ def flash_assign_body(xT, cT, c_sq, out_idx, *, MT: int = _MT, BK: int = _BK,
                        buffer=nl.sbuf)
     for i in nl.affine_range(n_dt):
         cT_sb[:, i, :] = nl.load(cT[i * _PMAX:(i + 1) * _PMAX, :])
-    csq_sb = nl.ndarray((1, Kp), dtype=nl.float32, buffer=nl.sbuf)
-    csq_sb[...] = nl.load(c_sq)
+    if not fold_csq:
+        csq_sb = nl.ndarray((1, Kp), dtype=nl.float32, buffer=nl.sbuf)
+        csq_sb[...] = nl.load(c_sq)
+    score_dt = nl.bfloat16 if score_bf16 else nl.float32
 
     for mt_i in nl.affine_range(per):
         m0 = (m_base + mt_i) * MT
@@ -116,12 +128,19 @@ def flash_assign_body(xT, cT, c_sq, out_idx, *, MT: int = _MT, BK: int = _BK,
             for i in nl.affine_range(n_dt):
                 acc += nisa.nc_matmul(x_sb[:, i, :], cT_sb[:, i, k0:k0 + BK])
 
-            # sim = 2*cross - c_sq  (Vector engine; overlaps next PE matmul).
-            csq_bc = nl.broadcast_to(csq_sb[:, k0:k0 + BK], shape=(MT, BK))
-            sim = nisa.scalar_tensor_tensor(
-                data=acc, op0=nl.multiply, operand0=2.0,
-                op1=nl.subtract, operand1=csq_bc,
-            )
+            if fold_csq:
+                # The caller appends x=1 and c=-0.5*||c||^2. The matmul
+                # therefore produces a score monotone with negative distance,
+                # without a Vector-engine epilogue.
+                sim = nl.copy(acc, dtype=score_dt)
+            else:
+                # sim = 2*cross - c_sq (Vector engine).
+                csq_bc = nl.broadcast_to(
+                    csq_sb[:, k0:k0 + BK], shape=(MT, BK))
+                sim = nisa.scalar_tensor_tensor(
+                    data=acc, op0=nl.multiply, operand0=2.0,
+                    op1=nl.subtract, operand1=csq_bc, dtype=score_dt,
+                )
 
             # Per-tile argmax (top value + its index), then running update.
             top = nisa.max8(src=sim)                               # [MT, 8]
@@ -136,6 +155,120 @@ def flash_assign_body(xT, cT, c_sq, out_idx, *, MT: int = _MT, BK: int = _BK,
         nl.store(out_idx[m0:m0 + MT, :], best_idx)
 
 
+def flash_assign_chunked_body(
+    xT,
+    cT,
+    c_sq,
+    out_idx,
+    *,
+    MT: int = _MT,
+    BK: int = _BK,
+    n_shards: int = 1,
+    k_resident: int = 4096,
+    point_lanes: int = 4,
+):
+    """Exact large-K assign with bounded centroid residency.
+
+    ``flash_assign_body`` keeps the complete centroid matrix in SBUF, which is
+    ideal up to K=16384 but impossible at K=65536 (D=256 alone needs 32 MiB,
+    versus 28 MiB/NeuronCore-v3). This variant keeps only ``k_resident``
+    centroids on chip and carries the exact running argmax across chunks.
+
+    Multiple independent point tiles share each centroid load. Interleaving
+    their TensorEngine and max/find-index epilogues also gives the compiler
+    independent dependency chains to overlap. Equal scores retain the earlier
+    global centroid ID, hence the smallest ID across chunk boundaries.
+    """
+    Dp, N = xT.shape
+    _, Kp = cT.shape
+    assert Dp % _PMAX == 0
+    assert Kp % k_resident == 0
+    assert k_resident % BK == 0
+    assert point_lanes in (1, 2, 4)
+    assert N % (MT * n_shards * point_lanes) == 0
+
+    n_dt = Dp // _PMAX
+    n_kc = Kp // k_resident
+    n_kt_resident = k_resident // BK
+    n_mt = N // MT
+    per = n_mt // n_shards
+    n_groups = per // point_lanes
+    m_base = (nl.program_id(0) * per) if n_shards > 1 else 0
+    score_dt = nl.float32
+
+    for mg in nl.affine_range(n_groups):
+        x_sb = nl.ndarray(
+            (nl.par_dim(_PMAX), point_lanes, n_dt, MT),
+            dtype=xT.dtype, buffer=nl.sbuf)
+        best_val = nl.full(
+            (nl.par_dim(_PMAX), point_lanes, 1),
+            _NEG, dtype=nl.float32, buffer=nl.sbuf)
+        best_idx = nl.zeros(
+            (nl.par_dim(_PMAX), point_lanes, 1),
+            dtype=nl.int32, buffer=nl.sbuf)
+
+        for lane in nl.affine_range(point_lanes):
+            m0 = (m_base + mg * point_lanes + lane) * MT
+            for dt in nl.affine_range(n_dt):
+                x_sb[:, lane, dt, :] = nl.load(
+                    xT[
+                        dt * _PMAX:(dt + 1) * _PMAX,
+                        m0:m0 + MT])
+
+        for kc in nl.sequential_range(n_kc):
+            k_chunk0 = kc * k_resident
+            cT_sb = nl.ndarray(
+                (nl.par_dim(_PMAX), n_dt, k_resident),
+                dtype=cT.dtype, buffer=nl.sbuf)
+            for dt in nl.affine_range(n_dt):
+                cT_sb[:, dt, :] = nl.load(
+                    cT[
+                        dt * _PMAX:(dt + 1) * _PMAX,
+                        k_chunk0:k_chunk0 + k_resident])
+            csq_sb = nl.ndarray(
+                (1, k_resident), dtype=nl.float32, buffer=nl.sbuf)
+            csq_sb[...] = nl.load(
+                c_sq[:, k_chunk0:k_chunk0 + k_resident])
+            # Bound static unrolling to the resident chunk (8 copies for the
+            # default), instead of emitting 128 copies at K=65536.
+            for kt in nl.static_range(n_kt_resident):
+                k_local = kt * BK
+                k_global = k_chunk0 + k_local
+                csq_bc = nl.broadcast_to(
+                    csq_sb[:, k_local:k_local + BK],
+                    shape=(MT, BK))
+                for lane in nl.affine_range(point_lanes):
+                    acc = nl.zeros(
+                        (MT, BK), dtype=nl.float32, buffer=nl.psum)
+                    for dt in nl.affine_range(n_dt):
+                        acc += nisa.nc_matmul(
+                            x_sb[:, lane, dt, :],
+                            cT_sb[:, dt, k_local:k_local + BK])
+                    sim = nisa.scalar_tensor_tensor(
+                        data=acc, op0=nl.multiply, operand0=2.0,
+                        op1=nl.subtract, operand1=csq_bc,
+                        dtype=score_dt,
+                    )
+                    top = nisa.max8(src=sim)
+                    idx = nisa.nc_find_index8(data=sim, vals=top)
+                    tile_val = top[:, 0:1]
+                    tile_idx = nl.copy(
+                        nl.add(idx[:, 0:1], k_global),
+                        dtype=nl.int32)
+                    upd = nl.greater(
+                        tile_val, best_val[:, lane, :])
+                    best_idx[:, lane, :] = nl.where(
+                        upd, tile_idx, best_idx[:, lane, :])
+                    best_val[:, lane, :] = nl.maximum(
+                        tile_val, best_val[:, lane, :])
+
+        for lane in nl.affine_range(point_lanes):
+            m0 = (m_base + mg * point_lanes + lane) * MT
+            nl.store(
+                out_idx[m0:m0 + MT, :],
+                best_idx[:, lane, :])
+
+
 def _flash_assign_kernel(xT, cT, c_sq):
     """NKI kernel: allocate output and run the assign body (single core)."""
     N = xT.shape[1]
@@ -144,7 +277,8 @@ def _flash_assign_kernel(xT, cT, c_sq):
     return out_idx
 
 
-def make_assign_kernel(n_shards: int):
+def make_assign_kernel(n_shards: int, *, fold_csq: bool = False,
+                       score_bf16: bool = False):
     """Build an assign kernel sharded over ``n_shards`` NeuronCores.
 
     Launch the returned (baremetal- or jit-wrapped) kernel with
@@ -154,7 +288,29 @@ def make_assign_kernel(n_shards: int):
     def _kernel(xT, cT, c_sq):
         N = xT.shape[1]
         out_idx = nl.ndarray((N, 1), dtype=nl.int32, buffer=nl.shared_hbm)
-        flash_assign_body(xT, cT, c_sq, out_idx, n_shards=n_shards)
+        flash_assign_body(
+            xT, cT, c_sq, out_idx, n_shards=n_shards,
+            fold_csq=fold_csq, score_bf16=score_bf16)
+        return out_idx
+    return _kernel
+
+
+def make_assign_kernel_large(
+    n_shards: int,
+    *,
+    k_resident: int = 4096,
+    point_lanes: int = 4,
+):
+    """Build the bounded-SBUF exact assign kernel for K>=32768."""
+    def _kernel(xT, cT, c_sq):
+        N = xT.shape[1]
+        out_idx = nl.ndarray(
+            (N, 1), dtype=nl.int32, buffer=nl.shared_hbm)
+        flash_assign_chunked_body(
+            xT, cT, c_sq, out_idx,
+            n_shards=n_shards,
+            k_resident=k_resident,
+            point_lanes=point_lanes)
         return out_idx
     return _kernel
 

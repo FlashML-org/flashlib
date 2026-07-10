@@ -88,7 +88,7 @@ def _route(
         # (no CUDA). v1 handles squared-L2, B==1, k<=64; the corpus-size limit
         # (M<=16384) is enforced in the dispatcher, which falls back to torch.
         if B == 1 and k <= 64:
-            return "trainium"
+            return "nki"
         return "torch"
     if not hw.is_cuda:
         return "torch"
@@ -98,12 +98,12 @@ def _route(
 # Backends are DSL-only: the hardware (Hopper vs Blackwell) is NOT a
 # backend -- the router picks the matching CuteDSL kernel by hardware
 # inside ``_cutedsl_knn``.
-_VALID_BACKENDS = ("triton", "cutedsl", "torch", "trainium")
+_VALID_BACKENDS = ("triton", "cutedsl", "torch", "nki")
 
 _OP_NAME = {
     "triton":  "knn_triton",
     "cutedsl": "knn_cutedsl_fa3",
-    "trainium": "knn_trainium",
+    "nki":      "knn_nki",
     "torch":   "knn_torch",
 }
 
@@ -252,7 +252,7 @@ def flash_knn_dispatch(
         ``None`` (default) keeps the input dtype (EXACT path). Pass a
         tolerance to opt into low-precision storage via
         :func:`flashlib.linalg.gemm.storage_dtype_for`.
-    backend : {"triton", "cutedsl", "torch"}, optional
+    backend : {"triton", "cutedsl", "nki", "torch"}, optional
         Explicit backend override. By default auto-routes to Triton on
         CUDA and Torch on CPU. CuteDSL FA3 is reachable only via this
         override.
@@ -286,13 +286,13 @@ def flash_knn_dispatch(
             return vals[0], idxs[0]
         return vals, idxs
 
-    if chosen == "trainium":
+    if chosen == "nki":
         # NKI flash-knn (Trainium): fused matmul + max8/nc_match_replace8 top-k,
         # own fp32 true-distance epilogue (no CUDA Triton gather). Falls back to
         # the torch reference for shapes it doesn't cover (e.g. M > 16384).
-        from flashlib.primitives.knn.trainium import trainium_knn
+        from flashlib.primitives.knn.nki import nki_knn
         try:
-            res = trainium_knn(x, c, k, return_distances=return_distances)
+            res = nki_knn(x, c, k, return_distances=return_distances)
         except NotImplementedError:
             vals, idxs = knn_torch_naive(x, c, k)
             res = idxs if not return_distances else (vals, idxs)

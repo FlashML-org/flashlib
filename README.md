@@ -5,8 +5,7 @@
 
 A GPU library for classical machine-learning operators — `kmeans`, `knn`,
 `ivf-flat`, `pca`, `svd`, `dbscan`, `hdbscan`, `umap`, `t-sne`, regression,
-GEMM, and more — built on Triton and CuteDSL, with an experimental AWS
-Trainium (NKI) backend.
+GEMM, and more — built on Triton, CuteDSL, and NKI (AWS Trainium).
 
 See [the blog post](https://flashml-org.github.io/) for motivation, design,
 and benchmarks.
@@ -40,25 +39,26 @@ labels, centroids, n_iter = flash_kmeans(x, n_clusters=1024, max_iters=20)
 Every primitive is exposed as a top-level `flash_*` function and as a
 sklearn-style class (`KMeans`, `PCA`, `HDBSCAN`, …).
 
-### AWS Trainium (NKI) backend
+### NKI backend (AWS Trainium)
 
 `flash_kmeans` also runs on AWS Trainium. The same flash algorithm (stream
 centroids, never materialise the `N×K` distance matrix) is implemented in
 [NKI](https://awsdocs-neuron.readthedocs-hosted.com/en/latest/general/nki/):
 the assign step is an `nc_matmul` on the 128×128×512 TensorEngine (bf16
-FLOPs) with a streaming argmax epilogue, and the Lloyd update is a one-hot
-matmul. On a Trainium/Inferentia host it is selected automatically; you can
-also force it:
+FLOPs) with a streaming argmax epilogue. Lloyd update routing selects a
+transposed one-hot matmul, fused group-reduce, radix segmented reduction, or
+atomic accumulation by shape. On a Trainium/Inferentia host the `nki` backend
+is selected automatically; you can also force it:
 
 ```python
 labels, centroids, n_iter = flash_kmeans(
-    x, n_clusters=1024, max_iters=20, backend="trainium")   # B=1, euclidean, D<=512, bf16
+    x, n_clusters=1024, max_iters=20, backend="nki")   # B=1, euclidean, D<=512, bf16
 ```
 
 On the same NeuronCore, the flash assign is **1.4–2.1× faster than the
 naive torch-on-Trainium** path that materialises the full `N×K` distance
 matrix (and `O(N+K)` vs `O(N·K)` device memory, so it keeps running where
-the naive path OOMs). See `benchmarks/micro/bench_kmeans_trainium.py` for
+the naive path OOMs). See `benchmarks/micro/bench_kmeans_nki.py` for
 that baseline and the bf16 PE-array utilization sweep.
 
 Requires the AWS Neuron SDK (`neuronx-cc`, `torch-neuronx`) from the Neuron

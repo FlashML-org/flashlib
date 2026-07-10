@@ -26,7 +26,6 @@ all rules can still pattern-match on.
 from __future__ import annotations
 
 import glob
-import os
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Optional
@@ -98,7 +97,7 @@ class HwProps:
     def is_neuron(self) -> bool:
         """True on an AWS Trainium/Inferentia (NeuronDevice) host.
 
-        Used by routing rules to select the NKI (``trainium``) backend.
+        Used by routing rules to select the ``nki`` backend.
         ``sm_arch`` stays 0 (no CUDA), so ``is_cuda`` is False.
         """
         return self.device_tag.startswith("trn") or self.device_tag.startswith("inf")

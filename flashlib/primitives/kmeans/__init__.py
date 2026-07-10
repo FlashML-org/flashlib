@@ -1,4 +1,4 @@
-"""K-Means primitive -- multi-backend (Triton + CuteDSL).
+"""K-Means primitive -- multi-backend (Triton + CuteDSL + NKI).
 
 Public API
 ----------
@@ -6,7 +6,7 @@ Smart dispatcher (recommended):
     flash_kmeans(x, n_clusters, *, metric, max_iters, backend, variant)
 
 Backend-explicit:
-    flash_kmeans_triton, flash_kmeans_cutedsl
+    flash_kmeans_triton, flash_kmeans_cutedsl, flash_kmeans_nki
     batch_kmeans_Euclid, batch_kmeans_Cosine, batch_kmeans_Dot   (Triton).
     cutedsl_assign_euclid, cutedsl_kmeans_Euclid                  (CuteDSL).
     kmeans_largeN, kmeans_largeN_assign                           (CPU streaming).
@@ -50,14 +50,14 @@ def flash_kmeans_cutedsl(x, n_clusters, **kw):
     return flash_kmeans(x, n_clusters, backend="cutedsl", **kw)
 
 
-def flash_kmeans_trainium(x, n_clusters, **kw):
+def flash_kmeans_nki(x, n_clusters, **kw):
     """Force the AWS Trainium (NKI) backend.
 
     Constraints: B=1, euclidean metric, D <= 512, bf16 matmul inputs
     (fp32 accumulate). Runs on a NeuronDevice host (Trainium/Inferentia);
     requires the Neuron NKI toolchain (``neuronxcc``).
     """
-    return flash_kmeans(x, n_clusters, backend="trainium", **kw)
+    return flash_kmeans(x, n_clusters, backend="nki", **kw)
 
 
 cutedsl_assign_euclid = lazy_attr(
@@ -68,13 +68,13 @@ cutedsl_kmeans_Euclid = lazy_attr(
     "flashlib.primitives.kmeans.cutedsl",
     "cutedsl_kmeans_Euclid",
 )
-trainium_assign_euclid = lazy_attr(
-    "flashlib.primitives.kmeans.trainium",
-    "trainium_assign_euclid",
+nki_assign_euclid = lazy_attr(
+    "flashlib.primitives.kmeans.nki",
+    "nki_assign_euclid",
 )
-trainium_kmeans_Euclid = lazy_attr(
-    "flashlib.primitives.kmeans.trainium",
-    "trainium_kmeans_Euclid",
+nki_kmeans_Euclid = lazy_attr(
+    "flashlib.primitives.kmeans.nki",
+    "nki_kmeans_Euclid",
 )
 
 
@@ -82,7 +82,7 @@ __all__ = [
     "flash_kmeans",
     "flash_kmeans_triton",
     "flash_kmeans_cutedsl",
-    "flash_kmeans_trainium",
+    "flash_kmeans_nki",
     "batch_kmeans_Euclid",
     "batch_kmeans_Cosine",
     "batch_kmeans_Dot",
@@ -98,7 +98,7 @@ __all__ = [
     "kmeans_largeN_assign",
     "cutedsl_assign_euclid",
     "cutedsl_kmeans_Euclid",
-    "trainium_assign_euclid",
-    "trainium_kmeans_Euclid",
+    "nki_assign_euclid",
+    "nki_kmeans_Euclid",
     "cost",
 ]
