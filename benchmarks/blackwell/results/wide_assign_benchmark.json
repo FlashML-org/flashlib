@@ -1,0 +1,943 @@
+{
+  "meta": {
+    "gpu": "NVIDIA B200",
+    "cap": "sm100",
+    "torch": "2.8.0+cu128",
+    "dtype": "bfloat16",
+    "B": 1,
+    "grid": {
+      "N": [
+        65536,
+        262144,
+        1048576
+      ],
+      "K": [
+        256,
+        1024,
+        4096,
+        16384,
+        65536
+      ],
+      "D": [
+        64,
+        128,
+        256
+      ]
+    },
+    "reference_grid": "https://github.com/svg-project/flash-kmeans-tune"
+  },
+  "rows": [
+    {
+      "N": 65536,
+      "D": 64,
+      "K": 256,
+      "tuned_ms": 0.048128001391887665,
+      "cake_ms": 0.08292799815535545,
+      "ours_ms": 0.08524800091981888,
+      "tuned_tflops": 44.62025402870717,
+      "cake_tflops": 25.895761332342214,
+      "ours_tflops": 25.191014743206047,
+      "tuned_over_cake": 0.5803588952156513,
+      "ours_over_cake": 1.027976109589878,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 8,
+        "num_stages": 3
+      }
+    },
+    {
+      "N": 65536,
+      "D": 64,
+      "K": 1024,
+      "tuned_ms": 0.06659200042486191,
+      "cake_ms": 0.09219200164079666,
+      "ours_ms": 0.09164800122380257,
+      "tuned_tflops": 128.99349076759339,
+      "cake_tflops": 93.17440167389526,
+      "ours_tflops": 93.72746243558059,
+      "tuned_over_cake": 0.7223186311142389,
+      "ours_over_cake": 0.9940992666683423,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 64,
+      "K": 4096,
+      "tuned_ms": 0.16326399892568588,
+      "cake_ms": 0.1597760021686554,
+      "ours_ms": 0.14851200580596924,
+      "tuned_tflops": 210.4550825294913,
+      "cake_tflops": 215.04943108872354,
+      "ours_tflops": 231.36000474527935,
+      "tuned_over_cake": 1.0218305421946197,
+      "ours_over_cake": 0.9295013255445197,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 64,
+      "K": 16384,
+      "tuned_ms": 0.5325120091438293,
+      "cake_ms": 0.4177919924259186,
+      "ours_ms": 0.37376001477241516,
+      "tuned_tflops": 258.09550040565995,
+      "cake_tflops": 328.96502557159516,
+      "ours_tflops": 367.71978820604295,
+      "tuned_over_cake": 1.2745864420516688,
+      "ours_over_cake": 0.8946078947137528,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 64,
+      "K": 65536,
+      "tuned_ms": 2.0018880367279053,
+      "cake_ms": 1.568608045578003,
+      "ours_ms": 1.3280960321426392,
+      "tuned_tflops": 274.6186618840973,
+      "cake_tflops": 350.47366704371655,
+      "ours_tflops": 413.94281782550763,
+      "tuned_over_cake": 1.27621941145294,
+      "ours_over_cake": 0.8466716946190725,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 128,
+      "K": 256,
+      "tuned_ms": 0.050655998289585114,
+      "cake_ms": 0.08160000294446945,
+      "ours_ms": 0.08667199686169624,
+      "tuned_tflops": 84.786944113646,
+      "cake_tflops": 52.63440123798546,
+      "ours_tflops": 49.55426725489597,
+      "tuned_over_cake": 0.6207842703640293,
+      "ours_over_cake": 1.0621567859584318,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 128,
+      "K": 1024,
+      "tuned_ms": 0.07684799656271935,
+      "cake_ms": 0.09780800342559814,
+      "ours_ms": 0.09625600278377533,
+      "tuned_tflops": 223.55650052605708,
+      "cake_tflops": 175.64890992860933,
+      "ours_tflops": 178.4810161148287,
+      "tuned_over_cake": 0.785702538352877,
+      "ours_over_cake": 0.9841321713206894,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 128,
+      "K": 4096,
+      "tuned_ms": 0.18031999468803406,
+      "cake_ms": 0.1679840013384819,
+      "ours_ms": 0.15465599298477173,
+      "tuned_tflops": 381.09737555665635,
+      "cake_tflops": 409.0834614513834,
+      "ours_tflops": 444.3376257832213,
+      "tuned_over_cake": 1.073435525117035,
+      "ours_over_cake": 0.9206590612944461,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 128,
+      "K": 16384,
+      "tuned_ms": 0.5954079926013947,
+      "cake_ms": 0.4505919963121414,
+      "ours_ms": 0.39110399782657623,
+      "tuned_tflops": 461.6631122854634,
+      "cake_tflops": 610.037260301406,
+      "ours_tflops": 702.8256128076878,
+      "tuned_over_cake": 1.3213905206361765,
+      "ours_over_cake": 0.8679781288339714,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 128,
+      "K": 65536,
+      "tuned_ms": 2.264575958251953,
+      "cake_ms": 1.6077120304107666,
+      "ours_ms": 1.3753600120544434,
+      "tuned_tflops": 485.5264950462174,
+      "cake_tflops": 683.8983642456649,
+      "ours_tflops": 799.4355064414044,
+      "tuned_over_cake": 1.4085706366664181,
+      "ours_over_cake": 0.855476594090698,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 256,
+      "K": 256,
+      "tuned_ms": 0.06862400099635124,
+      "cake_ms": 0.08860800042748451,
+      "ours_ms": 0.09416000172495842,
+      "tuned_tflops": 125.17391098278763,
+      "cake_tflops": 96.94310390211183,
+      "ours_tflops": 91.22700121747256,
+      "tuned_over_cake": 0.774467324228946,
+      "ours_over_cake": 1.0626580136182802,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 4
+      }
+    },
+    {
+      "N": 65536,
+      "D": 256,
+      "K": 1024,
+      "tuned_ms": 0.11673600226640701,
+      "cake_ms": 0.11420800164341927,
+      "ours_ms": 0.11980800330638885,
+      "tuned_tflops": 294.337117092519,
+      "cake_tflops": 300.8522859482134,
+      "ours_tflops": 286.7900091793596,
+      "tuned_over_cake": 1.0221350569715832,
+      "ours_over_cake": 1.0490333565283274,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 256,
+      "K": 4096,
+      "tuned_ms": 0.3046720027923584,
+      "cake_ms": 0.21915200352668762,
+      "ours_ms": 0.22015999257564545,
+      "tuned_tflops": 451.1046378149426,
+      "cake_tflops": 627.1398447665259,
+      "ours_tflops": 624.2685233775021,
+      "tuned_over_cake": 1.3902314279105208,
+      "ours_over_cake": 1.0045994973020407,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 256,
+      "K": 16384,
+      "tuned_ms": 1.0618879795074463,
+      "cake_ms": 0.627839982509613,
+      "ours_ms": 0.6369600296020508,
+      "tuned_tflops": 517.7154506852999,
+      "cake_tflops": 875.6304619060837,
+      "ours_tflops": 863.0931115590836,
+      "tuned_over_cake": 1.691335386546822,
+      "ours_over_cake": 1.014526069295528,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 65536,
+      "D": 256,
+      "K": 65536,
+      "tuned_ms": 4.089888095855713,
+      "cake_ms": 2.277343988418579,
+      "ours_ms": 2.3695359230041504,
+      "tuned_tflops": 537.6732086582691,
+      "cake_tflops": 965.6087383966241,
+      "ours_tflops": 928.0396360330462,
+      "tuned_over_cake": 1.7959026465280683,
+      "ours_over_cake": 1.0404822174666686,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 64,
+      "K": 256,
+      "tuned_ms": 0.06964800134301186,
+      "cake_ms": 0.11520000174641609,
+      "ours_ms": 0.09625600278377533,
+      "tuned_tflops": 123.3335404657936,
+      "cake_tflops": 74.56540331404322,
+      "ours_tflops": 89.24050805741435,
+      "tuned_over_cake": 0.6045833358260225,
+      "ours_over_cake": 0.835555567053365,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 4
+      }
+    },
+    {
+      "N": 262144,
+      "D": 64,
+      "K": 1024,
+      "tuned_ms": 0.13148800283670425,
+      "cake_ms": 0.17102400213479996,
+      "ours_ms": 0.14905600249767303,
+      "tuned_tflops": 261.3146266330592,
+      "cake_tflops": 200.90594266948497,
+      "ours_tflops": 230.51563031509855,
+      "tuned_over_cake": 0.7688277738528555,
+      "ours_over_cake": 0.8715501955110845,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 64,
+      "K": 4096,
+      "tuned_ms": 0.36660799384117126,
+      "cake_ms": 0.3819519877433777,
+      "ours_ms": 0.32467199862003326,
+      "tuned_tflops": 374.89349872590026,
+      "cake_tflops": 359.833062485176,
+      "ours_tflops": 423.316313252028,
+      "tuned_over_cake": 0.9598274275443341,
+      "ours_over_cake": 0.8500335357285033,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3
+      }
+    },
+    {
+      "N": 262144,
+      "D": 64,
+      "K": 16384,
+      "tuned_ms": 1.3332799673080444,
+      "cake_ms": 1.2441600561141968,
+      "ours_ms": 1.0414079427719116,
+      "tuned_tflops": 412.3333638605424,
+      "cake_tflops": 441.86904344527517,
+      "ours_tflops": 527.8966976425367,
+      "tuned_over_cake": 1.0716305838271243,
+      "ours_over_cake": 0.8370369532875638,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3
+      }
+    },
+    {
+      "N": 262144,
+      "D": 64,
+      "K": 65536,
+      "tuned_ms": 5.522463798522949,
+      "cake_ms": 5.146656036376953,
+      "ours_ms": 4.1769280433654785,
+      "tuned_tflops": 398.19604723170045,
+      "cake_tflops": 427.27224046237745,
+      "ours_tflops": 526.4690300434718,
+      "tuned_over_cake": 1.0730197937242665,
+      "ours_over_cake": 0.8115809593341067,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3
+      }
+    },
+    {
+      "N": 262144,
+      "D": 128,
+      "K": 256,
+      "tuned_ms": 0.0809439979493618,
+      "cake_ms": 0.11980800330638885,
+      "ours_ms": 0.1096160002052784,
+      "tuned_tflops": 212.2438923111711,
+      "cake_tflops": 143.3950045896798,
+      "ours_tflops": 156.72775098368103,
+      "tuned_over_cake": 0.6756142804780839,
+      "ours_over_cake": 0.9149305320192498,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 128,
+      "K": 1024,
+      "tuned_ms": 0.16075199842453003,
+      "cake_ms": 0.17254400253295898,
+      "ours_ms": 0.15617600083351135,
+      "tuned_tflops": 427.487542360243,
+      "cake_tflops": 398.2721840643134,
+      "ours_tflops": 440.01303893840367,
+      "tuned_over_cake": 0.9316579890617962,
+      "ours_over_cake": 0.9051372318993177,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 128,
+      "K": 4096,
+      "tuned_ms": 0.4639039933681488,
+      "cake_ms": 0.4054559916257858,
+      "ours_ms": 0.3461439907550812,
+      "tuned_tflops": 592.5318834793046,
+      "cake_tflops": 677.9475766082589,
+      "ours_tflops": 794.1143405216401,
+      "tuned_over_cake": 1.1441537502208312,
+      "ours_over_cake": 0.8537153178255498,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 128,
+      "K": 16384,
+      "tuned_ms": 1.698848009109497,
+      "cake_ms": 1.3608640432357788,
+      "ours_ms": 1.1407359838485718,
+      "tuned_tflops": 647.2101223183247,
+      "cake_tflops": 807.9511199088257,
+      "ours_tflops": 963.8616150833686,
+      "tuned_over_cake": 1.2483598325296925,
+      "ours_over_cake": 0.8382439006443289,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 128,
+      "K": 65536,
+      "tuned_ms": 6.632944107055664,
+      "cake_ms": 5.3882880210876465,
+      "ours_ms": 4.571599960327148,
+      "tuned_tflops": 663.0609937487133,
+      "cake_tflops": 816.2233521838051,
+      "ours_tflops": 962.036606280238,
+      "tuned_over_cake": 1.2309928647275203,
+      "ours_over_cake": 0.8484327382715435,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 256,
+      "K": 256,
+      "tuned_ms": 0.15256000310182571,
+      "cake_ms": 0.14033599942922592,
+      "ours_ms": 0.14336000382900238,
+      "tuned_tflops": 225.22114361171515,
+      "cake_tflops": 244.83908981122312,
+      "ours_tflops": 239.67450788424762,
+      "tuned_over_cake": 1.087105259679036,
+      "ours_over_cake": 1.0215483155574883,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 256,
+      "K": 1024,
+      "tuned_ms": 0.31121599674224854,
+      "cake_ms": 0.2263519987463951,
+      "ours_ms": 0.22631999850273132,
+      "tuned_tflops": 441.6191806034572,
+      "cake_tflops": 607.1912518253778,
+      "ours_tflops": 607.2771049012769,
+      "tuned_over_cake": 1.3749204710621314,
+      "ours_over_cake": 0.9998586261935348,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 256,
+      "K": 4096,
+      "tuned_ms": 0.9492480158805847,
+      "cake_ms": 0.5683519840240479,
+      "ours_ms": 0.5652160048484802,
+      "tuned_tflops": 579.1487626950798,
+      "cake_tflops": 967.2805397732877,
+      "ours_tflops": 972.6472873594146,
+      "tuned_over_cake": 1.6701763037048192,
+      "ours_over_cake": 0.9944823291486303,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 256,
+      "K": 16384,
+      "tuned_ms": 3.511296033859253,
+      "cake_ms": 1.9527679681777954,
+      "ours_ms": 1.9722559452056885,
+      "tuned_tflops": 626.2711074050517,
+      "cake_tflops": 1126.1057593053388,
+      "ours_tflops": 1114.9786420457015,
+      "tuned_over_cake": 1.7981122647847307,
+      "ours_over_cake": 1.0099796685246112,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 262144,
+      "D": 256,
+      "K": 65536,
+      "tuned_ms": 13.781904220581055,
+      "cake_ms": 7.495167970657349,
+      "ours_ms": 7.820255994796753,
+      "tuned_tflops": 638.2349551575356,
+      "cake_tflops": 1173.5684986171907,
+      "ours_tflops": 1124.7832587655091,
+      "tuned_over_cake": 1.8387718960449582,
+      "ours_over_cake": 1.0433730138419957,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 64,
+      "K": 256,
+      "tuned_ms": 0.14847999811172485,
+      "cake_ms": 0.23244799673557281,
+      "ours_ms": 0.14847999811172485,
+      "tuned_tflops": 231.4098788049941,
+      "cake_tflops": 147.8168831331629,
+      "ours_tflops": 231.4098788049941,
+      "tuned_over_cake": 0.6387665206709958,
+      "ours_over_cake": 0.6387665206709958,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 64,
+      "K": 1024,
+      "tuned_ms": 0.3461280018091202,
+      "cake_ms": 0.3989280015230179,
+      "ours_ms": 0.28830400109291077,
+      "tuned_tflops": 397.0755118154055,
+      "cake_tflops": 344.52069783842904,
+      "ours_tflops": 476.7153870601609,
+      "tuned_over_cake": 0.8676452905980049,
+      "ours_over_cake": 0.7226968274782181,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 64,
+      "K": 4096,
+      "tuned_ms": 1.2482880353927612,
+      "cake_ms": 1.2451839447021484,
+      "ours_ms": 1.0087039470672607,
+      "tuned_tflops": 440.40782119250616,
+      "cake_tflops": 441.5057038175217,
+      "ours_tflops": 545.0120577860117,
+      "tuned_over_cake": 1.0024928772201245,
+      "ours_over_cake": 0.8100842862285264,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 64,
+      "K": 16384,
+      "tuned_ms": 4.849535942077637,
+      "cake_ms": 4.6162238121032715,
+      "ours_ms": 3.888159990310669,
+      "tuned_tflops": 453.4502438618684,
+      "cake_tflops": 476.368422559232,
+      "ours_tflops": 565.5691280790879,
+      "tuned_over_cake": 1.0505417716885053,
+      "ours_over_cake": 0.8422815159257026,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 64,
+      "K": 65536,
+      "tuned_ms": 20.308527946472168,
+      "cake_ms": 19.87228775024414,
+      "ours_ms": 15.80288028717041,
+      "tuned_tflops": 433.1231217443303,
+      "cake_tflops": 442.63112193008254,
+      "ours_tflops": 556.6132795012767,
+      "tuned_over_cake": 1.021952187977082,
+      "ours_over_cake": 0.795221993853036,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 3
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 128,
+      "K": 256,
+      "tuned_ms": 0.17308799922466278,
+      "cake_ms": 0.15566399693489075,
+      "ours_ms": 0.14235199987888336,
+      "tuned_tflops": 397.0204580550052,
+      "cake_tflops": 441.4603125264935,
+      "ours_tflops": 482.7433179334905,
+      "tuned_over_cake": 1.1119334119183637,
+      "ours_over_cake": 0.9144824923031151,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 128,
+      "K": 1024,
+      "tuned_ms": 0.4679360091686249,
+      "cake_ms": 0.3753120005130768,
+      "ours_ms": 0.332832008600235,
+      "tuned_tflops": 587.426275298564,
+      "cake_tflops": 732.3983953836365,
+      "ours_tflops": 825.875816752217,
+      "tuned_over_cake": 1.2467920251122395,
+      "ours_over_cake": 0.8868141923126125,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 128,
+      "K": 4096,
+      "tuned_ms": 1.6773120164871216,
+      "cake_ms": 1.322975993156433,
+      "ours_ms": 1.1980479955673218,
+      "tuned_tflops": 655.5200326286115,
+      "cake_tflops": 831.0896293384139,
+      "ours_tflops": 917.7525707184535,
+      "tuned_over_cake": 1.2678325420594314,
+      "ours_over_cake": 0.9055704727558579,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 128,
+      "K": 16384,
+      "tuned_ms": 6.401023864746094,
+      "cake_ms": 4.958175897598267,
+      "ours_ms": 4.751904010772705,
+      "tuned_tflops": 687.0848483047258,
+      "cake_tflops": 887.0291417523948,
+      "ours_tflops": 925.5335337442634,
+      "tuned_over_cake": 1.2910037878742342,
+      "ours_over_cake": 0.9583976262468866,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 128,
+      "K": 65536,
+      "tuned_ms": 25.209343910217285,
+      "cake_ms": 20.717599868774414,
+      "ours_ms": 19.093039512634277,
+      "tuned_tflops": 697.8438672212302,
+      "cake_tflops": 849.1420896168074,
+      "ours_tflops": 921.3926380226086,
+      "tuned_over_cake": 1.2168081278668208,
+      "ours_over_cake": 0.9215854941484474,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 4,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 256,
+      "K": 256,
+      "tuned_ms": 0.47920000553131104,
+      "cake_ms": 0.33585599064826965,
+      "ours_ms": 0.31435200572013855,
+      "tuned_tflops": 286.80916503666384,
+      "cake_tflops": 409.2198957258889,
+      "ours_tflops": 437.2135407793746,
+      "tuned_over_cake": 1.4268020189437698,
+      "ours_over_cake": 0.935972602761606,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 256,
+      "K": 1024,
+      "tuned_ms": 1.1080000400543213,
+      "cake_ms": 0.6768320202827454,
+      "ours_ms": 0.66457599401474,
+      "tuned_tflops": 496.16948918255224,
+      "cake_tflops": 812.2485305265855,
+      "ours_tflops": 827.227915000202,
+      "tuned_over_cake": 1.6370384480206126,
+      "ours_over_cake": 0.98189207085255,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 256,
+      "K": 4096,
+      "tuned_ms": 3.635200023651123,
+      "cake_ms": 2.0387520790100098,
+      "ours_ms": 2.0142080783843994,
+      "tuned_tflops": 604.9249673318786,
+      "cake_tflops": 1078.6123914683221,
+      "ours_tflops": 1091.7557521245974,
+      "tuned_over_cake": 1.7830515348469083,
+      "ours_over_cake": 0.9879612627360123,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 256,
+      "K": 16384,
+      "tuned_ms": 14.104080200195312,
+      "cake_ms": 7.635439872741699,
+      "ours_ms": 7.641599893569946,
+      "tuned_tflops": 623.6559135622465,
+      "cake_tflops": 1152.008681727663,
+      "ours_tflops": 1151.0800283602268,
+      "tuned_over_cake": 1.8471863357272282,
+      "ours_over_cake": 1.0008067669880079,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    },
+    {
+      "N": 1048576,
+      "D": 256,
+      "K": 65536,
+      "tuned_ms": 57.39467239379883,
+      "cake_ms": 29.69702434539795,
+      "ours_ms": 32.19974327087402,
+      "tuned_tflops": 613.0250530471444,
+      "cake_tflops": 1184.7776962301748,
+      "ours_tflops": 1092.6910749831256,
+      "tuned_over_cake": 1.932674187361573,
+      "ours_over_cake": 1.0842750740399993,
+      "match_min": 1.0,
+      "cfg": {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "num_warps": 8,
+        "num_stages": 2
+      }
+    }
+  ],
+  "summary": {
+    "geomean_all": {
+      "tuned_over_cake": 1.1315759432101742,
+      "ours_over_cake": 0.9186998881698875
+    },
+    "tuned_vs_cake": {
+      "win": 12,
+      "tie": 1,
+      "loss": 32,
+      "n": 45
+    }
+  }
+}

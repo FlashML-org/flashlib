@@ -83,6 +83,18 @@ def _route(
     hw = hw or _hw.current()
     if not hw.is_cuda:
         return "torch", None
+    # Blackwell (sm_100): the CuteDSL Lloyd loop uses the dedicated tcgen05
+    # assign kernel, which beats Triton across its whole supported regime
+    # (B=1, bf16, D in {64,128,256}, N % 128 == 0, K % 256 == 0).
+    if (
+        hw.is_blackwell
+        and B == 1
+        and metric == "euclidean"
+        and D in (64, 128, 256)
+        and N % 128 == 0
+        and K % 256 == 0
+    ):
+        return "cutedsl", variant or "blackwell"
     if (
         hw.sm_arch >= 90
         and B == 1

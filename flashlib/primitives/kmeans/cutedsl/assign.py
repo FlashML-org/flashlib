@@ -511,6 +511,32 @@ def cutedsl_assign_euclid(
     if c_sq is not None and c_sq.dim() == 1:
         c_sq_for_tri = c_sq.view(1, -1)
 
+    # ---- Blackwell (sm_100) tcgen05 fast path -----------------------------
+    # The Hopper WGMMA kernel below cannot use Blackwell tensor cores (it is
+    # ~50-100x slower on B200). On Blackwell, route supported bf16 shapes to
+    # the dedicated tcgen05 assign kernel and everything else to Triton --
+    # never the Hopper path.
+    from flashlib import _hw
+    if _hw.current().is_blackwell:
+        if (
+            B == 1
+            and x.dtype == torch.bfloat16
+            and centroids.dtype == torch.bfloat16
+        ):
+            try:
+                from flashlib.primitives.kmeans.cutedsl.blackwell_assign import (
+                    blackwell_assign_supported,
+                    blackwell_assign_euclid,
+                )
+
+                if blackwell_assign_supported(N, D, K):
+                    return blackwell_assign_euclid(
+                        x, centroids, out=out, c_sq=c_sq
+                    )
+            except Exception:
+                pass  # any failure -> Triton fallback below
+        return euclid_assign_triton(x, centroids, out=out, c_sq=c_sq_for_tri)
+
     # ---- fallback gates ---------------------------------------------------
     if not _try_init_cutedsl() or B != 1:
         return euclid_assign_triton(x, centroids, out=out, c_sq=c_sq_for_tri)
