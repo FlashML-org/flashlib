@@ -3,6 +3,8 @@ import torch
 import triton
 import triton.language as tl
 
+from flashlib import _hw
+
 # ===============================================================
 # Triton kernel: compute nearest-centroid IDs (Euclidean distance).
 #
@@ -14,7 +16,7 @@ import triton.language as tl
 # recovering the true distances post-hoc.
 #
 # Inputs:
-#   x           : (B, N, D)  float16 / float32
+#   x           : (B, N, D)  floating-point
 #   centroids   : (B, K, D)  same dtype as x
 # Output:
 #   cluster_ids : (B, N)     int32   -- nearest centroid index per point
@@ -552,22 +554,168 @@ def _heuristic_euclid_config_fallback_smallD(N: int, K: int, D: int, dtype) -> d
     }
 
 
-_KNOWN_ARCHS = ("H200", "H100", "A100", "GB10")
+def _heuristic_euclid_config_b200_smallD(
+    N: int, K: int, D: int, dtype
+) -> dict:
+    """B200 small-D table with BF16, FP16, and FP32/wider branches."""
+    if dtype is torch.float16:
+        if D <= 64:
+            if N <= 131_072 and 1_024 < K <= 4_096:
+                return {
+                    "BLOCK_N": 128, "BLOCK_K": 128,
+                    "num_warps": 4, "num_stages": 1,
+                }
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 32,
+                "num_warps": 4, "num_stages": 2,
+            }
+        if D <= 128:
+            if K <= 2_048:
+                return {
+                    "BLOCK_N": 128, "BLOCK_K": 64,
+                    "num_warps": 4, "num_stages": 2,
+                }
+            if N <= 131_072 and K <= 4_096:
+                return {
+                    "BLOCK_N": 128, "BLOCK_K": 128,
+                    "num_warps": 4, "num_stages": 1,
+                }
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 64,
+                "num_warps": 4, "num_stages": 2,
+            }
+        return {
+            "BLOCK_N": 128, "BLOCK_K": 64,
+            "num_warps": 8, "num_stages": 1,
+        }
+    if not _is_half_dtype(dtype):
+        if D <= 64:
+            if N <= 65_536:
+                block_k, stages = 128, 2
+            elif K <= 2_048:
+                block_k, stages = 64, 2
+            elif N <= 131_072:
+                if K <= 4_096:
+                    block_k, stages = 32, 1
+                else:
+                    block_k, stages = 64, 2
+            else:
+                block_k, stages = 64, 1
+            return {
+                "BLOCK_N": 128,
+                "BLOCK_K": block_k,
+                "num_warps": 4,
+                "num_stages": stages,
+            }
+        if D <= 128:
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 64,
+                "num_warps": 8, "num_stages": 1,
+            }
+        return {
+            "BLOCK_N": 128, "BLOCK_K": 64,
+            "num_warps": 4, "num_stages": 1,
+        }
+    if D <= 64:
+        if N <= 65_536:
+            if K <= 256:
+                return {
+                    "BLOCK_N": 128, "BLOCK_K": 128,
+                    "num_warps": 4, "num_stages": 1,
+                }
+            if K <= 1_024:
+                return {
+                    "BLOCK_N": 64, "BLOCK_K": 128,
+                    "num_warps": 4, "num_stages": 1,
+                }
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 32,
+                "num_warps": 4, "num_stages": 4,
+            }
+        return {
+            "BLOCK_N": 128,
+            "BLOCK_K": 32,
+            "num_warps": 4,
+            "num_stages": 1 if N >= 524_288 and K >= 65_536 else 2,
+        }
+
+    if D <= 128:
+        if N <= 131_072:
+            if K <= 4_096:
+                return {
+                    "BLOCK_N": 128, "BLOCK_K": 128,
+                    "num_warps": 4, "num_stages": 1,
+                }
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 128,
+                "num_warps": 4, "num_stages": 2,
+            }
+        if N <= 524_288:
+            if K <= 4_096:
+                return {
+                    "BLOCK_N": 128, "BLOCK_K": 128,
+                    "num_warps": 4, "num_stages": 1,
+                }
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 64,
+                "num_warps": 4, "num_stages": 2,
+            }
+        if K <= 1_024:
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 128,
+                "num_warps": 4, "num_stages": 1,
+            }
+        if K < 4_096:
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 64,
+                "num_warps": 4, "num_stages": 2,
+            }
+        return {
+            "BLOCK_N": 128, "BLOCK_K": 64,
+            "num_warps": 4, "num_stages": 1,
+        }
+
+    # D=256 consistently prefers a shallow BK=64 pipeline. Eight warps are
+    # within 4.1% of every expanded-grid oracle and remove brittle K-specific
+    # exceptions.
+    return {
+        "BLOCK_N": 128,
+        "BLOCK_K": 64,
+        "num_warps": 8,
+        "num_stages": 1,
+    }
 
 
-def _is_known_arch(gpu_name: str) -> bool:
-    return any(tag in gpu_name for tag in _KNOWN_ARCHS)
+def _arch_small_d_max(device_tag: str, dtype_bytes: int) -> int:
+    """Return the measured small-vs-split kernel crossover for one GPU.
+
+    This is performance data, not dtype or architecture eligibility: every
+    recognized GPU reaches the same dispatcher and no dtype is filtered here.
+    """
+    if device_tag == "H200":
+        return 512
+    if device_tag == "H100":
+        return 512
+    if device_tag == "A100":
+        return 512
+    if device_tag == "GB10":
+        return 512
+    if device_tag == "B200":
+        return 128 if dtype_bytes >= 4 else 256
+    return 0
 
 
-def _arch_smallD_picker(gpu_name: str):
-    if "H200" in gpu_name:
+def _arch_smallD_picker(device_tag: str):
+    if device_tag == "H200":
         return _heuristic_euclid_config_h200_smallD
-    if "H100" in gpu_name:
+    if device_tag == "H100":
         return _heuristic_euclid_config_h100_smallD
-    if "A100" in gpu_name:
+    if device_tag == "A100":
         return _heuristic_euclid_config_a100_smallD
-    if "GB10" in gpu_name:
+    if device_tag == "GB10":
         return _heuristic_euclid_config_gb10_smallD
+    if device_tag == "B200":
+        return _heuristic_euclid_config_b200_smallD
     return _heuristic_euclid_config_fallback_smallD
 
 
@@ -592,9 +740,9 @@ def _heuristic_euclid_config(
     """
     if device is None:
         device = torch.device("cuda")
-    gpu_name = torch.cuda.get_device_properties(device).name.upper()
-
-    cfg = _arch_smallD_picker(gpu_name)(N, K, D, dtype)
+    device_tag = _hw.device_tag(getattr(device, "index", None))
+    picker = _arch_smallD_picker(device_tag)
+    cfg = picker(N, K, D, dtype)
 
     if _is_half_dtype(dtype):
         return cfg
@@ -738,15 +886,79 @@ def _heuristic_euclid_config_fallback_largeD(N: int, K: int, D: int, dtype) -> d
     }
 
 
-def _arch_largeD_picker(gpu_name: str):
-    if "H200" in gpu_name:
+def _heuristic_euclid_config_b200_largeD(
+    N: int, K: int, D: int, dtype
+) -> dict:
+    """B200 split-D table with BF16, FP16, and FP32/wider branches.
+
+    D=768/1024 showed no D-axis crossover: BN128/BK128/BD64/W4/S4 stayed
+    close to every oracle. Expanded-config extrapolation found BD32 preferable
+    for 256<D<768, while D>=768 keeps BD64. Both ranges use the same deep
+    BN128/BK128/W4/S4 pipeline.
+    """
+    if dtype is torch.float16:
+        if D < 768:
+            if D >= 512 and K <= 4_096:
+                return {
+                    "BLOCK_N": 128, "BLOCK_K": 128, "BLOCK_D": 32,
+                    "num_warps": 4, "num_stages": 4,
+                }
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 128, "BLOCK_D": 64,
+                "num_warps": 4, "num_stages": 2,
+            }
+        if D < 1_280:
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 128, "BLOCK_D": 64,
+                "num_warps": 4, "num_stages": 4,
+            }
+        return {
+            "BLOCK_N": 64, "BLOCK_K": 128, "BLOCK_D": 64,
+            "num_warps": 4, "num_stages": 4,
+        }
+    if not _is_half_dtype(dtype):
+        if D < 768:
+            return {
+                "BLOCK_N": 128, "BLOCK_K": 128, "BLOCK_D": 32,
+                "num_warps": 4, "num_stages": 4,
+            }
+        if D < 2_048:
+            return {
+                "BLOCK_N": 64, "BLOCK_K": 128, "BLOCK_D": 32,
+                "num_warps": 4, "num_stages": 4,
+            }
+        return {
+            "BLOCK_N": 64, "BLOCK_K": 128, "BLOCK_D": 64,
+            "num_warps": 4, "num_stages": 4,
+        }
+    if D < 768:
+        return {
+            "BLOCK_N": 128,
+            "BLOCK_K": 128,
+            "BLOCK_D": 32,
+            "num_warps": 4,
+            "num_stages": 4,
+        }
+    return {
+        "BLOCK_N": 128,
+        "BLOCK_K": 128,
+        "BLOCK_D": 64,
+        "num_warps": 4,
+        "num_stages": 4,
+    }
+
+
+def _arch_largeD_picker(device_tag: str):
+    if device_tag == "H200":
         return _heuristic_euclid_config_h200_largeD
-    if "H100" in gpu_name:
+    if device_tag == "H100":
         return _heuristic_euclid_config_h100_largeD
-    if "A100" in gpu_name:
+    if device_tag == "A100":
         return _heuristic_euclid_config_a100_largeD
-    if "GB10" in gpu_name:
+    if device_tag == "GB10":
         return _heuristic_euclid_config_gb10_largeD
+    if device_tag == "B200":
+        return _heuristic_euclid_config_b200_largeD
     return _heuristic_euclid_config_fallback_largeD
 
 
@@ -765,18 +977,12 @@ def _heuristic_euclid_config_split_d(
     """
     if device is None:
         device = torch.device("cuda")
-    gpu_name = torch.cuda.get_device_properties(device).name.upper()
-    cfg = _arch_largeD_picker(gpu_name)(N, K, D, dtype)
+    device_tag = _hw.device_tag(getattr(device, "index", None))
+    picker = _arch_largeD_picker(device_tag)
+    cfg = picker(N, K, D, dtype)
     dtype_bytes = _dtype_bytes(dtype)
     smem_limit = _smem_limit(device)
     return _fit_config_to_smem_split_d(cfg, D, dtype_bytes, smem_limit)
-
-
-# Hard threshold: D > this triggers split-D dispatch even when SMEM would
-# nominally fit, so the fp16/bf16/fp32 + D ≤ 512 regime stays on the
-# original kernel path (matches the regime the existing tables were tuned
-# in). Larger D goes through the split-D path.
-_SMALL_D_MAX = 512
 
 
 def _is_power_of_2(n: int) -> bool:
@@ -803,19 +1009,18 @@ def _need_split_d(D: int, dtype, device) -> bool:
          then guarantees the launch fits regardless of how small the SMEM
          budget actually turns out to be.
     """
-    if D > _SMALL_D_MAX:
+    if device is None:
+        device = torch.device("cuda")
+    device_tag = _hw.device_tag(getattr(device, "index", None))
+    dtype_bytes = _dtype_bytes(dtype)
+    small_d_max = _arch_small_d_max(device_tag, dtype_bytes)
+    if small_d_max == 0 or D > small_d_max:
         return True
     if not _is_power_of_2(D):
         return True
     # tl.dot requires the contraction axis (D) to be >= 16.
     if D < 16:
         return True
-    if device is None:
-        device = torch.device("cuda")
-    gpu_name = torch.cuda.get_device_properties(device).name.upper()
-    if not _is_known_arch(gpu_name):
-        return True
-    dtype_bytes = _dtype_bytes(dtype)
     smem_limit = _smem_limit(device)
     return not _smallD_kernel_fits_smem(D, dtype_bytes, smem_limit)
 
@@ -1247,7 +1452,7 @@ def euclid_assign_triton(
     """Return nearest-centroid indices using Triton kernel.
 
     Args:
-        x         : (B, N, D) float16 / float32 (on CUDA)
+        x         : (B, N, D) floating-point tensor (on CUDA)
         centroids : (B, K, D) same dtype/device as x
         out       : (B, N)    int32   – (option) pre-allocated output tensor (on CUDA)
         c_sq      : (B, K)    float32 – (option) ||centroids||^2 per centroid (on CUDA)
@@ -1259,7 +1464,6 @@ def euclid_assign_triton(
         use_heuristic : use a fixed heuristic config instead of autotune
     """
     assert x.is_cuda and centroids.is_cuda, "All tensors must be on CUDA"
-    # assert x.dtype in (torch.float16, torch.float32), "x must be fp16/fp32"
     assert centroids.dtype == x.dtype, "centroids dtype mismatch"
 
     B, N, D = x.shape
@@ -1397,14 +1601,13 @@ def cosine_assign_triton(x: torch.Tensor, centroids: torch.Tensor, out: torch.Te
     """Return nearest(cosine similarity)-centroid indices using Triton kernel.
 
     Args:
-        x         : (B, N, D) float16 / float32 (on CUDA)
+        x         : (B, N, D) floating-point tensor (on CUDA)
         centroids : (B, K, D) same dtype/device as x
 
     Returns:
         cluster_ids (B, N) int32 (callers can cast to int64 if desired)
     """
     assert x.is_cuda and centroids.is_cuda, "All tensors must be on CUDA"
-    # assert x.dtype in (torch.float16, torch.float32), "x must be fp16/fp32"
     assert centroids.dtype == x.dtype, "centroids dtype mismatch"
 
     B, N, D = x.shape

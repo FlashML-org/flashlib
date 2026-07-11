@@ -8,10 +8,7 @@ Grid (the repo's cube, restricted to the regime cake/ours both support):
 
 Engines (all solve argmin ||x - c||^2):
     tuned  - Triton with the best tcgen05 config (BLOCK_N=128) from a per-shape
-             sweep, matching the repo's "pick best config" methodology. The
-             stock B200 default path routes to split-D + tiny tiles (BLOCK_N=32)
-             which is below the tcgen05 M=128 atom and falls back to mma.sync;
-             forcing BLOCK_N=128 is what flips Triton onto tcgen05.
+             sweep, matching the repo's "pick best config" methodology.
     cake   - flashlib_cake.flash_kmeans_assign(arch="sm_100a")
     ours   - flashlib blackwell CuteDSL tcgen05 kernel
 
@@ -43,9 +40,6 @@ from flashlib.primitives.kmeans.cutedsl.blackwell_assign import (  # noqa: E402
     blackwell_assign_euclid,
 )
 from flashlib_cake import flash_kmeans_assign  # noqa: E402
-
-_ORIG_SPLIT = TA._need_split_d
-_NO_SPLIT = lambda *a, **k: False
 
 NS = (65536, 262144, 1048576)
 KS = (256, 1024, 4096, 16384, 65536)
@@ -81,7 +75,6 @@ def _adaptive(N, D, K):
 
 
 def pick_tuned(x, c, c_sq, D, sweep_iters):
-    TA._need_split_d = _NO_SPLIT
     out = torch.empty((1, x.shape[1]), dtype=torch.int32, device=x.device)
     best, best_ms = None, float("inf")
     for cfg in _cands(D):
@@ -93,7 +86,6 @@ def pick_tuned(x, c, c_sq, D, sweep_iters):
                 best, best_ms = cfg, ms
         except Exception:
             continue
-    TA._need_split_d = _ORIG_SPLIT
     return best
 
 
@@ -146,11 +138,10 @@ def main():
                      for k in ("tuned", "cake", "ours")}
 
                 def f_tuned():
-                    TA._need_split_d = _NO_SPLIT
-                    r = euclid_assign_triton(x, c, out=o["tuned"], c_sq=c_sq,
-                                             config=cfg, use_heuristic=False)
-                    TA._need_split_d = _ORIG_SPLIT
-                    return r
+                    return euclid_assign_triton(
+                        x, c, out=o["tuned"], c_sq=c_sq,
+                        config=cfg, use_heuristic=False,
+                    )
 
                 def f_cake():
                     return flash_kmeans_assign(x, c, out=o["cake"], x_sq=x_sq,

@@ -1,0 +1,49 @@
+{
+  "rows": [
+    {
+      "B": 1,
+      "N": 147456,
+      "D": 1152,
+      "K": 6144,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD64_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "B": 2,
+      "N": 73728,
+      "D": 1280,
+      "K": 10240,
+      "heuristic_key": "BN64_BK128_BD64_W4_S4",
+      "oracle_key": "BN64_BK128_BD64_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "B": 4,
+      "N": 32768,
+      "D": 1408,
+      "K": 4096,
+      "heuristic_key": "BN64_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD64_W4_S4",
+      "regret": 1.0249621886384583,
+      "correctness": 1.0
+    },
+    {
+      "B": 1,
+      "N": 196608,
+      "D": 1792,
+      "K": 2048,
+      "heuristic_key": "BN64_BK128_BD64_W4_S4",
+      "oracle_key": "BN64_BK128_BD64_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    }
+  ],
+  "summary": {
+    "regret_geomean": 1.0061829668073148,
+    "regret_max": 1.0249621886384583,
+    "minimum_correctness": 1.0
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "seed": 20260716,
+  "config_count": 92,
+  "rows": [
+    {
+      "B": 1,
+      "N": 119680,
+      "D": 320,
+      "K": 1536,
+      "heuristic_key": "BN128_BK128_BD32_W4_S4",
+      "oracle_key": "BN128_BK128_BD32_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "B": 1,
+      "N": 114688,
+      "D": 416,
+      "K": 4352,
+      "heuristic_key": "BN128_BK128_BD32_W4_S4",
+      "oracle_key": "BN128_BK128_BD32_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "B": 1,
+      "N": 85120,
+      "D": 512,
+      "K": 24832,
+      "heuristic_key": "BN128_BK128_BD32_W4_S4",
+      "oracle_key": "BN128_BK128_BD32_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "B": 1,
+      "N": 128128,
+      "D": 704,
+      "K": 17152,
+      "heuristic_key": "BN128_BK128_BD32_W4_S4",
+      "oracle_key": "BN128_BK128_BD32_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "B": 1,
+      "N": 115200,
+      "D": 1152,
+      "K": 32512,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN64_BK128_BD64_W4_S4",
+      "regret": 1.0517783924482205,
+      "correctness": 1.0
+    },
+    {
+      "B": 1,
+      "N": 77184,
+      "D": 2560,
+      "K": 14080,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD64_W8_S4",
+      "regret": 1.003420113480151,
+      "correctness": 1.0
+    },
+    {
+      "B": 2,
+      "N": 65536,
+      "D": 416,
+      "K": 16384,
+      "heuristic_key": "BN128_BK128_BD32_W4_S4",
+      "oracle_key": "BN128_BK128_BD32_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "B": 2,
+      "N": 98304,
+      "D": 1152,
+      "K": 8192,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN64_BK128_BD64_W4_S4",
+      "regret": 1.0287584492867394,
+      "correctness": 1.0
+    },
+    {
+      "B": 4,
+      "N": 32768,
+      "D": 2560,
+      "K": 4096,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD64_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    }
+  ],
+  "summary": {
+    "shapes": 9,
+    "regret_geomean": 1.0091807090822302,
+    "regret_p95": 1.0425704151836281,
+    "regret_max": 1.0517783924482205,
+    "minimum_correctness": 1.0
+  }
+}

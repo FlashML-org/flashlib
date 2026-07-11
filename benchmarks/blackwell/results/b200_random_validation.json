@@ -1,0 +1,203 @@
+{
+  "seed": 20260713,
+  "samples_per_region": 6,
+  "small_config_count": 58,
+  "wide_config_count": 92,
+  "rows": [
+    {
+      "region": "small",
+      "B": 1,
+      "N": 146176,
+      "D": 256,
+      "K": 8448,
+      "heuristic_key": "BN128_BK64_W8_S1",
+      "oracle_key": "BN128_BK64_W8_S1",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "region": "small",
+      "B": 1,
+      "N": 78976,
+      "D": 256,
+      "K": 7168,
+      "heuristic_key": "BN128_BK64_W8_S1",
+      "oracle_key": "BN128_BK128_W4_S2",
+      "regret": 1.0607117858668216,
+      "correctness": 1.0
+    },
+    {
+      "region": "small",
+      "B": 1,
+      "N": 162432,
+      "D": 64,
+      "K": 4096,
+      "heuristic_key": "BN128_BK32_W4_S2",
+      "oracle_key": "BN128_BK32_W4_S2",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "region": "small",
+      "B": 1,
+      "N": 432128,
+      "D": 256,
+      "K": 35072,
+      "heuristic_key": "BN128_BK64_W8_S1",
+      "oracle_key": "BN128_BK64_W8_S1",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "region": "small",
+      "B": 1,
+      "N": 355328,
+      "D": 128,
+      "K": 4864,
+      "heuristic_key": "BN128_BK64_W4_S2",
+      "oracle_key": "BN128_BK128_W4_S1",
+      "regret": 1.0545973676390448,
+      "correctness": 1.0
+    },
+    {
+      "region": "small",
+      "B": 1,
+      "N": 294016,
+      "D": 128,
+      "K": 1792,
+      "heuristic_key": "BN128_BK128_W4_S1",
+      "oracle_key": "BN128_BK128_W4_S1",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "region": "small",
+      "B": 2,
+      "N": 147456,
+      "D": 128,
+      "K": 6144,
+      "heuristic_key": "BN128_BK64_W4_S2",
+      "oracle_key": "BN128_BK128_W4_S1",
+      "regret": 1.0349182884698664,
+      "correctness": 1.0
+    },
+    {
+      "region": "small",
+      "B": 4,
+      "N": 40960,
+      "D": 256,
+      "K": 2048,
+      "heuristic_key": "BN128_BK64_W8_S1",
+      "oracle_key": "BN128_BK64_W4_S1",
+      "regret": 1.0371943528037506,
+      "correctness": 1.0
+    },
+    {
+      "region": "small",
+      "B": 8,
+      "N": 12288,
+      "D": 64,
+      "K": 3072,
+      "heuristic_key": "BN128_BK32_W4_S4",
+      "oracle_key": "BN128_BK64_W4_S3",
+      "regret": 1.0176630194084584,
+      "correctness": 1.0
+    },
+    {
+      "region": "wide",
+      "B": 1,
+      "N": 311168,
+      "D": 1024,
+      "K": 56320,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD64_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "region": "wide",
+      "B": 1,
+      "N": 74624,
+      "D": 1024,
+      "K": 46848,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD64_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "region": "wide",
+      "B": 1,
+      "N": 529280,
+      "D": 768,
+      "K": 15616,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD32_W4_S4",
+      "regret": 1.0129407582947265,
+      "correctness": 1.0
+    },
+    {
+      "region": "wide",
+      "B": 1,
+      "N": 440192,
+      "D": 768,
+      "K": 7680,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD64_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "region": "wide",
+      "B": 1,
+      "N": 262528,
+      "D": 1024,
+      "K": 2304,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD64_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "region": "wide",
+      "B": 1,
+      "N": 393984,
+      "D": 1024,
+      "K": 12288,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD64_W4_S4",
+      "regret": 1.0,
+      "correctness": 1.0
+    },
+    {
+      "region": "wide",
+      "B": 2,
+      "N": 147456,
+      "D": 768,
+      "K": 16384,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN128_BK128_BD32_W4_S4",
+      "regret": 1.0484015828008975,
+      "correctness": 1.0
+    },
+    {
+      "region": "wide",
+      "B": 4,
+      "N": 40960,
+      "D": 1024,
+      "K": 10240,
+      "heuristic_key": "BN128_BK128_BD64_W4_S4",
+      "oracle_key": "BN64_BK128_BD64_W4_S4",
+      "regret": 1.0111721139922463,
+      "correctness": 1.0
+    }
+  ],
+  "summary": {
+    "shapes": 17,
+    "regret_geomean": 1.016109826741455,
+    "regret_p95": 1.0558202512846002,
+    "regret_max": 1.0607117858668216,
+    "minimum_correctness": 1.0,
+    "passes": true
+  }
+}

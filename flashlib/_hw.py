@@ -43,8 +43,8 @@ class HwProps:
     ----------
     device_tag : str
         Stable short string used for filesystem paths and rule branches:
-        ``"H100"``, ``"H200"``, ``"A100"``, ``"GB200"``, ``"L40S"``,
-        ``"sm89"`` (fallback), ``"cpu"``.
+        ``"H100"``, ``"H200"``, ``"A100"``, ``"GB10"``, ``"GB200"``,
+        ``"L40S"``, ``"sm89"`` (fallback), ``"cpu"``.
     sm_arch : int
         Compute capability major*10 + minor (e.g. 90 for Hopper, 100
         for Blackwell sm100). 0 on CPU.
@@ -108,6 +108,7 @@ _NAME_TO_TAG: dict[str, str] = {
     "NVIDIA L4":    "L4",
     "NVIDIA B200":  "B200",
     "NVIDIA B100":  "B100",
+    "NVIDIA GB10":  "GB10",
     "NVIDIA GB200": "GB200",
     "NVIDIA RTX 4090": "RTX4090",
     "NVIDIA RTX 5090": "RTX5090",
