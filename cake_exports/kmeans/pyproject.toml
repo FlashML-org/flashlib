@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kmeans"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "cuda-python",
+    "torch",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+benchmark = [
+    "cupti-python",
+    "cuda-pathfinder",
+    "nvidia-cuda-cupti",
+    "pytest",
+    "triton",
+]
+tvm-ffi = [
+    "cake-std==0.1.13.dev20260704+g7b8dbc8",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "export_validation_shape: one declared contract shape counted by the fail-closed publication gate",
+    "gpu: requires a CUDA GPU",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"flashlib_cake_kmeans" = ["*.json", "*.cu", "cuda/*.cu", "cuda/prebuilt/*/*.cubin"]
+

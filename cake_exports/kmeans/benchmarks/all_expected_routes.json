@@ -1,0 +1,1142 @@
+[
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_lowdim_e50c_v1:launch_for_eval",
+    "selected_route": "lowdim_e50c_v1",
+    "shape": "d895_expanded_heldout_neighborhood_d80_b2_n2176_k1024_d80"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "d895_expanded_guard_miss_fallback_d128_b1_n1408_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "d895_expanded_forced_fallback_d128_b1_n1664_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "d895_expanded_guard_boundary_d144_b1_n128_k256_d144"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "d895_expanded_tail_divisibility_d176_b1_n1152_k512_d176"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_v1:launch_for_eval",
+    "selected_route": "d192_paired_repeated_mma_v1",
+    "shape": "d895_expanded_guard_overlap_d192_b1_n1024_k768_d192"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_highd_splitd_6fcf_v1:launch_for_eval",
+    "selected_route": "highd_splitd_single_tile_6fcf_v1",
+    "shape": "d895_expanded_random_legal_d320_b1_n1280_k512_d320"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_highd_splitd_6fcf_v1:launch_for_eval",
+    "selected_route": "highd_splitd_single_tile_6fcf_v1",
+    "shape": "d895_expanded_request_specific_d448_b1_n1280_k1024_d448"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1:launch_for_eval",
+    "selected_route": "flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1",
+    "shape": "d895_expanded_request_specific_d512_splitk_b1_n512_k8192_d512"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_microdim_hybrid_9c0d_v1:launch_for_eval",
+    "selected_route": "microdim_hybrid_9c0d_v1",
+    "shape": "d16_paired_b2_n4096_k1024_d16"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "microdim_pad64_d64_direct_v1",
+    "shape": "d16_fallback_b3_n2432_k512_d16"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "microdim_pad64_d64_direct_v1",
+    "shape": "d16_small_b4_n1024_k512_d16"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_microdim_hybrid_9c0d_v1:launch_for_eval",
+    "selected_route": "microdim_hybrid_9c0d_v1",
+    "shape": "d16_large_b8_n32768_k512_d16"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_microdim_hybrid_9c0d_v1:launch_for_eval",
+    "selected_route": "microdim_hybrid_9c0d_v1",
+    "shape": "d32_hugek_b1_n512_k8192_d32"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_microdim_hybrid_9c0d_v1:launch_for_eval",
+    "selected_route": "microdim_hybrid_9c0d_v1",
+    "shape": "d32_paired_b2_n4096_k1024_d32"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "microdim_pad64_d64_direct_v1",
+    "shape": "d32_fallback_b3_n2432_k512_d32"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "microdim_pad64_d64_direct_v1",
+    "shape": "d32_small_b4_n1024_k512_d32"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1:launch_for_eval",
+    "selected_route": "d64_direct_single64_1p2gap_9f2a_v1",
+    "shape": "d64_paired_b2_n4096_k1024_d64"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1:launch_for_eval",
+    "selected_route": "d64_direct_single64_1p2gap_9f2a_v1",
+    "shape": "d64_fallback_b3_n2432_k512_d64"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1:launch_for_eval",
+    "selected_route": "d64_direct_single64_1p2gap_9f2a_v1",
+    "shape": "d64_small_b4_n1024_k512_d64"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1:launch_for_eval",
+    "selected_route": "d64_direct_single64_1p2gap_9f2a_v1",
+    "shape": "d64_large_b8_n32768_k512_d64"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_lowdim_e50c_v1:launch_for_eval",
+    "selected_route": "lowdim_e50c_v1",
+    "shape": "d80_paired_b1_n2048_k1024_d80"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_lowdim_e50c_v1:launch_for_eval",
+    "selected_route": "lowdim_e50c_v1",
+    "shape": "d80_small_b2_n1024_k512_d80"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_lowdim_e50c_v1:launch_for_eval",
+    "selected_route": "lowdim_e50c_v1",
+    "shape": "d96_paired_b1_n1536_k1024_d96"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_lowdim_e50c_v1:launch_for_eval",
+    "selected_route": "lowdim_e50c_v1",
+    "shape": "d96_small_b2_n896_k512_d96"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_lowdim_e50c_v1:launch_for_eval",
+    "selected_route": "lowdim_e50c_v1",
+    "shape": "d96_random_b3_n6144_k1280_d96"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_lowdim_e50c_v1:launch_for_eval",
+    "selected_route": "lowdim_e50c_v1",
+    "shape": "d96_fallback_b5_n1664_k256_d96"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "boundary_b1_n128_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_tiny_hugek_b1_n128_k4096_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "small_b1_n256_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_min_even_b1_n256_k768_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_low_n_hugek_b1_n256_k4096_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "small_b1_n896_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_odd_kover_b1_n896_k768_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_hugek_b1_n896_k16384_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "boundary_b1_n1024_k768_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_kover_b1_n1024_k2048_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "forced_fallback_b1_n1152_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_first_after_small_b1_n1152_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "boundary_b1_n1280_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_even_b1_n1536_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d128_splitk_priority_575c_v1:launch_for_eval",
+    "selected_route": "d128_splitk_priority_575c_v1",
+    "shape": "paired_largek_b1_n2048_k4096_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_odd_b1_n2176_k4096_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "tail_odd_b1_n4224_k1024_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_large_odd_b1_n8320_k1280_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_large_b1_n65536_k4096_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_large_n_b1_n131072_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_kover_b2_n256_k768_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_low_n_hugek_b2_n384_k8192_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_even_b2_n512_k8192_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "small_random_b2_n768_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "random_b2_n768_k3072_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "smoke_b2_n1024_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_first_odd_b2_n1408_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_even_tail_b2_n1792_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "tail_even_b2_n2048_k2048_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "random_legal_b2_n4736_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_large_b2_n65664_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "small_low_b3_n256_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_first_even_b3_n1536_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_mid_odd_b3_n2432_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "random_legal_b3_n2560_k1536_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "random_b3_n6144_k1280_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "small_b4_n128_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "random_legal_b4_n640_k1024_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "boundary_b4_n1024_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_odd_b4_n1664_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_widek_b4_n3072_k3072_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "random_legal_b5_n512_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "random_b5_n3456_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "small_cap_b6_n1024_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_large_b6_n65536_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "small_boundary_b7_n896_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "random_b7_n1024_k4096_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "fallback_b8_n3712_k2048_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paired_b8_n4096_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "mid_b8_n8192_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "random_legal_b9_n3840_k1792_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "small_b12_n640_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "small_grid_single_tile_v10",
+    "shape": "small_b16_n1024_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "large_b16_n32768_k1024_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "paper_b32_n75776_k1024_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_b23d_v2:launch_for_eval",
+    "selected_route": "d160_padded_single_repeated_mma_v2",
+    "shape": "d160_paired_b1_n2048_k2048_d160"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_b23d_v2:launch_for_eval",
+    "selected_route": "d160_padded_single_repeated_mma_v2",
+    "shape": "d160_fallback_b2_n2432_k1024_d160"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_v1:launch_for_eval",
+    "selected_route": "d192_single_repeated_mma_v1",
+    "shape": "d192_fallback_b1_n2176_k1024_d192"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_v1:launch_for_eval",
+    "selected_route": "d192_single_repeated_mma_v1",
+    "shape": "d192_small_b2_n1024_k512_d192"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_v1:launch_for_eval",
+    "selected_route": "d192_paired_repeated_mma_v1",
+    "shape": "d192_paired_b2_n2048_k2048_d192"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_v1:launch_for_eval",
+    "selected_route": "d192_paired_repeated_mma_v1",
+    "shape": "d192_large_b4_n32768_k1024_d192"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_v1:launch_for_eval",
+    "selected_route": "d256_single_repeated_mma_v1",
+    "shape": "d256_hugek_b1_n512_k8192_d256"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_v1:launch_for_eval",
+    "selected_route": "d256_single_repeated_mma_v1",
+    "shape": "d256_small_b1_n1024_k512_d256"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_v1:launch_for_eval",
+    "selected_route": "d256_single_repeated_mma_v1",
+    "shape": "d256_paired_b1_n4096_k4096_d256"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_non128d_splitd_v1:launch_for_eval",
+    "selected_route": "d256_single_repeated_mma_v1",
+    "shape": "d256_fallback_b2_n2432_k2048_d256"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_highd_splitd_6fcf_v1:launch_for_eval",
+    "selected_route": "highd_splitd_single_tile_6fcf_v1",
+    "shape": "d320_paired_b1_n2048_k4096_d320"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_highd_splitd_6fcf_v1:launch_for_eval",
+    "selected_route": "highd_splitd_single_tile_6fcf_v1",
+    "shape": "d320_large_b2_n16384_k1024_d320"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1:launch_for_eval",
+    "selected_route": "flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1",
+    "shape": "d384_hugek_b1_n768_k8192_d384"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_highd_splitd_6fcf_v1:launch_for_eval",
+    "selected_route": "highd_splitd_single_tile_6fcf_v1",
+    "shape": "d384_small_b1_n896_k512_d384"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_highd_splitd_6fcf_v1:launch_for_eval",
+    "selected_route": "highd_splitd_single_tile_6fcf_v1",
+    "shape": "d384_paired_b1_n2048_k4096_d384"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_highd_splitd_6fcf_v1:launch_for_eval",
+    "selected_route": "highd_splitd_single_tile_6fcf_v1",
+    "shape": "d384_fallback_b3_n3456_k1024_d384"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1:launch_for_eval",
+    "selected_route": "flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1",
+    "shape": "d448_hugek_b1_n512_k8192_d448"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1:launch_for_eval",
+    "selected_route": "flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1",
+    "shape": "d448_paired_b1_n2048_k4096_d448"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1:launch_for_eval",
+    "selected_route": "flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1",
+    "shape": "d512_hugek_b1_n512_k8192_d512"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_highd_splitd_6fcf_v1:launch_for_eval",
+    "selected_route": "highd_splitd_single_tile_6fcf_v1",
+    "shape": "d512_small_b1_n1024_k512_d512"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1:launch_for_eval",
+    "selected_route": "flash_kmeans_assign_no_padding_portfolio_r63_g1_d512n512_v1",
+    "shape": "d512_paired_b1_n2048_k4096_d512"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_highd_splitd_6fcf_v1:launch_for_eval",
+    "selected_route": "highd_splitd_single_tile_6fcf_v1",
+    "shape": "d512_fallback_b2_n2432_k2048_d512"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_microdim_hybrid_9c0d_v1:launch_for_eval",
+    "selected_route": "microdim_hybrid_9c0d_v1",
+    "shape": "post_d895_d16_b4_n32768_k1024_d16"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_microdim_pipeline4_08f9_v4:launch_for_eval",
+    "selected_route": "microdim_pipeline4_08f9_v4",
+    "shape": "post_d895_d16_b8_n65536_k512_d16"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_microdim_hybrid_9c0d_v1:launch_for_eval",
+    "selected_route": "microdim_hybrid_9c0d_v1",
+    "shape": "post_d895_d32_b4_n32768_k1024_d32"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_microdim_pipeline4_08f9_v4:launch_for_eval",
+    "selected_route": "microdim_pipeline4_08f9_v4",
+    "shape": "post_d895_d32_b8_n65536_k512_d32"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_3328_d48_small_boundary_b1_n256_k256_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d48_b1_n512_k8192_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_d9d5_d48_highk_heldout_b2_n640_k4096_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_a2f8_d48_k1024_boundary_b2_n768_k1024_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_8f09_d48_medium_tail_b2_n1792_k512_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d48_b2_n2048_k512_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_5600_d48_low_n_boundary_b3_n1536_k256_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_c44f_d48_midk_boundary_b3_n2688_k768_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_ef00_d48_midn_boundary_b3_n3456_k512_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_68cf_d48_boundary_b4_n2304_k512_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_1d49_d48_lowk_boundary_b4_n3968_k256_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d48_b4_n8192_k1024_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_9ca0_d48_guard_boundary_b6_n12288_k512_d48"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1:launch_for_eval",
+    "selected_route": "d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1",
+    "shape": "post_d895_d112_b1_n256_k256_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1:launch_for_eval",
+    "selected_route": "d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1",
+    "shape": "adjacent_8f09_d112_small_highk_b1_n384_k4096_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1:launch_for_eval",
+    "selected_route": "d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1",
+    "shape": "post_d895_d112_b1_n512_k8192_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_1d49_d112_highk_tail_b1_n1408_k4096_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1:launch_for_eval",
+    "selected_route": "d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1",
+    "shape": "adjacent_3328_d112_highk_low_n_b2_n512_k8192_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1:launch_for_eval",
+    "selected_route": "d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1",
+    "shape": "post_d895_d112_b2_n2048_k512_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_c44f_d112_odd_tail_b2_n3200_k768_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1:launch_for_eval",
+    "selected_route": "d112_f826_c829_full_bucket_weave_evolve_flash_kmeans_assign_a262_v1",
+    "shape": "adjacent_d9d5_d112_highk_request_b3_n768_k8192_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_9ca0_d112_tail_div_b3_n3840_k768_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_a2f8_d112_lowk_tail_b4_n3456_k256_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_ef00_d112_odd_tail_b4_n3712_k1024_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d112_b4_n8192_k1024_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_5600_d112_odd_tile_tail_b5_n2176_k512_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_68cf_d112_tail_b5_n2944_k512_d112"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "post_d895_d128_paired_b2_n262144_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "post_d895_d128_fallback_b3_n1920_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "adjacent_8f09_d128_fallback_neighbor_b4_n4480_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "adjacent_ef00_d128_forced_fallback_b4_n7552_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "post_d895_d128_fallback_b5_n2176_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "adjacent_d9d5_d128_guard_miss_fallback_b5_n6016_k1024_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "adjacent_1d49_d128_forced_fallback_b5_n7296_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "adjacent_c44f_d128_forced_fallback_b6_n6272_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "adjacent_a2f8_d128_odd_fallback_b6_n8576_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "post_d895_d128_fallback_b7_n2432_k1024_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "adjacent_68cf_d128_forced_fallback_b7_n6016_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "adjacent_9ca0_d128_exact_guard_neighbor_b8_n8064_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "d128_even_near_floor_v10_repair",
+    "shape": "post_d895_d128_paired_b8_n8192_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v15:launch_for_eval",
+    "selected_route": "paired_large_v15",
+    "shape": "adjacent_3328_d128_exact_guard_k_neighbor_b8_n8192_k512_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_cleanroom_tcgen05_v10:launch_for_eval",
+    "selected_route": "aligned_weave_v10_fallback",
+    "shape": "adjacent_5600_d128_fallback_neighbor_b8_n8320_k256_d128"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "post_d895_d144_b1_n256_k256_d144"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "post_d895_d144_b1_n512_k8192_d144"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "post_d895_d144_b2_n2048_k1024_d144"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "post_d895_d144_b4_n8192_k1024_d144"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "post_d895_d176_b1_n256_k256_d176"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "post_d895_d176_b1_n512_k8192_d176"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "post_d895_d176_b2_n2048_k1024_d176"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d160_pad192_tail_repair_f9b2_v1:launch_for_eval",
+    "selected_route": "d144_d160_d176_pad192_tail_repair_f9b2_v1",
+    "shape": "post_d895_d176_b4_n8192_k1024_d176"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d224_b1_n256_k256_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d224_b1_n512_k8192_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d224_b2_n2048_k1024_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_d9d5_d224_random_midk_b2_n2944_k1280_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_9ca0_d224_guard_overlap_b2_n4096_k256_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_ef00_d224_midn_overlap_b2_n5376_k512_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_a2f8_d224_highn_overlap_b2_n6144_k768_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_5600_d224_k512_overlap_b3_n3072_k512_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_3328_d224_tail_div_b3_n3840_k512_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_68cf_d224_overlap_b3_n5120_k1024_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d224_tmem_abi_repair_d17c_v4:launch_for_eval",
+    "selected_route": "d224_tmem_abi_repair_d17c_v4",
+    "shape": "adjacent_8f09_d224_low_n_boundary_b4_n1536_k256_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_c44f_d224_overlap_b4_n4480_k512_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d224_b4_n8192_k1024_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_1d49_d224_highn_overlap_b5_n5632_k768_d224"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "post_d895_d288_b1_n256_k256_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_9ca0_d288_highk_low_n_b1_n384_k4096_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "post_d895_d288_b1_n512_k8192_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_a2f8_d288_splitk_probe_b1_n640_k4096_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_d9d5_d288_heldout_low_n_b1_n896_k4096_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_ef00_d288_highk_heldout_b1_n1664_k4096_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_8f09_d288_k768_overlap_b1_n2560_k768_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_c44f_d288_highk_heldout_b2_n768_k4096_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_5600_d288_mid_highk_b2_n1024_k2048_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_68cf_d288_boundary_b2_n1920_k512_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "post_d895_d288_b2_n2048_k1024_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_1d49_d288_low_n_heldout_b3_n1152_k2048_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "adjacent_3328_d288_guard_overlap_b4_n8192_k256_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d288_parent_splitk_hybrid_20260629_v1:launch_for_eval",
+    "selected_route": "d288_parent_splitk_hybrid_20260629_v1",
+    "shape": "post_d895_d288_b4_n8192_k1024_d288"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d352_b1_n256_k256_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d352_exactd_splitk_c95c_v2:launch_for_eval",
+    "selected_route": "d352_exactd_splitk_c95c_v2",
+    "shape": "adjacent_9ca0_d352_splitk_boundary_b1_n512_k8192_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d352_exactd_splitk_c95c_v2:launch_for_eval",
+    "selected_route": "d352_exactd_splitk_c95c_v2",
+    "shape": "post_d895_d352_b1_n512_k8192_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_c44f_d352_random_b1_n3328_k768_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d352_exactd_splitk_c95c_v2:launch_for_eval",
+    "selected_route": "d352_exactd_splitk_c95c_v2",
+    "shape": "adjacent_5600_d352_splitk_edge_b2_n768_k4096_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d352_exactd_splitk_c95c_v2:launch_for_eval",
+    "selected_route": "d352_exactd_splitk_c95c_v2",
+    "shape": "adjacent_1d49_d352_request_highk_b2_n1024_k8192_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d352_exactd_splitk_c95c_v2:launch_for_eval",
+    "selected_route": "d352_exactd_splitk_c95c_v2",
+    "shape": "post_d895_d352_b2_n2048_k1024_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d352_exactd_splitk_c95c_v2:launch_for_eval",
+    "selected_route": "d352_exactd_splitk_c95c_v2",
+    "shape": "adjacent_ef00_d352_request_low_n_b3_n896_k8192_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_3328_d352_random_legal_b3_n2048_k768_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_68cf_d352_tail_b3_n2816_k768_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_a2f8_d352_smallk_boundary_b4_n1024_k256_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_8f09_d352_smallk_large_n_b4_n4096_k256_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d352_b4_n8192_k1024_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_d9d5_d352_random_b5_n2304_k768_d352"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d416_b1_n256_k256_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_3328_d416_highk_low_n_b1_n384_k8192_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d416_b1_n512_k8192_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_9ca0_d416_splitk_min_b1_n1024_k4096_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_ef00_d416_random_midk_b1_n2176_k768_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_d9d5_d416_highk_request_b2_n640_k8192_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d416_b2_n2048_k1024_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_68cf_d416_overlap_b2_n2304_k1024_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_a2f8_d416_random_b2_n2560_k768_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_c44f_d416_highk_request_b3_n512_k8192_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_8f09_d416_midk_tail_b3_n3456_k768_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_5600_d416_smallk_boundary_b4_n2048_k256_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_1d49_d416_random_b4_n3840_k512_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d416_b4_n8192_k1024_d416"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_3328_d480_min_boundary_b1_n128_k256_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d480_b1_n256_k256_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d480_splitk_k1024_eac2_v1:launch_for_eval",
+    "selected_route": "d480_splitk_k1024_eac2_v1",
+    "shape": "post_d895_d480_b1_n512_k8192_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d480_splitk_k1024_eac2_v1:launch_for_eval",
+    "selected_route": "d480_splitk_k1024_eac2_v1",
+    "shape": "adjacent_a2f8_d480_highk_request_b1_n896_k4096_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d480_splitk_k1024_eac2_v1:launch_for_eval",
+    "selected_route": "d480_splitk_k1024_eac2_v1",
+    "shape": "adjacent_5600_d480_random_b1_n1536_k1024_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d480_splitk_k1024_eac2_v1:launch_for_eval",
+    "selected_route": "d480_splitk_k1024_eac2_v1",
+    "shape": "adjacent_8f09_d480_highk_low_n_b2_n640_k4096_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d480_splitk_k1024_eac2_v1:launch_for_eval",
+    "selected_route": "d480_splitk_k1024_eac2_v1",
+    "shape": "post_d895_d480_b2_n2048_k1024_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_1d49_d480_smallk_boundary_b2_n2816_k256_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_9ca0_d480_splitd_large_n_b2_n4096_k512_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_d480_splitk_k1024_eac2_v1:launch_for_eval",
+    "selected_route": "d480_splitk_k1024_eac2_v1",
+    "shape": "adjacent_d9d5_d480_heldout_highk_b3_n1024_k4096_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_ef00_d480_lowk_boundary_b3_n3200_k256_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_68cf_d480_boundary_b4_n1664_k512_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "post_d895_d480_b4_n8192_k1024_d480"
+  },
+  {
+    "launch_entrypoint": "loom.examples.weave.flash_kmeans_assign_gap_pad_v1:launch_for_eval",
+    "selected_route": "gap_pad_to_supported_seed_v1",
+    "shape": "adjacent_c44f_d480_boundary_b5_n2048_k512_d480"
+  }
+]
