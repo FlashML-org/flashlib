@@ -1,0 +1,410 @@
+# Exported Loom Kernels
+
+## Pre-publication GPU validation: PASS — declared 111-shape performance floor
+
+- Hardware: `NVIDIA GB200` (`sm_100a`)
+- Shapes: correctness `112/112`, CUPTI benchmark `112/112`; full generated suite `114` tests
+- Validation shards: `4`; host wall time: correctness `6.02s`, benchmark `7.34s`
+- Full all-shape `compute_speedup_vs_baseline` diagnostic vs `flashlib.flash_knn`: min `1.2771x`, geomean `2.4885x`, median `2.5720x`, p90 `4.0862x`, max `5.2521x`; `0/112` shapes are below the nominal `1.2000x` threshold (diagnostic, not hidden; see `VALIDATION.json`).
+- Publication performance floor: `111` explicitly named shapes; min `1.2771x`, geomean `2.5004x`, median `2.5822x`, p90 `4.0900x`, max `5.2521x` (required minimum `1.2000x`).
+- Publication floor labels: `flashml_correctness_b1_q256_m256_d128_k5`, `build_k_sweep_qm512_k1`, `build_k_sweep_qm512_k2`, `build_k_sweep_qm512_k4`, `build_k_sweep_qm512_k5`, `build_k_sweep_qm512_k6`, `build_k_sweep_qm512_k8`, `build_k_sweep_qm512_k10`, `build_qm1024_d128_k10`, `build_k_sweep_qm1024_k16`, `build_k_sweep_qm1024_k12`, `build_k_sweep_qm1024_k20`, `build_qm2048_d128_k8`, `build_qm1024_d128_k8`, `build_qm4096_d128_k8`, `build_qm2048_d128_k10`, `build_dim_sweep_b1_q1024_m1024_d64_k10`, `build_dim_sweep_b1_q2048_m2048_d64_k10`, `build_dim_sweep_b1_q4096_m4096_d64_k10`, `build_dim_sweep_b1_q1024_m1024_d96_k10`, `build_dim_sweep_b1_q2048_m2048_d192_k10`, `build_dim_sweep_b1_q2048_m2048_d256_k10`, `build_common_d256_b1_q1024_m1024_k10`, `build_common_d768_b1_q1024_m1024_k10`, `build_common_d1024_b1_q512_m512_k10`, `build_common_d4096_b1_q512_m512_k10`, `build_highd_b1_q1024_m1024_d320_k10`, `build_dtype_fp16_b1_q2048_m2048_d128_k10`, `build_batch_b2_q1024_m1024_d128_k10`, `build_k_sweep_qm2048_k11`, `build_k_sweep_qm2048_k12`, `build_k_sweep_qm2048_k13`, `build_k_sweep_qm2048_k20`, `build_k_sweep_qm2048_k24`, `build_k_sweep_qm2048_k28`, `build_tail_b1_q1536_m1536_d128_k10`, `build_tail_b1_q3072_m3072_d128_k20`, `build_medium_b1_q4096_m4096_d128_k10`, `build_k_sweep_qm4096_k12`, `build_k_sweep_qm4096_k13`, `build_k_sweep_qm4096_k20`, `build_k_sweep_qm4096_k24`, `build_k_sweep_qm4096_k28`, `build_largek_stress_qm4096_k32`, `build_k_sweep_qm4096_k30`, `build_over32_stress_qm2048_k48`, `build_over32_stress_qm2048_k64`, `build_over32_stress_qm4096_k48`, `build_large_b1_q8192_m8192_d128_k10`, `build_large_b1_q6144_m6144_d128_k10`, `build_large_b1_q8192_m8192_d128_k20`, `build_large_b1_q8192_m8192_d128_k32`, `build_verylarge_b1_q12288_m12288_d128_k10`, `rag_offline_b1_q4096_m100000_d128_k10`, `search_rect_b1_q1024_m8192_d128_k10`, `search_rect_b1_q1024_m32768_d64_k10`, `search_rect_highd_b1_q512_m12000_d320_k10`, `search_rect_common_d256_b1_q1024_m32768_k10`, `search_rect_common_d768_b1_q512_m8192_k10`, `search_rect_b1_q4096_m65536_d128_k20`, `search_rect_b1_q1536_m65536_d128_k20`, `search_rect_over32_b1_q2048_m65536_d128_k64`, `rag_online_b1_q1_m100000_d128_k10`, `rag_online_b1_q1_m65536_d128_k10`, `rag_online_irregular_b1_q1_m131071_d128_k10`, `rag_online_large_m_b1_q1_m250000_d128_k10`, `rag_online_irregular_b1_q1_m262143_d128_k10`, `rag_online_irregular_b1_q1_m524287_d128_k10`, `rag_stream_b1_q128_m100000_d128_k10`, `rag_offline_largek_b1_q4096_m100000_d128_k20`, `rag_offline_large_m_b1_q8192_m250000_d128_k20`, `rag_offline_large_m_over32_b1_q2048_m250000_d128_k64`, `rag_offline_batch_b1_q10000_m100000_d128_k10`, `rag_offline_b1_q10000_m50000_d128_k10`, `rag_microbatch_b1_q4_m100000_d128_k10`, `rag_microbatch_b1_q8_m100000_d128_k10`, `rag_microbatch_b1_q16_m100000_d128_k10`, `rag_microbatch_highd_b1_q16_m50000_d768_k10`, `rag_microbatch_common_d64_b1_q16_m50000_k10`, `rag_microbatch_common_d256_b1_q16_m50000_k10`, `rag_microbatch_common_d1024_b1_q8_m50000_k10`, `rag_microbatch_common_d4096_b1_q4_m32768_k10`, `rag_microbatch_b1_q32_m100000_d128_k10`, `rag_microbatch_largek_b1_q8_m100000_d128_k32`, `rag_microbatch_largek_b1_q16_m100000_d128_k32`, `rag_microbatch_largek_b1_q24_m100000_d128_k32`, `rag_microbatch_largek_b1_q16_m250000_d128_k32`, `rag_microbatch_largek_b1_q32_m100000_d128_k32`, `rag_microbatch_largek_b1_q16_m131071_d128_k32`, `rag_microbatch_b1_q64_m100000_d128_k10`, `rag_stream_largek_b1_q128_m100000_d128_k32`, `rag_stream_largek_b1_q128_m131071_d128_k32`, `rag_batch_b2_q256_m50000_d128_k10`, `rag_irregular_b1_q512_m131071_d128_k10`, `search_rect_b1_q2048_m32768_d128_k10`, `build_large_tail_b1_q6144_m6144_d128_k20`, `build_over32_stress_qm4096_k64`, `build_over64_stress_qm1024_k96`, `build_over64_stress_qm2048_k96`, `build_over64_stress_qm4096_k96`, `rag_online_common_d64_b1_q1_m262143_k10`, `rag_microbatch_common_d64_b1_q4_m100000_k10`, `rag_microbatch_common_d256_b1_q4_m100000_k10`, `rag_stream_common_d256_b1_q128_m100000_k10`, `rag_microbatch_common_d768_b1_q8_m100000_k10`, `rag_microbatch_common_d1024_b1_q4_m100000_k10`, `search_rect_common_d1024_b1_q256_m8192_k10`, `search_rect_common_d4096_b1_q128_m4096_k10`, `rag_microbatch_largek_common_d256_b1_q8_m100000_k32`, `rag_stream_largek_common_d256_b1_q128_m100000_k32`, `rag_microbatch_over32_d128_b1_q16_m100000_k48`.
+- Candidate lifecycle latency diagnostics: init-once median `429.4133 ms`; first-signature compute median/p90 `6.3068/8.7991 ms`; hot compute median/p90 `0.1500/0.4792 ms`
+
+#### Hot steady-state synchronized E2E speedup
+
+| Validated shape scope | Min | Geomean | Median | P90 | Max |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| All 112 benchmarked shapes (diagnostic scope) | 1.2771x | 2.4885x | 2.5720x | 4.0862x | 5.2521x |
+
+#### Modeled after-init amortized synchronized E2E speedup
+
+| Public calls N | Min | Geomean | Median | P90 | Max |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.0961x | 2.1556x | 2.1203x | 2.7753x | 14.8853x |
+| 10 | 0.7306x | 2.2335x | 2.1250x | 2.8931x | 14.5309x |
+| 100 | 1.3366x | 2.4269x | 2.4201x | 3.5339x | 11.9009x |
+| 1000 | 1.2842x | 2.5047x | 2.5672x | 4.1222x | 6.5306x |
+
+#### Modeled including-init amortized synchronized E2E speedup
+
+| Public calls N | Min | Geomean | Median | P90 | Max |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 0.0018x | 0.0384x | 0.0311x | 0.0584x | 1.3909x |
+| 10 | 0.0164x | 0.0525x | 0.0417x | 0.0788x | 1.3983x |
+| 100 | 0.0868x | 0.1627x | 0.1325x | 0.3113x | 1.4693x |
+| 1000 | 0.4544x | 0.8188x | 0.7763x | 1.2702x | 1.9947x |
+
+- All three tables report synchronized host E2E speedups as `baseline/candidate`. `Hot steady-state` measures a repeated public call at each lane's declared hot cache state; its per-shape values supply the official metric used by the separate publication-floor section.
+- `After-init amortized(N) = (first_compute + (N-1) * hot_median) / N`; it excludes init.
+- `Including-init amortized(N) = (init + first_compute + (N-1) * hot_median) / N`; it includes init. Each latency formula is evaluated separately for baseline and candidate, then reported as `baseline/candidate`. Both amortized scenarios are composed from measured components, not a directly timed N-call loop. A lane without explicit init uses `I=0`.
+- Init scope: `once_per_validation_shard_process_device_operator`; composition: `runtime_init_only`; baseline has explicit init: `no`.
+- Cache policy: `synchronize_and_clear_after_each_completed_shape`; resident multi-shape cache benchmarked: `no`; cold order: `deterministic_balanced_per_publication_contract_portfolio`; init order: `candidate_only_baseline_has_no_explicit_init`
+- Lifecycle timing convention: all three lifecycle tables are synchronized host E2E. Init/first-call brackets are CUPTI timestamp host diagnostics; separately, the hot GPU-span diagnostic remains strict correlated CUPTI activity timing.
+
+- Measured: `2026-07-13T07:50:09+00:00`
+- Full summary: [`VALIDATION.json`](VALIDATION.json); per-shape results: [`BENCHMARK_RESULTS.json`](BENCHMARK_RESULTS.json)
+
+This repository was generated by `loom.export.kernel_repo`. It contains frozen
+CUDA source plus a lightweight Python binding that launches kernels through
+CUDA driver APIs. When the package ships prebuilt binaries for the detected
+GPU architecture (`manifest.json` `prebuilt_binaries`), kernels load directly
+from those cubins; NVRTC compilation of the frozen source is the fallback for
+unshipped architectures and can be forced with
+`LOOM_EXPORTED_DISABLE_PREBUILT=1`.
+
+## Complete Workload Entry Points
+
+This export is a complete workload package. Its three review and execution
+entry points are deliberately separate and have stable names:
+
+- Python interface: [`src/flashlib_cake_knn_build/interface.py`](src/flashlib_cake_knn_build/interface.py) — public APIs: `KNNBuildRuntime`, `PreparedKNNBuild`, `init`, `knn_build`, `knn_build_prepared`, `prepare_knn_build`
+- GPU correctness test: [`tests/test_correctness.py`](tests/test_correctness.py)
+- CUPTI performance benchmark: [`benchmarks/benchmark.py`](benchmarks/benchmark.py)
+
+```bash
+pytest tests/test_correctness.py -q
+python benchmarks/benchmark.py --no-correctness --json results/performance.json
+```
+
+The public interface can be imported directly from the package root; the
+implementation contains frozen CUDA and bindings but no Weave IR.
+
+## Repository Layout
+
+```text
+src/flashlib_cake_knn_build/
+  __init__.py          # public Python exports
+  kernels.py           # KernelSpec, get_kernel(), launch_<kernel>() wrappers
+  tvm_ffi.py           # optional TVM FFI global-function registration
+  _runtime.py          # prebuilt-cubin loader + NVRTC fallback + CUDA driver launch support
+  _benchmark.py        # strict CUPTI timing with cold-L2 flushing
+  manifest.json        # provenance, parameter order, launch metadata
+  cuda/*.cu            # frozen bundled CUDA sources; no Weave IR
+  cuda/prebuilt/       # arch-keyed prebuilt cubins (when the export plan declares them)
+tests/
+  test_exported_kernels.py
+  test_benchmark_harness.py
+benchmarks/
+  benchmark_exported_kernels.py
+  benchmark_shapes.py  # semantic correctness + CUPTI performance runner
+  workload.py          # workload shapes/reference/metric adapter
+RESULTS.md             # correctness and performance results
+```
+
+## Kernels
+
+- `dispatch_kernel_0000`: `kernel_knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_threshold_k5`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0001`: `kernel_knn_build_evolve_7bfc_k5_merge_s4_tree`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, B, Q, total_queries)
+- `dispatch_kernel_0002`: `kernel_knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_maxtree`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0003`: `kernel_knn_build_evolve_7bfc_split_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, B, Q, K, split_count, total_queries)
+- `dispatch_kernel_0004`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k8split`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0005`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k8s8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0006`: `kernel_knn_build_evolve_7bfc_k10_merge_s4_rowbase_cache`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0007`: `kernel_knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0008`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k16split`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0009`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_f8c3lowk_k16s16`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0010`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k12split`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0011`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s16`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0012`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k20split`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0013`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s16`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0014`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_195e_q1024k8s16`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0015`: `kernel_knn_build_q4096_k8_fd9b_stage1_unordered_exact_prefill`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0016`: `kernel_knn_build_q4096_k8_fd9b_merge_s4_unordered_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0017`: `kernel_knn_build_dim_midk_73a9_d64_split_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0018`: `kernel_knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0019`: `kernel_knn_build_d64_q4096_c271_stage1_unordered_syncdrop`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0020`: `kernel_knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_s4`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0021`: `kernel_knn_build_non128_frontier_4be7_d96exact_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0022`: `kernel_knn_build_non128_frontier_3d5a_k10_merge_s8_rowbase_cache`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0023`: `kernel_knn_build_dim_midk_df2f_d256_split_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0024`: `kernel_knn_build_non128_frontier_7231_pad_bf16_rows_d256`, launch_mode=`standard`, threads=256, shared_mem=0, params=(src, dst, rows, src_cols, total_elems)
+- `dispatch_kernel_0025`: `kernel_knn_build_common_d_56f3_d256_q1024_k10_merge_rowbase_cache_s16`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0026`: `kernel_knn_build_common_d768_build_eeff_m64split_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0027`: `kernel_knn_build_non128_frontier_4be7_d768fused_merge_s16g8_4be7_d768fused_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0028`: `kernel_knn_build_non128_frontier_7231_stage1_d1024`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0029`: `kernel_knn_build_common_d_56f3_k10_merge_rowbase_cache_s8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0030`: `kernel_knn_build_non128_frontier_7231_stage1_d4096`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0031`: `kernel_knn_build_non128_frontier_8227_d320tail_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0032`: `kernel_knn_build_dim_midk_df2f_fp16_split_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0033`: `kernel_knn_build_fp16_d128_lowfloor_fd37_k10_s8_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0034`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k11exact`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0035`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k11s8exact`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0036`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0037`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k13exact`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0038`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k13s8exact`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0039`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0040`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5midks8k24`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0041`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5midks8k24`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0042`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5midks8k28`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0043`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5midks8k28`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0044`: `kernel_knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_k20split`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, K, total_queries)
+- `dispatch_kernel_0045`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k12unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0046`: `kernel_knn_build_evolve_7bfc_k32_merge_s4_unordered_k12unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0047`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_2c1ck13unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0048`: `kernel_knn_build_evolve_7bfc_k32_merge_s4_unordered_2c1ck13unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0049`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k20unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0050`: `kernel_knn_build_evolve_7bfc_k32_merge_s4_unordered_k20unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0051`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_1074k24unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0052`: `kernel_knn_build_1074_k24_q4096_merge_s4_unordered_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0053`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_bad5k28unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0054`: `kernel_knn_build_evolve_7bfc_k32_merge_s4_unordered_k30unordered_bad5k28unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0055`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0056`: `kernel_knn_build_evolve_7bfc_k32_merge_s4_unordered_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0057`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0058`: `kernel_knn_build_k30_q4096_6998_merge_s4_unordered_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0059`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k48over32`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0060`: `kernel_knn_build_k48_merge_s4_unordered_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0061`: `kernel_knn_build_k64_stage1_tailinf_k64over32tailinfsplitgrid`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0062`: `kernel_knn_build_k64_merge_s8_unordered_warp_select_k64over32s8warpselect`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0063`: `kernel_knn_build_k20_mergeown_08ec_warp8_select_s2warp8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0064`: `kernel_knn_build_large_square_k32_stage1_chunkworst`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0065`: `kernel_knn_build_large_square_k32_s2_warp8_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0066`: `kernel_knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rectd15e_s16`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0067`: `kernel_knn_build_rect_d64_23be_s16_cached_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0068`: `kernel_knn_build_rect_d64_23be_unordered_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0069`: `kernel_knn_build_d128_rag_q128_k10_s74_warp_merge_d320_s48_f556_v2`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0070`: `kernel_knn_build_non128_frontier_7231_stage1_d256`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0071`: `kernel_knn_build_non128_frontier_7231_stage1_d768`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0072`: `kernel_knn_build_non128_frontier_4be7_d768fused_merge_s32g8_4be7_d768fused_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0073`: `kernel_knn_build_evolve_7bfc_k20_merge_s4_unordered_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0074`: `kernel_knn_build_rect_d128_k20_q1536_warp4_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0075`: `kernel_knn_build_ragonline_mbucket_4fc7_q1m262_v2_stage1_q1_k10_m64_halfrow`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0076`: `kernel_knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s144g12_4a72_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0077`: `kernel_knn_build_ragonline_mbucket_ea43_q1m524_n128_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0078`: `kernel_knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s147g7_4a72_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0079`: `kernel_knn_build_rag_stream_k10_q128_1bed_rowld_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0080`: `kernel_knn_build_d128_rag_q128_k10_s74_warp_merge_rowld_s74_1bed_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0081`: `kernel_knn_build_k20_large_lowfanout_s2_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0082`: `kernel_knn_build_rag_microbatch_4a72_v2_stage1_k10_cta1_maxtree`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0083`: `kernel_knn_build_rag_microbatch_4a72_v2_k10_fused_group_final_merge_s144g12_4a72_v2`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0084`: `kernel_knn_build_rag_microbatch_m64_d4f7_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(query, database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0085`: `kernel_knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s136g8_4a72_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0086`: `kernel_knn_build_non128_frontier_7ee5_m64rag_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0087`: `kernel_knn_build_non128_frontier_4be7_d768fused_merge_s72g8_4be7_d768fused_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0088`: `kernel_knn_build_common_d_1438_rag_d64_m128_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(query, database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0089`: `kernel_knn_build_non128_frontier_4be7_d768fused_merge_s136g8_4be7_d768fused_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0090`: `kernel_knn_build_non128_frontier_7ee5_m64rag_stage1_d256_5e7f_rag_d64d256_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0091`: `kernel_knn_build_non128_frontier_4be7_d768fused_merge_s144g8_4be7_d768fused_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0092`: `kernel_knn_build_non128_frontier_7ee5_m64rag_stage1_d1024_5e7f_highd_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0093`: `kernel_knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0094`: `kernel_knn_build_non128_frontier_7ee5_m64rag_stage1_d4096_5e7f_highd_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0095`: `kernel_knn_build_non128_frontier_4be7_d768fused_merge_s128g8_4be7_d768fused_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0096`: `kernel_knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s128g8_4a72_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0097`: `kernel_knn_build_rag_microbucket_k32q8half_0077_v1_stage1_q8_k32_m64_halfrow_q8half_0077_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0098`: `kernel_knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144_0077_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0099`: `kernel_knn_build_rag_microbucket_k32_q16irreg2warp_a444_v2_stage1_q16_rowld1_2warp_q16dual2warp_56ed_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0100`: `kernel_knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144r4_56ed_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0101`: `kernel_knn_build_rag_microbucket_k32rowld1warp_0077_v1_stage1_q32_k32_m64_rowld2_q24rowld2_24dc_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0102`: `kernel_knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q24s144r4_24dc_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0103`: `kernel_knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s288r4_56ed_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0104`: `kernel_knn_build_rag_microbucket_k32_q32rowld2exact_s141_72d1_v1_stage1_q32rowld2exact_f653_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, num_db_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0105`: `kernel_knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q32exact_s141r4_f653_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0106`: `kernel_knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s148r4_56ed_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0107`: `kernel_knn_build_rag_stream_k32_q128m100000_staticn128_664a_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(query, database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0108`: `kernel_knn_build_rag_frontier_7399_k32_fused_group_final_merge_k32s72g8_4fbf_v6`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0109`: `kernel_knn_build_rag_microbucket_q32rowld_e5db_v1_stage1_q32_k32_m64`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0110`: `kernel_knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s72_0077_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0111`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k10s72_4e09`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0112`: `kernel_knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rect4452_s8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0113`: `kernel_knn_build_k96_stage1_exact_prefill_q1024_k96over64exactprefillq1024_e5db`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0114`: `kernel_knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s2chunkprefill_f9d1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0115`: `kernel_knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s4chunkprefill_f9d1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0116`: `kernel_knn_build_v12_d64_tail_017a_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0117`: `kernel_knn_build_common_d768_build_eeff_m64split_stage1_d256_q128_k10_59fe_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0118`: `kernel_knn_build_non128_frontier_7ee5_m64rag_stage1_d768_5e7f_highd_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0119`: `kernel_knn_build_common_d768_build_eeff_m64split_stage1_d1024_be66_search_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0120`: `kernel_knn_build_non128_frontier_4be7_d768fused_merge_s64g8_4be7_d768fused_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0121`: `kernel_knn_build_common_d768_build_eeff_m64split_stage1_d4096_be66_search_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0122`: `kernel_knn_build_v12_d256_k32_tail_59fe_v1_stage1_rowld`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0123`: `kernel_knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s64_0077_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0124`: `kernel_knn_build_v12_d128_q16_k48_dd2b_v1_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0125`: `kernel_knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k48s144r4_dd2b_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0126`: `kernel_knn_build_rag_stream_k10_s72_warp_row_merge_34da`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0127`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k10s64_3d97`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0128`: `kernel_knn_build_evolve_7bfc_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, out_dists, out_indices, B, Q, M, K, num_q_tiles, num_db_tiles, total_tiles)
+- `dispatch_kernel_0129`: `kernel_knn_build_evolve_7bfc_split_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0130`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0131`: `kernel_knn_build_evolve_7bfc_k10_merge_s4`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, B, Q, total_queries)
+- `dispatch_kernel_0132`: `kernel_knn_build_evolve_7bfc_k10_merge_s7`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, B, Q, total_queries)
+- `dispatch_kernel_0133`: `kernel_knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_threshold_k5_mintree`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0134`: `kernel_knn_build_evolve_7bfc_k5_merge_s4_tree_rowbase`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0135`: `kernel_knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0136`: `kernel_knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_maxtree`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0137`: `kernel_knn_build_evolve_7bfc_k32_merge_s4_unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0138`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0139`: `kernel_knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_k8s7`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0140`: `kernel_knn_build_evolve_7bfc_fp16_d128_base`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, out_dists, out_indices, B, Q, M, K, num_q_tiles, num_db_tiles, total_tiles)
+- `dispatch_kernel_0141`: `kernel_knn_build_evolve_7bfc_d256_twomma_base`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, out_dists, out_indices, B, Q, M, K, num_q_tiles, num_db_tiles, total_tiles)
+- `dispatch_kernel_0142`: `kernel_knn_build_evolve_7bfc_d64_tcgen05_base`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, out_dists, out_indices, B, Q, M, K, num_q_tiles, num_db_tiles, total_tiles)
+- `dispatch_kernel_0143`: `kernel_knn_build_evolve_7bfc_k20_merge_s4_unordered_warp_select_splitmajor`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0144`: `kernel_knn_build_k20_mergeown_08ec_s4_rowbase_lane`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0145`: `kernel_knn_build_k20_large_rect_s3_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0146`: `kernel_knn_build_rag_frontier_b6d4_stage1_k32_sort4earlystop`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0147`: `kernel_knn_build_rag_frontier_7399_k32_fused_group_final_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0148`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k32s32_4b5c`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0149`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k96over64`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0150`: `kernel_knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s8chunkprefill`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0151`: `kernel_knn_build_rag_frontier_b6d4_stage1_k32_chunked`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0152`: `kernel_knn_build_rag_frontier_4fbf_v7_stage1_k32_sort4earlystop_tailinf`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0153`: `kernel_knn_build_rag_frontier_4fbf_stage1_k32_sort4earlystop_tailinf`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0154`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k24s8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0155`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k28s8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0156`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k24s8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0157`: `kernel_knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k28s8`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0158`: `kernel_knn_build_large_square_k32_s2_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0159`: `kernel_knn_build_rect_d64_cf49_s16_cached_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0160`: `kernel_knn_build_ragonline_mbucket_aa88_q1m_s72_k10_coop_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0161`: `kernel_knn_build_ragonline_mbucket_aa88_q1m_s72_k10_coop_merge_s74_m250`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0162`: `kernel_knn_build_rag_microbucket_5093_v1_stage1_k32_tailinf_cta1_compactwarp`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0163`: `kernel_knn_build_rag_microbucket_3505_v3_stage1_k32_tailinf_cta1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0164`: `kernel_knn_build_rect_d64_cf49_s16_cached_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0165`: `kernel_knn_build_k96_stage1_sort4_chunked_k96over64sort4chunked`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0166`: `kernel_knn_build_rag_microbucket_3505_v9_stage1_q8_k32_m64`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0167`: `kernel_knn_build_d128_rag_q128_k10_s74_warp_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0168`: `kernel_knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_e080k11s4exact`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, K, total_queries)
+- `dispatch_kernel_0169`: `kernel_knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_e080k13s4exact`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, K, total_queries)
+- `dispatch_kernel_0170`: `kernel_knn_build_rag_microbucket_k32rowld1warp_0077_v1_stage1_q16_k32_m64_rowld1_q16rowld1_0077_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0171`: `kernel_knn_build_rag_microbucket_k32rowld1warp_0077_v1_stage1_q32_k32_m64_rowld2_q32rowld2_0077_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0172`: `kernel_knn_build_k96_stage1_sort4_prefill_q1024_k96over64sort4prefillq1024_8c56`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0173`: `kernel_knn_build_non128_frontier_8199_d384_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0174`: `kernel_knn_build_rag_microbucket_q32_k31_c3d2_v1_stage1_q32k31_c3d2_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0175`: `kernel_knn_build_rag_microbucket_k32_f590_q32exact_v1_stage1_q32exact_f590_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0176`: `kernel_knn_build_rag_microbucket_k12_2f22_q48exact_v1_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0177`: `kernel_knn_build_rag_microbucket_k32_q32rowld2uneven_f653_v1_stage1_q32rowld2uneven_f653_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, num_db_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0178`: `kernel_knn_build_rag_microbucket_k32rowld1warp_0077_v1_stage1_q32_k32_m64_rowld2_q32rowld2_f653_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0179`: `kernel_knn_build_rag_microbucket_k32_0cb5_q31tail_v2_stage1_q31exact_0cb5_v2`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0180`: `kernel_knn_build_rag_microbucket_k32_q16irreg2warp_a444_v2_stage1_q16_rowld1_2warp_q16irreg2warp_a444_v2`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0181`: `kernel_knn_build_rag_microbucket_q32rowld_e5db_v1_stage1_q32_k32_m64_q128rowld_60fb_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0182`: `kernel_knn_build_common_d_5e7f_rag_d64_m64_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0183`: `kernel_knn_build_rag_microbucket_3505_v2_stage1_k32_tailinf_cta1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0184`: `kernel_knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_fd9b_k8unordered`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tile_pairs, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0185`: `kernel_knn_build_d64_q4096_c271_twostage_group_reduce`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, reduced_dists, reduced_indices, total_queries)
+- `dispatch_kernel_0186`: `kernel_knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_c271_s5`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0187`: `kernel_knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_c271_s6`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0188`: `kernel_knn_build_d64_q4096_c271_stage1_syncdrop`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0189`: `kernel_knn_build_common_d_generic_direct_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(query, database, out_dists, out_indices, B, Q, M, K, D)
+- `dispatch_kernel_0190`: `kernel_knn_build_common_d_5e7f_rag_d64_repair_stage1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0191`: `kernel_knn_build_rag_microbucket_k32_q32rowld2exact_f653_v1_stage1_q32rowld2exact_f653_v1`, launch_mode=`standard`, threads=256, shared_mem=0, params=(tmap_query, tmap_database, query_sq, database_sq, partial_dists, partial_indices, B, Q, M, K, num_q_tiles, num_db_tiles, db_tiles_per_split, split_count, total_work)
+- `dispatch_kernel_0192`: `kernel_knn_build_k96_merge_s2_unordered_warp_select`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+- `dispatch_kernel_0193`: `kernel_knn_build_q1m524_workfeed_s147_g21_register_merge`, launch_mode=`standard`, threads=256, shared_mem=0, params=(partial_dists, partial_indices, out_dists, out_indices, total_queries)
+
+## Install
+
+```bash
+python -m pip install -e .
+```
+
+The runtime expects PyTorch and a CUDA Python package that provides
+`cuda.bindings.driver` and `cuda.bindings.nvrtc`.
+
+Install the optional Apache TVM FFI adapter with:
+
+```bash
+python -m pip install -e ".[tvm-ffi]"
+```
+
+## API Entry Points
+
+The complete workload API is exported from the package root. The bindings below
+remain available for inspecting or launching individual frozen kernels.
+
+- `flashlib_cake_knn_build.KERNELS`: mapping from exported kernel name to `ExportedKernel`.
+- `flashlib_cake_knn_build.get_kernel(name)`: inspect metadata, source text, or compile.
+- `flashlib_cake_knn_build.launch_<kernel>(*args, grid=...)`: low-level launch wrapper.
+- `ExportedKernel.source_text()`: read the frozen CUDA source.
+- `ExportedKernel.compile(arch="sm_100a")`: compile with NVRTC.
+- `ExportedKernel.launch(...)`: launch with explicit CUDA parameter order.
+
+Frozen sources are compiled through a process-local content-addressed cache.
+Aliases with identical CUDA source, architecture, options, active device, and
+function symbol share one loaded kernel; translation units with different
+symbols or active device contexts share the NVRTC cubin but retain separate
+loaded function objects. Semantic APIs may use
+the generated `_runtime.launch_context(...)` helper to capture one current or
+explicit PyTorch CUDA stream for every stage in a multi-kernel call.
+
+```python
+import torch
+from flashlib_cake_knn_build import get_kernel, launch_dispatch_kernel_0000
+
+kernel = get_kernel("dispatch_kernel_0000")
+print(kernel.parameters)
+
+# Pass CUDA tensors or scalar values in the parameter order shown in
+# src/flashlib_cake_knn_build/manifest.json. Pointer parameters accept CUDA tensors
+# or integer device pointers. Scalar parameters are range-checked and packed
+# with the exact signedness and width recorded by the Cake-STD-derived ABI.
+launch_dispatch_kernel_0000(*args, grid=(1, 1, 1))
+torch.cuda.synchronize()
+```
+
+## TVM FFI
+
+`flashlib_cake_knn_build.register_tvm_ffi()` registers both the workload-level public API
+declared by a complete export plan and every low-level frozen kernel in the
+TVM FFI global registry. Tensor arguments use DLPack zero-copy conversion and
+launches honor the current TVM FFI CUDA stream.
+
+```python
+import tvm_ffi
+import flashlib_cake_knn_build
+
+names = flashlib_cake_knn_build.register_tvm_ffi()
+print(names)
+
+# Complete plans expose semantic functions as <package>.<public_name>.
+semantic = tvm_ffi.get_global_func("flashlib_cake_knn_build.<public_name>", allow_missing=True)
+
+# Low-level functions use <package>.launch_<kernel>. The final seven
+# positional arguments are grid xyz, block xyz, and dynamic shared-memory bytes.
+launch = tvm_ffi.get_global_func("flashlib_cake_knn_build.launch_dispatch_kernel_0000")
+launch(*kernel_args, 1, 1, 1, 256, 1, 1, 0)
+```
+
+## Correctness And Performance
+
+Recorded correctness and performance results live in `RESULTS.md`.
+`benchmarks/workload.py` is the workload adapter: it declares concrete shapes
+and builds candidate/reference/compare callables for each shape. When the
+export command receives `--benchmark-adapter path/to/workload.py`, the
+generated repository is immediately runnable; otherwise the file is an
+explicit template that must be completed before performance can be reported.
+
+## Tests
+
+The exported repository includes unit tests that do not require a GPU or CUDA
+Python bindings:
+
+```bash
+python -m pip install -e ".[test]"
+pytest
+```
+
+## Benchmarks
+
+The generated benchmark script measures NVRTC compile latency for the frozen
+CUDA sources. It is a build/runtime smoke benchmark, not a semantic kernel
+throughput benchmark:
+
+```bash
+python benchmarks/benchmark_exported_kernels.py --arch sm_100a --json results/compile_benchmark.json
+python benchmarks/benchmark_shapes.py --json results/shape_benchmark.json
+```
+
+The shape runner checks correctness before timing and refuses to report
+performance unless the requested timing backend is CUPTI. `gpu_span_ms` remains
+the official kernel timing used for throughput and speedup. Each result also
+records the exact per-iteration kernel sum, active interval union, uncovered
+gap, activity count, host enqueue bracket, synchronized end-to-end bracket, and
+the first semantic-call host diagnostic. Host brackets may include an internal
+API synchronization. Cold-L2 flushing completes before the host bracket starts,
+so synchronized E2E isolates semantic call start through candidate completion.
+Neither host bracket may be substituted for GPU-only timing.
+
+Stateful production plans may also publish an init-once lifecycle record. It
+separates the one-time runtime init, first-signature compute, repeated hot
+``runtime.compute`` distribution, and modeled amortized latency. Init and first
+compute remain CUPTI-timestamp host diagnostics; only the repeated-call GPU span
+is strict correlated CUPTI activity. The report states the output/preprocessing
+policy, per-shard init samples, cache hit/miss evidence, clear policy, and whether
+resident multi-shape caching was actually measured.
