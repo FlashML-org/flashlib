@@ -373,6 +373,62 @@ def test_knn_flash_strict_no_cross_backend_fallback():
 
 
 # ---------------------------------------------------------------------------
+# Pairwise MRD — every autotune config must fill the full matrix (issue #12)
+# ---------------------------------------------------------------------------
+
+
+def test_pairwise_mrd_every_config_fills_full_matrix():
+    """Regression for issue #12: rectangular tiles left an uninitialized hole.
+
+    The autotuner masks per-config bugs (all configs are benchmarked into the
+    same buffer, so square configs paper over holes left by rectangular
+    ones). Force each config to run alone against a NaN-poisoned output so
+    any cell not written by *that* config survives as NaN, then check value
+    parity with the torch reference and exact symmetry.
+    """
+    import triton
+    from flashlib.kernels.distance.triton import mrd as M
+    from flashlib.kernels.distance.triton._common import _round_to_bucket
+
+    _seeded()
+    kernel = M._pairwise_mrd_kernel
+    orig_configs = kernel.configs
+    try:
+        # N deliberately not a multiple of every block size.
+        for N, D in [(512, 32), (500, 32), (129, 7)]:
+            X = torch.randn(N, D, device=DEVICE, dtype=torch.float32)
+            core = torch.rand(N, device=DEVICE) + 0.1
+            x_sq = (X * X).sum(dim=1)
+            ref = torch.maximum(
+                torch.maximum(core[:, None], core[None, :]), torch.cdist(X, X)
+            )
+            for cfg in M._PAIRWISE_MRD_CONFIGS:
+                kernel.configs = [cfg]
+                kernel.cache.clear()
+                out = torch.full((N, N), float("nan"), device=DEVICE,
+                                 dtype=torch.float32)
+                grid = lambda META: (triton.cdiv(N, META["BLOCK_I"]),
+                                     triton.cdiv(N, META["BLOCK_J"]))
+                kernel[grid](
+                    X, x_sq, core, out, N, D,
+                    X.stride(0), X.stride(1), out.stride(0), out.stride(1),
+                    N_KEY=_round_to_bucket(N), D_KEY=_round_to_bucket(D),
+                )
+                torch.cuda.synchronize()
+                bi, bj = cfg.kwargs["BLOCK_I"], cfg.kwargs["BLOCK_J"]
+                tag = f"N={N} D={D} BLOCK_I={bi} BLOCK_J={bj}"
+                n_nan = torch.isnan(out).sum().item()
+                assert n_nan == 0, f"{tag}: {n_nan} unwritten cells"
+                err = (out - ref).abs().max().item()
+                assert err < 0.5, f"{tag}: max err {err:.4f} vs torch ref"
+                asym = (out - out.T).abs().max().item()
+                assert asym == 0.0, f"{tag}: output not symmetric ({asym})"
+    finally:
+        kernel.configs = orig_configs
+        kernel.cache.clear()
+
+
+# ---------------------------------------------------------------------------
 # Standard scaler — element-wise within fp16 tol
 # ---------------------------------------------------------------------------
 

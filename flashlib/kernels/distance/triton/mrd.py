@@ -35,19 +35,27 @@ def _pairwise_mrd_kernel(
 ):
     """MRD[i,j] = max(core[i], core[j], sqrt(||xi-xj||^2)).
 
-    Symmetric optimization: only tiles with pid_i <= pid_j are computed; the
-    result is mirrored to OUT[j_offs, i_offs] in the same kernel call.
-    Halves compute (lower-triangle tiles skip tl.dot entirely).
+    Symmetric optimization: tiles entirely inside the strict lower triangle
+    are skipped (no tl.dot at all); each surviving tile stores its
+    upper-triangle (i <= j) elements directly and mirrors its strictly-upper
+    (i < j) elements to OUT[j, i]. All triangle tests are element-wise on
+    row/col coordinates so rectangular tiles (BLOCK_I != BLOCK_J) stay
+    exact — comparing pid_i against pid_j is only valid for square tiles.
     """
     pid_i = tl.program_id(0)
     pid_j = tl.program_id(1)
 
-    # Skip lower-triangle tiles entirely
-    if pid_i > pid_j:
+    i_start = pid_i * BLOCK_I
+    j_start = pid_j * BLOCK_J
+
+    # Skip tiles entirely inside the strict lower triangle. A tile is fully
+    # below the diagonal iff its largest column (j_start + BLOCK_J - 1) is
+    # smaller than its smallest row (i_start).
+    if j_start + BLOCK_J <= i_start:
         return
 
-    i_offs = (pid_i * BLOCK_I + tl.arange(0, BLOCK_I)).to(tl.int64)
-    j_offs = (pid_j * BLOCK_J + tl.arange(0, BLOCK_J)).to(tl.int64)
+    i_offs = (i_start + tl.arange(0, BLOCK_I)).to(tl.int64)
+    j_offs = (j_start + tl.arange(0, BLOCK_J)).to(tl.int64)
     i_mask = i_offs < N
     j_mask = j_offs < N
 
@@ -73,17 +81,32 @@ def _pairwise_mrd_kernel(
     # MRD = max(core_i, core_j, dist)
     mrd = tl.maximum(tl.maximum(core_i[:, None], core_j[None, :]), dist)
 
-    # Write upper-triangle tile
     out_ptrs = OUT_ptr + i_offs[:, None] * stride_on + j_offs[None, :] * stride_om
-    tl.store(out_ptrs, mrd, mask=i_mask[:, None] & j_mask[None, :])
 
-    # Mirror to lower triangle when off-diagonal (avoid double-write on diagonal tiles)
-    if pid_i != pid_j:
+    if j_start >= i_start + BLOCK_I:
+        # Fast path: tile lies entirely in the strict upper triangle (every
+        # cell has i < j), so both the direct store and the mirror need only
+        # bounds masks. This covers all but the O(N / BLOCK) diagonal-band
+        # tiles, so the kernel stays store-bandwidth-optimal.
+        tl.store(out_ptrs, mrd, mask=i_mask[:, None] & j_mask[None, :])
         out_ptrs_t = (OUT_ptr + j_offs[:, None] * stride_on
                       + i_offs[None, :] * stride_om)
         # Transpose mrd: (BLOCK_I, BLOCK_J) -> (BLOCK_J, BLOCK_I)
-        mrd_t = tl.trans(mrd)
-        tl.store(out_ptrs_t, mrd_t, mask=j_mask[:, None] & i_mask[None, :])
+        tl.store(out_ptrs_t, tl.trans(mrd), mask=j_mask[:, None] & i_mask[None, :])
+    else:
+        # Diagonal-straddling tile: store the i <= j cells directly and
+        # mirror the i < j cells to OUT[j, i]. Together every cell of the
+        # band is written exactly once — no diagonal double-write and no
+        # duplicate/racing writes between neighbouring tiles (rectangular
+        # configs always produce straddling tiles, so tile-level pid checks
+        # cannot express this).
+        upper = i_offs[:, None] <= j_offs[None, :]
+        tl.store(out_ptrs, mrd, mask=i_mask[:, None] & j_mask[None, :] & upper)
+        out_ptrs_t = (OUT_ptr + j_offs[:, None] * stride_on
+                      + i_offs[None, :] * stride_om)
+        strict_upper_t = i_offs[None, :] < j_offs[:, None]
+        tl.store(out_ptrs_t, tl.trans(mrd),
+                 mask=j_mask[:, None] & i_mask[None, :] & strict_upper_t)
 
 
 def triton_pairwise_mrd(X: torch.Tensor, core_dists: torch.Tensor,
