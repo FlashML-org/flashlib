@@ -1,0 +1,759 @@
+{
+  "domain": "knn_search",
+  "package": "knn_search",
+  "min_arch": "sm_100a",
+  "archs": [
+    "sm_100a",
+    "sm_103a"
+  ],
+  "families": [
+    {
+      "name": "knn_search_d256_q64_7ad3",
+      "so_subdir": "knn_search_d256_q64_7ad3",
+      "host_tu": "host/dispatch_knn_search_d256_q64_7ad3.cpp",
+      "idents": {
+        "knn_search_q64_pairedowner_finalmerge_cce0_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_q64_pairedowner_finalmerge_cce0_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_q64_pairedowner_finalmerge_cce0_v1_9a9f64c806.cu"
+        },
+        "knn_search_q64_tail_groupmerge76_split152_3dee_v1_b110c2f976": {
+          "sm_100a": "device/knn_search_q64_tail_groupmerge76_split152_3dee_v1_b110c2f976.cu",
+          "sm_103a": "device/knn_search_q64_tail_groupmerge76_split152_3dee_v1_b110c2f976.cu"
+        },
+        "knn_search_q64_warp_distributed_state_04b4_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_q64_warp_distributed_state_04b4_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_q64_warp_distributed_state_04b4_v1_9a9f64c806.cu"
+        }
+      }
+    },
+    {
+      "name": "knn_search_portfolio_09a4",
+      "so_subdir": "knn_search_portfolio_09a4",
+      "host_tu": "host/dispatch_knn_search_portfolio_09a4.cpp",
+      "idents": {
+        "knn_search_d1024_q32_k64_hiermerge8_final_f561_v2_0a860783b4": {
+          "sm_100a": "device/knn_search_d1024_q32_k64_hiermerge8_final_f561_v2_0a860783b4.cu",
+          "sm_103a": "device/knn_search_d1024_q32_k64_hiermerge8_final_f561_v2_0a860783b4.cu"
+        },
+        "knn_search_d1024_q32_k64_hiermerge8_group_f561_v2_0a860783b4": {
+          "sm_100a": "device/knn_search_d1024_q32_k64_hiermerge8_group_f561_v2_0a860783b4.cu",
+          "sm_103a": "device/knn_search_d1024_q32_k64_hiermerge8_group_f561_v2_0a860783b4.cu"
+        },
+        "knn_search_d1024_q32_k64_targetd_partial_67ec_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_d1024_q32_k64_targetd_partial_67ec_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_d1024_q32_k64_targetd_partial_67ec_v1_9a9f64c806.cu"
+        },
+        "knn_search_d2048_q8_m16384_k10_merge_0623_6185_d51b_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_d2048_q8_m16384_k10_merge_0623_6185_d51b_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_d2048_q8_m16384_k10_merge_0623_6185_d51b_v1_123aab1b9a.cu"
+        },
+        "knn_search_d2048_q8_m16384_k10_partial_0623_6185_d51b_v1_782bf10941": {
+          "sm_100a": "device/knn_search_d2048_q8_m16384_k10_partial_0623_6185_d51b_v1_782bf10941.cu",
+          "sm_103a": "device/knn_search_d2048_q8_m16384_k10_partial_0623_6185_d51b_v1_782bf10941.cu"
+        },
+        "knn_search_d4096_q4q8_m8192m16384_k10_merge_0623_5ff7_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_d4096_q4q8_m8192m16384_k10_merge_0623_5ff7_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_d4096_q4q8_m8192m16384_k10_merge_0623_5ff7_v1_123aab1b9a.cu"
+        },
+        "knn_search_d4096_q4q8_m8192m16384_k10_partial_0623_5ff7_v1_782bf10941": {
+          "sm_100a": "device/knn_search_d4096_q4q8_m8192m16384_k10_partial_0623_5ff7_v1_782bf10941.cu",
+          "sm_103a": "device/knn_search_d4096_q4q8_m8192m16384_k10_partial_0623_5ff7_v1_782bf10941.cu"
+        },
+        "knn_search_d64_q128_m131072_k64_partial_0623_e157_v1_99c0a2f7e0": {
+          "sm_100a": "device/knn_search_d64_q128_m131072_k64_partial_0623_e157_v1_99c0a2f7e0.cu",
+          "sm_103a": "device/knn_search_d64_q128_m131072_k64_partial_0623_e157_v1_99c0a2f7e0.cu"
+        },
+        "knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_d160_ed174713c4": {
+          "sm_100a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_d160_ed174713c4.cu",
+          "sm_103a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_d160_ed174713c4.cu"
+        },
+        "knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_d640_0ed0e8c4ef": {
+          "sm_100a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_d640_0ed0e8c4ef.cu",
+          "sm_103a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_d640_0ed0e8c4ef.cu"
+        },
+        "knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_d80_92810d240c": {
+          "sm_100a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_d80_92810d240c.cu",
+          "sm_103a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_d80_92810d240c.cu"
+        },
+        "knn_search_dynamic_d_tiny_q128_m65536_tcgen05_partial_0618_c8b9_v1_d33_894984ad21": {
+          "sm_100a": "device/knn_search_dynamic_d_tiny_q128_m65536_tcgen05_partial_0618_c8b9_v1_d33_894984ad21.cu",
+          "sm_103a": "device/knn_search_dynamic_d_tiny_q128_m65536_tcgen05_partial_0618_c8b9_v1_d33_894984ad21.cu"
+        },
+        "knn_search_high_d_low_q_d768_q64_n256_partial_0268_v1_db886c4cf9": {
+          "sm_100a": "device/knn_search_high_d_low_q_d768_q64_n256_partial_0268_v1_db886c4cf9.cu",
+          "sm_103a": "device/knn_search_high_d_low_q_d768_q64_n256_partial_0268_v1_db886c4cf9.cu"
+        },
+        "knn_search_high_d_low_q_d768_q64_norm_merge_0268_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_high_d_low_q_d768_q64_norm_merge_0268_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_high_d_low_q_d768_q64_norm_merge_0268_v1_123aab1b9a.cu"
+        },
+        "knn_search_k64_q128split512_finalmerge32_kexact_0614_r25_k64thin_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_k64_q128split512_finalmerge32_kexact_0614_r25_k64thin_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_k64_q128split512_finalmerge32_kexact_0614_r25_k64thin_v1_0a860783b4.cu"
+        },
+        "knn_search_k64_q128split512_groupmerge64_kexact_0614_r25_k64thin_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_k64_q128split512_groupmerge64_kexact_0614_r25_k64thin_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_k64_q128split512_groupmerge64_kexact_0614_r25_k64thin_v1_0a860783b4.cu"
+        },
+        "knn_search_mma_split_merge_q128_const148_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_mma_split_merge_q128_const148_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_q128_const148_v1_123aab1b9a.cu"
+        },
+        "knn_search_mma_split_merge_stream_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_mma_split_merge_stream_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_stream_v1_123aab1b9a.cu"
+        },
+        "knn_search_mma_split_merge_v1_7b43f7c631": {
+          "sm_100a": "device/knn_search_mma_split_merge_v1_7b43f7c631.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_v1_7b43f7c631.cu"
+        },
+        "knn_search_mma_split_partial_v1_5599859202": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_5599859202.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_5599859202.cu"
+        },
+        "knn_search_mma_split_partial_v1_fullm_47f53bdb8c": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_fullm_47f53bdb8c.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_fullm_47f53bdb8c.cu"
+        },
+        "knn_search_mma_split_partial_v1_k64_3f052a6d18": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_k64_3f052a6d18.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_k64_3f052a6d18.cu"
+        },
+        "knn_search_residual_full198_d256_k64_fused_hier8x64_e92c_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_residual_full198_d256_k64_fused_hier8x64_e92c_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_residual_full198_d256_k64_fused_hier8x64_e92c_v1_9a9f64c806.cu"
+        }
+      }
+    },
+    {
+      "name": "knn_search_registered_b653",
+      "so_subdir": "knn_search_registered_b653",
+      "host_tu": "host/dispatch_knn_search_registered_b653.cpp",
+      "idents": {
+        "knn_search_d256_split256_rows8_finalmerge8compact_1056_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_d256_split256_rows8_finalmerge8compact_1056_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_d256_split256_rows8_finalmerge8compact_1056_v1_9a9f64c806.cu"
+        },
+        "knn_search_lowd_dbscan_d2_t128_m1536_0613_r56_cd72_v1_309725d503": {
+          "sm_100a": "device/knn_search_lowd_dbscan_d2_t128_m1536_0613_r56_cd72_v1_309725d503.cu",
+          "sm_103a": "device/knn_search_lowd_dbscan_d2_t128_m1536_0613_r56_cd72_v1_309725d503.cu"
+        },
+        "knn_search_lowq_row16_mma_partial_dispatch0610_r18_d14a_vec16_bguard_v1_782bf10941": {
+          "sm_100a": "device/knn_search_lowq_row16_mma_partial_dispatch0610_r18_d14a_vec16_bguard_v1_782bf10941.cu",
+          "sm_103a": "device/knn_search_lowq_row16_mma_partial_dispatch0610_r18_d14a_vec16_bguard_v1_782bf10941.cu"
+        },
+        "knn_search_mma_split_merge_q128_const148_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_mma_split_merge_q128_const148_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_q128_const148_v1_123aab1b9a.cu"
+        },
+        "knn_search_mma_split_merge_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_mma_split_merge_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_v1_123aab1b9a.cu"
+        },
+        "knn_search_mma_split_partial_v1_3f052a6d18": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_3f052a6d18.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_3f052a6d18.cu"
+        },
+        "knn_search_mma_split_partial_v1_5599859202": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_5599859202.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_5599859202.cu"
+        },
+        "knn_search_mma_split_partial_v1_9696dae2c9": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_9696dae2c9.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_9696dae2c9.cu"
+        },
+        "knn_search_q4096_lowk_k2partial_0613_r45_48e9_v1_77d118acf1": {
+          "sm_100a": "device/knn_search_q4096_lowk_k2partial_0613_r45_48e9_v1_77d118acf1.cu",
+          "sm_103a": "device/knn_search_q4096_lowk_k2partial_0613_r45_48e9_v1_77d118acf1.cu"
+        },
+        "knn_search_q4096_lowk_k2partial_split9_merge_0613_r46_48e9_v1_21cb6687d7": {
+          "sm_100a": "device/knn_search_q4096_lowk_k2partial_split9_merge_0613_r46_48e9_v1_21cb6687d7.cu",
+          "sm_103a": "device/knn_search_q4096_lowk_k2partial_split9_merge_0613_r46_48e9_v1_21cb6687d7.cu"
+        },
+        "knn_search_q4096_lowk_k5partial_0613_r49_48e9_v1_77d118acf1": {
+          "sm_100a": "device/knn_search_q4096_lowk_k5partial_0613_r49_48e9_v1_77d118acf1.cu",
+          "sm_103a": "device/knn_search_q4096_lowk_k5partial_0613_r49_48e9_v1_77d118acf1.cu"
+        },
+        "knn_search_q4096_lowk_k5partial_split9_merge_0613_r51_48e9_v1_1b8d87e68d": {
+          "sm_100a": "device/knn_search_q4096_lowk_k5partial_split9_merge_0613_r51_48e9_v1_1b8d87e68d.cu",
+          "sm_103a": "device/knn_search_q4096_lowk_k5partial_split9_merge_0613_r51_48e9_v1_1b8d87e68d.cu"
+        },
+        "knn_search_q4096_lowk_k8_stride10_out8_merge_0613_r52_48e9_v1_c7f0add491": {
+          "sm_100a": "device/knn_search_q4096_lowk_k8_stride10_out8_merge_0613_r52_48e9_v1_c7f0add491.cu",
+          "sm_103a": "device/knn_search_q4096_lowk_k8_stride10_out8_merge_0613_r52_48e9_v1_c7f0add491.cu"
+        },
+        "knn_search_q64_pairedowner_finalmerge_cce0_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_q64_pairedowner_finalmerge_cce0_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_q64_pairedowner_finalmerge_cce0_v1_9a9f64c806.cu"
+        },
+        "knn_search_q64_pairedowner_groupmerge_cce0_v1_b110c2f976": {
+          "sm_100a": "device/knn_search_q64_pairedowner_groupmerge_cce0_v1_b110c2f976.cu",
+          "sm_103a": "device/knn_search_q64_pairedowner_groupmerge_cce0_v1_b110c2f976.cu"
+        },
+        "knn_search_q64_tail_groupmerge76_split152_3dee_v1_b110c2f976": {
+          "sm_100a": "device/knn_search_q64_tail_groupmerge76_split152_3dee_v1_b110c2f976.cu",
+          "sm_103a": "device/knn_search_q64_tail_groupmerge76_split152_3dee_v1_b110c2f976.cu"
+        },
+        "knn_search_q64_tail_plus_812c_sentinel_warp_state_361b_v2_9a9f64c806": {
+          "sm_100a": "device/knn_search_q64_tail_plus_812c_sentinel_warp_state_361b_v2_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_q64_tail_plus_812c_sentinel_warp_state_361b_v2_9a9f64c806.cu"
+        },
+        "knn_search_q64_tail_split152_full_wave_partial_3dee_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_q64_tail_split152_full_wave_partial_3dee_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_q64_tail_split152_full_wave_partial_3dee_v1_9a9f64c806.cu"
+        },
+        "knn_search_q64_warp_distributed_state_04b4_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_q64_warp_distributed_state_04b4_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_q64_warp_distributed_state_04b4_v1_9a9f64c806.cu"
+        },
+        "knn_search_q65_fused_04b4_low_depth_tail_d436_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_q65_fused_04b4_low_depth_tail_d436_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_q65_fused_04b4_low_depth_tail_d436_v1_9a9f64c806.cu"
+        },
+        "knn_search_q65_tail_finalmerge_d436_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_q65_tail_finalmerge_d436_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_q65_tail_finalmerge_d436_v1_0a860783b4.cu"
+        },
+        "knn_search_q65_tail_groupmerge_d436_v1_b110c2f976": {
+          "sm_100a": "device/knn_search_q65_tail_groupmerge_d436_v1_b110c2f976.cu",
+          "sm_103a": "device/knn_search_q65_tail_groupmerge_d436_v1_b110c2f976.cu"
+        },
+        "knn_search_residual_q128_groupmerge76_fanin8_a8f5_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_residual_q128_groupmerge76_fanin8_a8f5_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_residual_q128_groupmerge76_fanin8_a8f5_v1_9a9f64c806.cu"
+        },
+        "knn_search_scalar_capacity_direct_v1_5da93bf4e8": {
+          "sm_100a": "device/knn_search_scalar_capacity_direct_v1_5da93bf4e8.cu",
+          "sm_103a": "device/knn_search_scalar_capacity_direct_v1_5da93bf4e8.cu"
+        },
+        "knn_search_scalar_capacity_direct_v1_f707fa44ca": {
+          "sm_100a": "device/knn_search_scalar_capacity_direct_v1_f707fa44ca.cu",
+          "sm_103a": "device/knn_search_scalar_capacity_direct_v1_f707fa44ca.cu"
+        }
+      }
+    },
+    {
+      "name": "knn_search_restored_full133",
+      "so_subdir": "knn_search_restored_full133",
+      "host_tu": "host/dispatch_knn_search_restored_full133.cpp",
+      "idents": {
+        "knn_search_blind_k64_q4096_m32768_prefix8_partial_5132_v1_9eaf43f85c": {
+          "sm_100a": "device/knn_search_blind_k64_q4096_m32768_prefix8_partial_5132_v1_9eaf43f85c.cu",
+          "sm_103a": "device/knn_search_blind_k64_q4096_m32768_prefix8_partial_5132_v1_9eaf43f85c.cu"
+        },
+        "knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_6f786b909a": {
+          "sm_100a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_6f786b909a.cu",
+          "sm_103a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_6f786b909a.cu"
+        },
+        "knn_search_d130_q64_k64_directpad_partial_0625_4b95_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_d130_q64_k64_directpad_partial_0625_4b95_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_d130_q64_k64_directpad_partial_0625_4b95_v1_9a9f64c806.cu"
+        },
+        "knn_search_d512_q32_k64_distonlymerge_merge_177e_r121_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_d512_q32_k64_distonlymerge_merge_177e_r121_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_d512_q32_k64_distonlymerge_merge_177e_r121_v1_0a860783b4.cu"
+        },
+        "knn_search_d512_q32_k64_mergefast_partial_83da_r121_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_d512_q32_k64_mergefast_partial_83da_r121_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_d512_q32_k64_mergefast_partial_83da_r121_v1_9a9f64c806.cu"
+        },
+        "knn_search_dynamic_d257_k64_q64_merge_0618_ccef_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_dynamic_d257_k64_q64_merge_0618_ccef_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_dynamic_d257_k64_q64_merge_0618_ccef_v1_0a860783b4.cu"
+        },
+        "knn_search_dynamic_d257_k64_q64_partial_0618_ccef_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_dynamic_d257_k64_q64_partial_0618_ccef_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_dynamic_d257_k64_q64_partial_0618_ccef_v1_9a9f64c806.cu"
+        },
+        "knn_search_dynamic_d3_k32_self_tile_0620_9d5c_v1_82e69c35d9": {
+          "sm_100a": "device/knn_search_dynamic_d3_k32_self_tile_0620_9d5c_v1_82e69c35d9.cu",
+          "sm_103a": "device/knn_search_dynamic_d3_k32_self_tile_0620_9d5c_v1_82e69c35d9.cu"
+        },
+        "knn_search_dynamic_d512_q64_tcgen05_partial_0618_9286_v1_782bf10941": {
+          "sm_100a": "device/knn_search_dynamic_d512_q64_tcgen05_partial_0618_9286_v1_782bf10941.cu",
+          "sm_103a": "device/knn_search_dynamic_d512_q64_tcgen05_partial_0618_9286_v1_782bf10941.cu"
+        },
+        "knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_0c76444142": {
+          "sm_100a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_0c76444142.cu",
+          "sm_103a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_0c76444142.cu"
+        },
+        "knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_b32efaf6c0": {
+          "sm_100a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_b32efaf6c0.cu",
+          "sm_103a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_b32efaf6c0.cu"
+        },
+        "knn_search_dynamic_d_d384_q32_m131072_exact_tcgen05_partial_0618_5847_v1_673bbe38ce": {
+          "sm_100a": "device/knn_search_dynamic_d_d384_q32_m131072_exact_tcgen05_partial_0618_5847_v1_673bbe38ce.cu",
+          "sm_103a": "device/knn_search_dynamic_d_d384_q32_m131072_exact_tcgen05_partial_0618_5847_v1_673bbe38ce.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_37337262a2": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_37337262a2.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_37337262a2.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_37bc4ac848": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_37bc4ac848.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_37bc4ac848.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_473790bfbd": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_473790bfbd.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_473790bfbd.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_4fb660422e": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_4fb660422e.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_4fb660422e.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_759ef24087": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_759ef24087.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_759ef24087.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_a23b53b726": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_a23b53b726.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_a23b53b726.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_d8600f0bb3": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_d8600f0bb3.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_d8600f0bb3.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_da4feb7e7c": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_da4feb7e7c.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_da4feb7e7c.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_dce38ac700": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_dce38ac700.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_dce38ac700.cu"
+        },
+        "knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_e6da0b4985": {
+          "sm_100a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_e6da0b4985.cu",
+          "sm_103a": "device/knn_search_dynamic_d_high_directstride_tcgen05_partial_0618_ccef_v1_e6da0b4985.cu"
+        },
+        "knn_search_dynamic_d_tiny_pack_bf16_0618_c8b9_v1_36a78f5b0d": {
+          "sm_100a": "device/knn_search_dynamic_d_tiny_pack_bf16_0618_c8b9_v1_36a78f5b0d.cu",
+          "sm_103a": "device/knn_search_dynamic_d_tiny_pack_bf16_0618_c8b9_v1_36a78f5b0d.cu"
+        },
+        "knn_search_dynamic_d_tiny_pack_bf16_0618_c8b9_v1_bfdc913a59": {
+          "sm_100a": "device/knn_search_dynamic_d_tiny_pack_bf16_0618_c8b9_v1_bfdc913a59.cu",
+          "sm_103a": "device/knn_search_dynamic_d_tiny_pack_bf16_0618_c8b9_v1_bfdc913a59.cu"
+        },
+        "knn_search_dynamic_d_tiny_q128_m65536_tcgen05_partial_0618_c8b9_v1_aeb053d401": {
+          "sm_100a": "device/knn_search_dynamic_d_tiny_q128_m65536_tcgen05_partial_0618_c8b9_v1_aeb053d401.cu",
+          "sm_103a": "device/knn_search_dynamic_d_tiny_q128_m65536_tcgen05_partial_0618_c8b9_v1_aeb053d401.cu"
+        },
+        "knn_search_dynamic_d_tiny_q128_m65536_tcgen05_partial_0618_c8b9_v1_cfd44eeac1": {
+          "sm_100a": "device/knn_search_dynamic_d_tiny_q128_m65536_tcgen05_partial_0618_c8b9_v1_cfd44eeac1.cu",
+          "sm_103a": "device/knn_search_dynamic_d_tiny_q128_m65536_tcgen05_partial_0618_c8b9_v1_cfd44eeac1.cu"
+        },
+        "knn_search_dynamic_self_d3_single_tile_0625_199f_v1_2d88384140": {
+          "sm_100a": "device/knn_search_dynamic_self_d3_single_tile_0625_199f_v1_2d88384140.cu",
+          "sm_103a": "device/knn_search_dynamic_self_d3_single_tile_0625_199f_v1_2d88384140.cu"
+        },
+        "knn_search_dynamic_tinyd_tile_reduce_merge_0618_c8b9_v1_db11c7c6f1": {
+          "sm_100a": "device/knn_search_dynamic_tinyd_tile_reduce_merge_0618_c8b9_v1_db11c7c6f1.cu",
+          "sm_103a": "device/knn_search_dynamic_tinyd_tile_reduce_merge_0618_c8b9_v1_db11c7c6f1.cu"
+        },
+        "knn_search_dynamic_tinyd_tile_reduce_partial_0618_c8b9_v1_28d2752384": {
+          "sm_100a": "device/knn_search_dynamic_tinyd_tile_reduce_partial_0618_c8b9_v1_28d2752384.cu",
+          "sm_103a": "device/knn_search_dynamic_tinyd_tile_reduce_partial_0618_c8b9_v1_28d2752384.cu"
+        },
+        "knn_search_dynamic_tinyd_tile_reduce_partial_0618_c8b9_v1_6aa106fd91": {
+          "sm_100a": "device/knn_search_dynamic_tinyd_tile_reduce_partial_0618_c8b9_v1_6aa106fd91.cu",
+          "sm_103a": "device/knn_search_dynamic_tinyd_tile_reduce_partial_0618_c8b9_v1_6aa106fd91.cu"
+        },
+        "knn_search_dynamic_tinyd_tile_reduce_partial_0618_c8b9_v1_c5d5e2002c": {
+          "sm_100a": "device/knn_search_dynamic_tinyd_tile_reduce_partial_0618_c8b9_v1_c5d5e2002c.cu",
+          "sm_103a": "device/knn_search_dynamic_tinyd_tile_reduce_partial_0618_c8b9_v1_c5d5e2002c.cu"
+        },
+        "knn_search_ext_k64_highq_prefix8_merge_0618_c2e0_v1_073db11bdc": {
+          "sm_100a": "device/knn_search_ext_k64_highq_prefix8_merge_0618_c2e0_v1_073db11bdc.cu",
+          "sm_103a": "device/knn_search_ext_k64_highq_prefix8_merge_0618_c2e0_v1_073db11bdc.cu"
+        },
+        "knn_search_ext_k64_highq_prefix8_partial_0618_c2e0_v1_9eaf43f85c": {
+          "sm_100a": "device/knn_search_ext_k64_highq_prefix8_partial_0618_c2e0_v1_9eaf43f85c.cu",
+          "sm_103a": "device/knn_search_ext_k64_highq_prefix8_partial_0618_c2e0_v1_9eaf43f85c.cu"
+        },
+        "knn_search_floor13_k64_prefix8_merge_0622_f3ce_v1_073db11bdc": {
+          "sm_100a": "device/knn_search_floor13_k64_prefix8_merge_0622_f3ce_v1_073db11bdc.cu",
+          "sm_103a": "device/knn_search_floor13_k64_prefix8_merge_0622_f3ce_v1_073db11bdc.cu"
+        },
+        "knn_search_floor13_k64_prefix8_partial_0622_f3ce_v1_9eaf43f85c": {
+          "sm_100a": "device/knn_search_floor13_k64_prefix8_partial_0622_f3ce_v1_9eaf43f85c.cu",
+          "sm_103a": "device/knn_search_floor13_k64_prefix8_partial_0622_f3ce_v1_9eaf43f85c.cu"
+        },
+        "knn_search_ivf_q12_m100_d64_k20_direct_6bea_r118_v1_9a6a0881b8": {
+          "sm_100a": "device/knn_search_ivf_q12_m100_d64_k20_direct_6bea_r118_v1_9a6a0881b8.cu",
+          "sm_103a": "device/knn_search_ivf_q12_m100_d64_k20_direct_6bea_r118_v1_9a6a0881b8.cu"
+        },
+        "knn_search_k1_top1_merge16_d212_v1_6fe708594c": {
+          "sm_100a": "device/knn_search_k1_top1_merge16_d212_v1_6fe708594c.cu",
+          "sm_103a": "device/knn_search_k1_top1_merge16_d212_v1_6fe708594c.cu"
+        },
+        "knn_search_k1_top1_pairq_partial_0622_598a_v1_77d118acf1": {
+          "sm_100a": "device/knn_search_k1_top1_pairq_partial_0622_598a_v1_77d118acf1.cu",
+          "sm_103a": "device/knn_search_k1_top1_pairq_partial_0622_598a_v1_77d118acf1.cu"
+        },
+        "knn_search_k48_q4096_m32768_prefix8_merge_0623_e36b_v1_7675ae1ffd": {
+          "sm_100a": "device/knn_search_k48_q4096_m32768_prefix8_merge_0623_e36b_v1_7675ae1ffd.cu",
+          "sm_103a": "device/knn_search_k48_q4096_m32768_prefix8_merge_0623_e36b_v1_7675ae1ffd.cu"
+        },
+        "knn_search_k48_q4096_m32768_prefix8_partial_0623_e36b_v1_9eaf43f85c": {
+          "sm_100a": "device/knn_search_k48_q4096_m32768_prefix8_partial_0623_e36b_v1_9eaf43f85c.cu",
+          "sm_103a": "device/knn_search_k48_q4096_m32768_prefix8_partial_0623_e36b_v1_9eaf43f85c.cu"
+        },
+        "knn_search_k64_q4096split79_indexfastmerge10_guarded_0612_r34_11c1_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_k64_q4096split79_indexfastmerge10_guarded_0612_r34_11c1_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_k64_q4096split79_indexfastmerge10_guarded_0612_r34_11c1_v1_0a860783b4.cu"
+        },
+        "knn_search_k64_q4096split79_twotile_oddevensort_partial_0612_r34_11c1_v1_99c0a2f7e0": {
+          "sm_100a": "device/knn_search_k64_q4096split79_twotile_oddevensort_partial_0612_r34_11c1_v1_99c0a2f7e0.cu",
+          "sm_103a": "device/knn_search_k64_q4096split79_twotile_oddevensort_partial_0612_r34_11c1_v1_99c0a2f7e0.cu"
+        },
+        "knn_search_mma_split_merge_q128_const148_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_mma_split_merge_q128_const148_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_q128_const148_v1_123aab1b9a.cu"
+        },
+        "knn_search_mma_split_merge_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_mma_split_merge_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_v1_0a860783b4.cu"
+        },
+        "knn_search_mma_split_partial_v1_5599859202": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_5599859202.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_5599859202.cu"
+        },
+        "knn_search_q4096_m32768_k32_prefix8_merge_tie_3c6e_v1_0d6c878bf7": {
+          "sm_100a": "device/knn_search_q4096_m32768_k32_prefix8_merge_tie_3c6e_v1_0d6c878bf7.cu",
+          "sm_103a": "device/knn_search_q4096_m32768_k32_prefix8_merge_tie_3c6e_v1_0d6c878bf7.cu"
+        },
+        "knn_search_q4096_m32768_k64_prefix8_merge_tie_3c6e_v1_073db11bdc": {
+          "sm_100a": "device/knn_search_q4096_m32768_k64_prefix8_merge_tie_3c6e_v1_073db11bdc.cu",
+          "sm_103a": "device/knn_search_q4096_m32768_k64_prefix8_merge_tie_3c6e_v1_073db11bdc.cu"
+        }
+      }
+    },
+    {
+      "name": "knn_search_compat0701",
+      "so_subdir": "knn_search_compat0701",
+      "host_tu": "host/dispatch_knn_search_compat0701.cpp",
+      "idents": {
+        "final_merge_ir_0a860783b4": {
+          "sm_100a": "device/final_merge_ir_0a860783b4.cu",
+          "sm_103a": "device/final_merge_ir_0a860783b4.cu"
+        },
+        "group_merge_ir_0a860783b4": {
+          "sm_100a": "device/group_merge_ir_0a860783b4.cu",
+          "sm_103a": "device/group_merge_ir_0a860783b4.cu"
+        },
+        "knn_search_80a5_b2_q128m65536_k64_twotile_partial_74f4_v1_99c0a2f7e0": {
+          "sm_100a": "device/knn_search_80a5_b2_q128m65536_k64_twotile_partial_74f4_v1_99c0a2f7e0.cu",
+          "sm_103a": "device/knn_search_80a5_b2_q128m65536_k64_twotile_partial_74f4_v1_99c0a2f7e0.cu"
+        },
+        "knn_search_80a5_blocker_k64_q256_m65536_twotile_partial_v1_99c0a2f7e0": {
+          "sm_100a": "device/knn_search_80a5_blocker_k64_q256_m65536_twotile_partial_v1_99c0a2f7e0.cu",
+          "sm_103a": "device/knn_search_80a5_blocker_k64_q256_m65536_twotile_partial_v1_99c0a2f7e0.cu"
+        },
+        "knn_search_blind_d384_tcgen05_partial_dispatch0610_r2_f94e_v1_673bbe38ce": {
+          "sm_100a": "device/knn_search_blind_d384_tcgen05_partial_dispatch0610_r2_f94e_v1_673bbe38ce.cu",
+          "sm_103a": "device/knn_search_blind_d384_tcgen05_partial_dispatch0610_r2_f94e_v1_673bbe38ce.cu"
+        },
+        "knn_search_blind_k64_highq_merge32_0614_50cc_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_blind_k64_highq_merge32_0614_50cc_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_blind_k64_highq_merge32_0614_50cc_v1_0a860783b4.cu"
+        },
+        "knn_search_blind_k64_q128m262144_groupmerge64_0614_r19_6389_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_blind_k64_q128m262144_groupmerge64_0614_r19_6389_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_blind_k64_q128m262144_groupmerge64_0614_r19_6389_v1_0a860783b4.cu"
+        },
+        "knn_search_blind_k64_twotile_partial_0614_50cc_v1_99c0a2f7e0": {
+          "sm_100a": "device/knn_search_blind_k64_twotile_partial_0614_50cc_v1_99c0a2f7e0.cu",
+          "sm_103a": "device/knn_search_blind_k64_twotile_partial_0614_50cc_v1_99c0a2f7e0.cu"
+        },
+        "knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_250a3b1891": {
+          "sm_100a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_250a3b1891.cu",
+          "sm_103a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_250a3b1891.cu"
+        },
+        "knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_67cf85b849": {
+          "sm_100a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_67cf85b849.cu",
+          "sm_103a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_67cf85b849.cu"
+        },
+        "knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_cfdb8f074b": {
+          "sm_100a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_cfdb8f074b.cu",
+          "sm_103a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_cfdb8f074b.cu"
+        },
+        "knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_e9bee0ce0d": {
+          "sm_100a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_e9bee0ce0d.cu",
+          "sm_103a": "device/knn_search_blind_lowd_non_d128_tcgen05_partial_0615_r99_v1_e9bee0ce0d.cu"
+        },
+        "knn_search_d1024_q32_k64_targetd_partial_67ec_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_d1024_q32_k64_targetd_partial_67ec_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_d1024_q32_k64_targetd_partial_67ec_v1_9a9f64c806.cu"
+        },
+        "knn_search_d256_mma_split_partial_0612_r34_v1_673bbe38ce": {
+          "sm_100a": "device/knn_search_d256_mma_split_partial_0612_r34_v1_673bbe38ce.cu",
+          "sm_103a": "device/knn_search_d256_mma_split_partial_0612_r34_v1_673bbe38ce.cu"
+        },
+        "knn_search_d384_mma_split_partial_0612_r34_v1_673bbe38ce": {
+          "sm_100a": "device/knn_search_d384_mma_split_partial_0612_r34_v1_673bbe38ce.cu",
+          "sm_103a": "device/knn_search_d384_mma_split_partial_0612_r34_v1_673bbe38ce.cu"
+        },
+        "knn_search_d4096_q1_m65536_k10_partial_qcache_pipe_69ea_v1_782bf10941": {
+          "sm_100a": "device/knn_search_d4096_q1_m65536_k10_partial_qcache_pipe_69ea_v1_782bf10941.cu",
+          "sm_103a": "device/knn_search_d4096_q1_m65536_k10_partial_qcache_pipe_69ea_v1_782bf10941.cu"
+        },
+        "knn_search_d4096_q4q8_m8192m16384_k10_merge_0623_5ff7_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_d4096_q4q8_m8192m16384_k10_merge_0623_5ff7_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_d4096_q4q8_m8192m16384_k10_merge_0623_5ff7_v1_123aab1b9a.cu"
+        },
+        "knn_search_d4096_q4q8_m8192m16384_k10_partial_0623_5ff7_v1_782bf10941": {
+          "sm_100a": "device/knn_search_d4096_q4q8_m8192m16384_k10_partial_0623_5ff7_v1_782bf10941.cu",
+          "sm_103a": "device/knn_search_d4096_q4q8_m8192m16384_k10_partial_0623_5ff7_v1_782bf10941.cu"
+        },
+        "knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_0c76444142": {
+          "sm_100a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_0c76444142.cu",
+          "sm_103a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_0c76444142.cu"
+        },
+        "knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_b32efaf6c0": {
+          "sm_100a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_b32efaf6c0.cu",
+          "sm_103a": "device/knn_search_dynamic_d768d1024_q32q16_tcgen05_partial_0618_9286_v1_b32efaf6c0.cu"
+        },
+        "knn_search_ext_k_capacity_truncate64_to_k_0618_28ec_v1_9a9f64c806": {
+          "sm_100a": "device/knn_search_ext_k_capacity_truncate64_to_k_0618_28ec_v1_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_ext_k_capacity_truncate64_to_k_0618_28ec_v1_9a9f64c806.cu"
+        },
+        "knn_search_floor13_k64_prefix8_merge_0622_f3ce_v1_073db11bdc": {
+          "sm_100a": "device/knn_search_floor13_k64_prefix8_merge_0622_f3ce_v1_073db11bdc.cu",
+          "sm_103a": "device/knn_search_floor13_k64_prefix8_merge_0622_f3ce_v1_073db11bdc.cu"
+        },
+        "knn_search_floor13_k64_prefix8_partial_0622_f3ce_v1_9eaf43f85c": {
+          "sm_100a": "device/knn_search_floor13_k64_prefix8_partial_0622_f3ce_v1_9eaf43f85c.cu",
+          "sm_103a": "device/knn_search_floor13_k64_prefix8_partial_0622_f3ce_v1_9eaf43f85c.cu"
+        },
+        "knn_search_floor13_k64_q384_prefix8_merge_0622_f3ce_v1_073db11bdc": {
+          "sm_100a": "device/knn_search_floor13_k64_q384_prefix8_merge_0622_f3ce_v1_073db11bdc.cu",
+          "sm_103a": "device/knn_search_floor13_k64_q384_prefix8_merge_0622_f3ce_v1_073db11bdc.cu"
+        },
+        "knn_search_floor13_k64_q384_prefix8_partial_0622_f3ce_v1_9eaf43f85c": {
+          "sm_100a": "device/knn_search_floor13_k64_q384_prefix8_partial_0622_f3ce_v1_9eaf43f85c.cu",
+          "sm_103a": "device/knn_search_floor13_k64_q384_prefix8_partial_0622_f3ce_v1_9eaf43f85c.cu"
+        },
+        "knn_search_floor13_k80_prefix8_merge_0622_f3ce_v1_9952843820": {
+          "sm_100a": "device/knn_search_floor13_k80_prefix8_merge_0622_f3ce_v1_9952843820.cu",
+          "sm_103a": "device/knn_search_floor13_k80_prefix8_merge_0622_f3ce_v1_9952843820.cu"
+        },
+        "knn_search_k20k30_q128_split148_guarded_merge_v1_20ee8053a9": {
+          "sm_100a": "device/knn_search_k20k30_q128_split148_guarded_merge_v1_20ee8053a9.cu",
+          "sm_103a": "device/knn_search_k20k30_q128_split148_guarded_merge_v1_20ee8053a9.cu"
+        },
+        "knn_search_k20k30_q128_split148_guarded_merge_v1_4a3ede9fae": {
+          "sm_100a": "device/knn_search_k20k30_q128_split148_guarded_merge_v1_4a3ede9fae.cu",
+          "sm_103a": "device/knn_search_k20k30_q128_split148_guarded_merge_v1_4a3ede9fae.cu"
+        },
+        "knn_search_k31k32_q128_split148_static_lateidx_merge_r68_v1_0e4d8a7063": {
+          "sm_100a": "device/knn_search_k31k32_q128_split148_static_lateidx_merge_r68_v1_0e4d8a7063.cu",
+          "sm_103a": "device/knn_search_k31k32_q128_split148_static_lateidx_merge_r68_v1_0e4d8a7063.cu"
+        },
+        "knn_search_k64_q128m65536_finalmerge16_kexact_0614_r27_k64thin_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_k64_q128m65536_finalmerge16_kexact_0614_r27_k64thin_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_k64_q128m65536_finalmerge16_kexact_0614_r27_k64thin_v1_0a860783b4.cu"
+        },
+        "knn_search_k64_q128m65536_groupmerge64_kexact_0614_r27_k64thin_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_k64_q128m65536_groupmerge64_kexact_0614_r27_k64thin_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_k64_q128m65536_groupmerge64_kexact_0614_r27_k64thin_v1_0a860783b4.cu"
+        },
+        "knn_search_k64_q128split512_finalmerge32_kexact_0614_r25_k64thin_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_k64_q128split512_finalmerge32_kexact_0614_r25_k64thin_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_k64_q128split512_finalmerge32_kexact_0614_r25_k64thin_v1_0a860783b4.cu"
+        },
+        "knn_search_k64_q128split512_finalmerge32_kexact_0614_r25_k64thin_v1_edde6d32aa": {
+          "sm_100a": "device/knn_search_k64_q128split512_finalmerge32_kexact_0614_r25_k64thin_v1_edde6d32aa.cu",
+          "sm_103a": "device/knn_search_k64_q128split512_finalmerge32_kexact_0614_r25_k64thin_v1_edde6d32aa.cu"
+        },
+        "knn_search_k64_q128split512_groupmerge64_kexact_0614_r25_k64thin_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_k64_q128split512_groupmerge64_kexact_0614_r25_k64thin_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_k64_q128split512_groupmerge64_kexact_0614_r25_k64thin_v1_0a860783b4.cu"
+        },
+        "knn_search_k64_q128split512_groupmerge64_kexact_0614_r25_k64thin_v1_edde6d32aa": {
+          "sm_100a": "device/knn_search_k64_q128split512_groupmerge64_kexact_0614_r25_k64thin_v1_edde6d32aa.cu",
+          "sm_103a": "device/knn_search_k64_q128split512_groupmerge64_kexact_0614_r25_k64thin_v1_edde6d32aa.cu"
+        },
+        "knn_search_k64_q128split512_twotile_partial_0614_r26_k64thin_v1_99c0a2f7e0": {
+          "sm_100a": "device/knn_search_k64_q128split512_twotile_partial_0614_r26_k64thin_v1_99c0a2f7e0.cu",
+          "sm_103a": "device/knn_search_k64_q128split512_twotile_partial_0614_r26_k64thin_v1_99c0a2f7e0.cu"
+        },
+        "knn_search_lowq_tile_reduce_merge_dispatch0610_r3_v1_81153f83fe": {
+          "sm_100a": "device/knn_search_lowq_tile_reduce_merge_dispatch0610_r3_v1_81153f83fe.cu",
+          "sm_103a": "device/knn_search_lowq_tile_reduce_merge_dispatch0610_r3_v1_81153f83fe.cu"
+        },
+        "knn_search_lowq_tile_reduce_merge_dispatch0610_r8_blockm512_v1_81153f83fe": {
+          "sm_100a": "device/knn_search_lowq_tile_reduce_merge_dispatch0610_r8_blockm512_v1_81153f83fe.cu",
+          "sm_103a": "device/knn_search_lowq_tile_reduce_merge_dispatch0610_r8_blockm512_v1_81153f83fe.cu"
+        },
+        "knn_search_lowq_tile_reduce_merge_m131072_exact_0617_cc76_v1_252f00d05e": {
+          "sm_100a": "device/knn_search_lowq_tile_reduce_merge_m131072_exact_0617_cc76_v1_252f00d05e.cu",
+          "sm_103a": "device/knn_search_lowq_tile_reduce_merge_m131072_exact_0617_cc76_v1_252f00d05e.cu"
+        },
+        "knn_search_lowq_tile_reduce_partial_dispatch0610_r3_v1_3759ba3a13": {
+          "sm_100a": "device/knn_search_lowq_tile_reduce_partial_dispatch0610_r3_v1_3759ba3a13.cu",
+          "sm_103a": "device/knn_search_lowq_tile_reduce_partial_dispatch0610_r3_v1_3759ba3a13.cu"
+        },
+        "knn_search_lowq_tile_reduce_partial_dispatch0610_r8_blockm512_v1_bb4e5e322e": {
+          "sm_100a": "device/knn_search_lowq_tile_reduce_partial_dispatch0610_r8_blockm512_v1_bb4e5e322e.cu",
+          "sm_103a": "device/knn_search_lowq_tile_reduce_partial_dispatch0610_r8_blockm512_v1_bb4e5e322e.cu"
+        },
+        "knn_search_lowq_tile_reduce_partial_m131072_exact_0617_cc76_v1_cc066f05dc": {
+          "sm_100a": "device/knn_search_lowq_tile_reduce_partial_m131072_exact_0617_cc76_v1_cc066f05dc.cu",
+          "sm_103a": "device/knn_search_lowq_tile_reduce_partial_m131072_exact_0617_cc76_v1_cc066f05dc.cu"
+        },
+        "knn_search_mma_split_merge_q128_const148_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_mma_split_merge_q128_const148_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_q128_const148_v1_123aab1b9a.cu"
+        },
+        "knn_search_mma_split_merge_q4096_pairlocal_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_mma_split_merge_q4096_pairlocal_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_q4096_pairlocal_v1_123aab1b9a.cu"
+        },
+        "knn_search_mma_split_merge_stream_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_mma_split_merge_stream_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_stream_v1_123aab1b9a.cu"
+        },
+        "knn_search_mma_split_merge_v1_06c7874ea3": {
+          "sm_100a": "device/knn_search_mma_split_merge_v1_06c7874ea3.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_v1_06c7874ea3.cu"
+        },
+        "knn_search_mma_split_merge_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_mma_split_merge_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_v1_123aab1b9a.cu"
+        },
+        "knn_search_mma_split_merge_v1_768ced837d": {
+          "sm_100a": "device/knn_search_mma_split_merge_v1_768ced837d.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_v1_768ced837d.cu"
+        },
+        "knn_search_mma_split_merge_v1_7b43f7c631": {
+          "sm_100a": "device/knn_search_mma_split_merge_v1_7b43f7c631.cu",
+          "sm_103a": "device/knn_search_mma_split_merge_v1_7b43f7c631.cu"
+        },
+        "knn_search_mma_split_partial_v1_0995a4eddb": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_0995a4eddb.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_0995a4eddb.cu"
+        },
+        "knn_search_mma_split_partial_v1_105649f56e": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_105649f56e.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_105649f56e.cu"
+        },
+        "knn_search_mma_split_partial_v1_47f53bdb8c": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_47f53bdb8c.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_47f53bdb8c.cu"
+        },
+        "knn_search_mma_split_partial_v1_5599859202": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_5599859202.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_5599859202.cu"
+        },
+        "knn_search_mma_split_partial_v1_6bee7cfeaf": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_6bee7cfeaf.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_6bee7cfeaf.cu"
+        },
+        "knn_search_mma_split_partial_v1_9696dae2c9": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_9696dae2c9.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_9696dae2c9.cu"
+        },
+        "knn_search_mma_split_partial_v1_99aaa04d2a": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_99aaa04d2a.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_99aaa04d2a.cu"
+        },
+        "knn_search_mma_split_partial_v1_99c4182f76": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_99c4182f76.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_99c4182f76.cu"
+        },
+        "knn_search_mma_split_partial_v1_ff61ce2648": {
+          "sm_100a": "device/knn_search_mma_split_partial_v1_ff61ce2648.cu",
+          "sm_103a": "device/knn_search_mma_split_partial_v1_ff61ce2648.cu"
+        },
+        "knn_search_q1_flashdecode_merge128_0614_r92_v1_81153f83fe": {
+          "sm_100a": "device/knn_search_q1_flashdecode_merge128_0614_r92_v1_81153f83fe.cu",
+          "sm_103a": "device/knn_search_q1_flashdecode_merge128_0614_r92_v1_81153f83fe.cu"
+        },
+        "knn_search_q1_irregular_m_tail_partial_v1_9b0e2fab6b": {
+          "sm_100a": "device/knn_search_q1_irregular_m_tail_partial_v1_9b0e2fab6b.cu",
+          "sm_103a": "device/knn_search_q1_irregular_m_tail_partial_v1_9b0e2fab6b.cu"
+        },
+        "knn_search_q1_tile_reduce_merge_v1_81153f83fe": {
+          "sm_100a": "device/knn_search_q1_tile_reduce_merge_v1_81153f83fe.cu",
+          "sm_103a": "device/knn_search_q1_tile_reduce_merge_v1_81153f83fe.cu"
+        },
+        "knn_search_q1_tile_reduce_partial_v1_9b0e2fab6b": {
+          "sm_100a": "device/knn_search_q1_tile_reduce_partial_v1_9b0e2fab6b.cu",
+          "sm_103a": "device/knn_search_q1_tile_reduce_partial_v1_9b0e2fab6b.cu"
+        },
+        "knn_search_q8_blockm256_two_stripe_tmem_8d4fe4ead6cd_v1_0c76444142": {
+          "sm_100a": "device/knn_search_q8_blockm256_two_stripe_tmem_8d4fe4ead6cd_v1_0c76444142.cu",
+          "sm_103a": "device/knn_search_q8_blockm256_two_stripe_tmem_8d4fe4ead6cd_v1_0c76444142.cu"
+        },
+        "knn_search_q8_blockm256_two_stripe_tmem_8d4fe4ead6cd_v1_b32efaf6c0": {
+          "sm_100a": "device/knn_search_q8_blockm256_two_stripe_tmem_8d4fe4ead6cd_v1_b32efaf6c0.cu",
+          "sm_103a": "device/knn_search_q8_blockm256_two_stripe_tmem_8d4fe4ead6cd_v1_b32efaf6c0.cu"
+        },
+        "knn_search_self_k5_direct_v1_e193c5f02e": {
+          "sm_100a": "device/knn_search_self_k5_direct_v1_e193c5f02e.cu",
+          "sm_103a": "device/knn_search_self_k5_direct_v1_e193c5f02e.cu"
+        },
+        "knn_search_target0627_d4096_q4_m32768_k10_merge128_r221_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_target0627_d4096_q4_m32768_k10_merge128_r221_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_target0627_d4096_q4_m32768_k10_merge128_r221_v1_123aab1b9a.cu"
+        },
+        "knn_search_target0627_d768_q64_m65536_k64_merge_6472_v2_0a860783b4": {
+          "sm_100a": "device/knn_search_target0627_d768_q64_m65536_k64_merge_6472_v2_0a860783b4.cu",
+          "sm_103a": "device/knn_search_target0627_d768_q64_m65536_k64_merge_6472_v2_0a860783b4.cu"
+        },
+        "knn_search_target0627_d768_q64_m65536_k64_partial_6472_v2_9a9f64c806": {
+          "sm_100a": "device/knn_search_target0627_d768_q64_m65536_k64_partial_6472_v2_9a9f64c806.cu",
+          "sm_103a": "device/knn_search_target0627_d768_q64_m65536_k64_partial_6472_v2_9a9f64c806.cu"
+        },
+        "knn_search_target0628_d1024_q32_m65536_k64_final_merge16_9571_v2_0a860783b4": {
+          "sm_100a": "device/knn_search_target0628_d1024_q32_m65536_k64_final_merge16_9571_v2_0a860783b4.cu",
+          "sm_103a": "device/knn_search_target0628_d1024_q32_m65536_k64_final_merge16_9571_v2_0a860783b4.cu"
+        },
+        "knn_search_target0628_d1024_q32_m65536_k64_group_merge16_9571_v2_0a860783b4": {
+          "sm_100a": "device/knn_search_target0628_d1024_q32_m65536_k64_group_merge16_9571_v2_0a860783b4.cu",
+          "sm_103a": "device/knn_search_target0628_d1024_q32_m65536_k64_group_merge16_9571_v2_0a860783b4.cu"
+        },
+        "knn_search_target0628_d128_q4096_m20000_k3_e8f1_k3partial_merge_v1_b2052ab39c": {
+          "sm_100a": "device/knn_search_target0628_d128_q4096_m20000_k3_e8f1_k3partial_merge_v1_b2052ab39c.cu",
+          "sm_103a": "device/knn_search_target0628_d128_q4096_m20000_k3_e8f1_k3partial_merge_v1_b2052ab39c.cu"
+        },
+        "knn_search_target0628_d128_q4096_m20000_k3_e8f1_k3partial_v1_77d118acf1": {
+          "sm_100a": "device/knn_search_target0628_d128_q4096_m20000_k3_e8f1_k3partial_v1_77d118acf1.cu",
+          "sm_103a": "device/knn_search_target0628_d128_q4096_m20000_k3_e8f1_k3partial_v1_77d118acf1.cu"
+        },
+        "knn_search_target0628_d4096_q4_m8192_k64_partial_e750_v1_90d6d403c7": {
+          "sm_100a": "device/knn_search_target0628_d4096_q4_m8192_k64_partial_e750_v1_90d6d403c7.cu",
+          "sm_103a": "device/knn_search_target0628_d4096_q4_m8192_k64_partial_e750_v1_90d6d403c7.cu"
+        },
+        "knn_search_target0628_d64_q256_m131072_k10_finalmerge_885d_hmerge8_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_target0628_d64_q256_m131072_k10_finalmerge_885d_hmerge8_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_target0628_d64_q256_m131072_k10_finalmerge_885d_hmerge8_v1_123aab1b9a.cu"
+        },
+        "knn_search_target0628_d64_q256_m131072_k10_groupmerge_885d_hmerge8_v1_123aab1b9a": {
+          "sm_100a": "device/knn_search_target0628_d64_q256_m131072_k10_groupmerge_885d_hmerge8_v1_123aab1b9a.cu",
+          "sm_103a": "device/knn_search_target0628_d64_q256_m131072_k10_groupmerge_885d_hmerge8_v1_123aab1b9a.cu"
+        },
+        "knn_search_target0628_d64_q256_m131072_k10_partial_885d_hmerge8_v1_782bf10941": {
+          "sm_100a": "device/knn_search_target0628_d64_q256_m131072_k10_partial_885d_hmerge8_v1_782bf10941.cu",
+          "sm_103a": "device/knn_search_target0628_d64_q256_m131072_k10_partial_885d_hmerge8_v1_782bf10941.cu"
+        },
+        "knn_search_target0628_d64_q512_m65536_k64_finalmerge_dbaf_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_target0628_d64_q512_m65536_k64_finalmerge_dbaf_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_target0628_d64_q512_m65536_k64_finalmerge_dbaf_v1_0a860783b4.cu"
+        },
+        "knn_search_target0628_d64_q512_m65536_k64_groupmerge_dbaf_v1_0a860783b4": {
+          "sm_100a": "device/knn_search_target0628_d64_q512_m65536_k64_groupmerge_dbaf_v1_0a860783b4.cu",
+          "sm_103a": "device/knn_search_target0628_d64_q512_m65536_k64_groupmerge_dbaf_v1_0a860783b4.cu"
+        },
+        "knn_search_target0628_d64_q512_m65536_k64_partial_e8f1_v1_99c0a2f7e0": {
+          "sm_100a": "device/knn_search_target0628_d64_q512_m65536_k64_partial_e8f1_v1_99c0a2f7e0.cu",
+          "sm_103a": "device/knn_search_target0628_d64_q512_m65536_k64_partial_e8f1_v1_99c0a2f7e0.cu"
+        },
+        "knn_search_target0630_d4096_q4_m32768_k10_partial_qreuse_v1_782bf10941": {
+          "sm_100a": "device/knn_search_target0630_d4096_q4_m32768_k10_partial_qreuse_v1_782bf10941.cu",
+          "sm_103a": "device/knn_search_target0630_d4096_q4_m32768_k10_partial_qreuse_v1_782bf10941.cu"
+        }
+      }
+    }
+  ],
+  "loom_rev": "unknown"
+}
