@@ -43,5 +43,9 @@ python /path/to/flashlib/cake_exports/knn_build/benchmarks/benchmark.py \
 Both lanes accept raw query/database inputs and allocate default outputs inside
 the timed call. The exported lane also computes the required row norms inside
 that boundary. GPU span is the primary metric; synchronized host E2E is
-retained as a diagnostic. See `RESULTS.md` and `BENCHMARK_RESULTS.json` for the
-measured B200 results.
+retained as a diagnostic. A second, explicitly labeled diagnostic measures the
+generated dispatcher with row norms and output buffers prepared outside the
+timed call; FlashLib has no matching precomputed-norm entrypoint, so that lane
+reuses the same-shape raw FlashLib timing and is not an API-boundary-equivalent
+comparison. See `RESULTS.md` and `BENCHMARK_RESULTS.json` for the measured B200
+results.
