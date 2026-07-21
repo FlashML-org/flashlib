@@ -42,5 +42,8 @@ python /path/to/flashlib/cake_exports/knn_search/benchmarks/benchmark.py \
 
 Both lanes accept raw query/database inputs and allocate default outputs inside
 the timed call. GPU span is the primary metric; synchronized host E2E is
-retained as a diagnostic. See `RESULTS.md` and `BENCHMARK_RESULTS.json` for the
-measured B200 results.
+retained as a diagnostic. A second, explicitly labeled diagnostic removes only
+the exported interface's output allocation; FlashLib has no matching output-
+buffer API, so that lane reuses the same-shape raw FlashLib timing and is not an
+API-boundary-equivalent comparison. See `RESULTS.md` and
+`BENCHMARK_RESULTS.json` for the measured B200 results.

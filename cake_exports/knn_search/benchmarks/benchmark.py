@@ -207,7 +207,22 @@ def _make_raw_calls(
             baseline_holder[0] = {"distances": distances, "indices": indices}
             return baseline_holder[0]
 
-        prepared_calls = None
+        def candidate_prepared_call():
+            exported.run(
+                query,
+                database,
+                inputs["query_sq"],
+                inputs["database_sq"],
+                inputs["out_dists"],
+                inputs["out_indices"],
+                *scalars(inputs),
+                arch="sm_100a",
+            )
+
+        # FlashLib has no precomputed-norm entrypoint. Reuse the same measured
+        # raw baseline GPU span so this diagnostic isolates the generated Cake
+        # dispatch with its required norms prepared outside timing.
+        prepared_calls = (candidate_prepared_call, None)
 
     else:
         query, database = inputs["queries"], inputs["database"]
@@ -225,7 +240,19 @@ def _make_raw_calls(
             baseline_holder[0] = {"distances": distances, "indices": indices}
             return baseline_holder[0]
 
-        prepared_calls = None
+        def candidate_prepared_call():
+            exported.run(
+                query,
+                database,
+                inputs["out_distances"],
+                inputs["out_indices"],
+                *scalars(inputs),
+                arch="sm_100a",
+            )
+
+        # Search has no norm inputs; this lane removes only default-output
+        # allocation and uses the already measured public FlashLib baseline.
+        prepared_calls = (candidate_prepared_call, None)
 
     return candidate_call, baseline_call, candidate_holder, baseline_holder, prepared_calls
 
@@ -309,13 +336,20 @@ def _run_one(
     }
 
     if prepared_calls is not None:
-        prepared_order = ["candidate", "baseline"]
-        if hashlib.sha256((label + ":prepared").encode("utf-8")).digest()[0] & 1:
-            prepared_order.reverse()
-        prepared_timers = {"candidate": prepared_calls[0], "baseline": prepared_calls[1]}
-        prepared_timings = {role: _measure(prepared_timers[role]) for role in prepared_order}
+        if prepared_calls[1] is None:
+            prepared_order = ["candidate"]
+            prepared_timings = {"candidate": _measure(prepared_calls[0]), "baseline": baseline_timing}
+            baseline_boundary = "same-shape raw FlashLib baseline reused from the paired raw lane"
+        else:
+            prepared_order = ["candidate", "baseline"]
+            if hashlib.sha256((label + ":prepared").encode("utf-8")).digest()[0] & 1:
+                prepared_order.reverse()
+            prepared_timers = {"candidate": prepared_calls[0], "baseline": prepared_calls[1]}
+            prepared_timings = {role: _measure(prepared_timers[role]) for role in prepared_order}
+            baseline_boundary = "precomputed baseline measured in its own paired lane"
         row["prepared"] = {
             "measurement_order": prepared_order,
+            "baseline_boundary": baseline_boundary,
             "candidate": _bench_payload(prepared_timings["candidate"]),
             "baseline": _bench_payload(prepared_timings["baseline"]),
             "gpu_span_speedup": (
@@ -356,7 +390,7 @@ def _summary(domain: str, rows: list[dict[str, Any]], health: dict[str, Any], el
     raw_e2e = [float(row["synchronized_e2e_speedup"]) for row in rows if "synchronized_e2e_speedup" in row]
     prepared_gpu = [float(row["prepared"]["gpu_span_speedup"]) for row in rows if "prepared" in row]
     failed = [row for row in rows if "exception" in row]
-    return {
+    summary = {
         "domain": domain,
         "expected_shape_count": EXPECTED_SHAPES[domain],
         "completed_shape_count": len(rows),
@@ -364,10 +398,16 @@ def _summary(domain: str, rows: list[dict[str, Any]], health: dict[str, Any], el
         "failed_shape_count": len(failed),
         "raw_operator_gpu_span_speedup": _distribution(raw_gpu) if raw_gpu else None,
         "raw_operator_synchronized_e2e_speedup": _distribution(raw_e2e) if raw_e2e else None,
-        "prepared_assignment_gpu_span_speedup": _distribution(prepared_gpu) if prepared_gpu else None,
         "health": health,
         "elapsed_s": elapsed_s,
     }
+    prepared_key = (
+        "prepared_assignment_gpu_span_speedup"
+        if domain == "flash_kmeans"
+        else "prepared_candidate_gpu_span_speedup_vs_raw_baseline"
+    )
+    summary[prepared_key] = _distribution(prepared_gpu) if prepared_gpu else None
+    return summary
 
 
 def main() -> None:
