@@ -1,0 +1,5 @@
+generated/flash_kmeans/_dispatch_so/
+results/*.progress.json
+results/*.log
+__pycache__/
+*.pyc

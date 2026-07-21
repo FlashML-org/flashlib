@@ -1,0 +1,155 @@
+{
+  "domain": "flash_kmeans",
+  "package": "flash_kmeans",
+  "min_arch": "sm_100a",
+  "archs": [
+    "sm_100a",
+    "sm_103a"
+  ],
+  "families": [
+    {
+      "name": "flash_kmeans_assign",
+      "so_subdir": null,
+      "host_tu": "host/dispatch.cpp",
+      "idents": {
+        "flash_kmeans_assign_cleanroom_tcgen05_d160_pack_padded_b23d_v1_6fe708594c": {
+          "sm_100a": "device/flash_kmeans_assign_cleanroom_tcgen05_d160_pack_padded_b23d_v1_6fe708594c.cu",
+          "sm_103a": "device/flash_kmeans_assign_cleanroom_tcgen05_d160_pack_padded_b23d_v1_6fe708594c.cu"
+        },
+        "flash_kmeans_assign_cleanroom_tcgen05_d192_single_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_cleanroom_tcgen05_d192_single_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_cleanroom_tcgen05_d192_single_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_cleanroom_tcgen05_d192_splitd_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_cleanroom_tcgen05_d192_splitd_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_cleanroom_tcgen05_d192_splitd_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_cleanroom_tcgen05_d256_single_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_cleanroom_tcgen05_d256_single_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_cleanroom_tcgen05_d256_single_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_cleanroom_tcgen05_v10_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_cleanroom_tcgen05_v10_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_cleanroom_tcgen05_v10_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_cleanroom_tcgen05_v15_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_cleanroom_tcgen05_v15_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_cleanroom_tcgen05_v15_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_d112_consumer_scoped_direct_mma_view_handoff_e5e1_v1_6fe708594c": {
+          "sm_100a": "device/sm_100a/flash_kmeans_assign_d112_consumer_scoped_direct_mma_view_handoff_e5e1_v1_6fe708594c.cu",
+          "sm_103a": "device/sm_103a/flash_kmeans_assign_d112_consumer_scoped_direct_mma_view_handoff_e5e1_v1_6fe708594c.cu"
+        },
+        "flash_kmeans_assign_d160_pad192_pack_f9b2_v1_6fe708594c": {
+          "sm_100a": "device/flash_kmeans_assign_d160_pad192_pack_f9b2_v1_6fe708594c.cu",
+          "sm_103a": "device/flash_kmeans_assign_d160_pad192_pack_f9b2_v1_6fe708594c.cu"
+        },
+        "flash_kmeans_assign_d224_tmem_abi_repair_d17c_v4_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_d224_tmem_abi_repair_d17c_v4_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_d224_tmem_abi_repair_d17c_v4_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_d288_exactd_a532_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_d288_exactd_a532_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_d288_exactd_a532_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_d288_splitk_cta_0438_v1_partial_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_d288_splitk_cta_0438_v1_partial_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_d288_splitk_cta_0438_v1_partial_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_d288_splitk_cta_0438_v1_reduce_edeb5db32b": {
+          "sm_100a": "device/flash_kmeans_assign_d288_splitk_cta_0438_v1_reduce_edeb5db32b.cu",
+          "sm_103a": "device/flash_kmeans_assign_d288_splitk_cta_0438_v1_reduce_edeb5db32b.cu"
+        },
+        "flash_kmeans_assign_d480_splitk_partial_d32k256_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_d480_splitk_partial_d32k256_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_d480_splitk_partial_d32k256_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_d480_splitk_reduce_d32k256_v1_6fe708594c": {
+          "sm_100a": "device/flash_kmeans_assign_d480_splitk_reduce_d32k256_v1_6fe708594c.cu",
+          "sm_103a": "device/flash_kmeans_assign_d480_splitk_reduce_d32k256_v1_6fe708594c.cu"
+        },
+        "flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_gap_pad_pack_v1_6fe708594c": {
+          "sm_100a": "device/flash_kmeans_assign_gap_pad_pack_v1_6fe708594c.cu",
+          "sm_103a": "device/flash_kmeans_assign_gap_pad_pack_v1_6fe708594c.cu"
+        },
+        "flash_kmeans_assign_highd_paired_ownerreduce_r39_reduce1_unroll_v1_3b3369aa10": {
+          "sm_100a": "device/flash_kmeans_assign_highd_paired_ownerreduce_r39_reduce1_unroll_v1_3b3369aa10.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_paired_ownerreduce_r39_reduce1_unroll_v1_3b3369aa10.cu"
+        },
+        "flash_kmeans_assign_highd_paired_packedpartial_producer_7b3c_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_highd_paired_packedpartial_producer_7b3c_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_paired_packedpartial_producer_7b3c_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_highd_paired_packedpartial_reduce_r2_7b3c_v1_edeb5db32b": {
+          "sm_100a": "device/flash_kmeans_assign_highd_paired_packedpartial_reduce_r2_7b3c_v1_edeb5db32b.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_paired_packedpartial_reduce_r2_7b3c_v1_edeb5db32b.cu"
+        },
+        "flash_kmeans_assign_highd_paired_xreuse_dualtmem_producer_r47_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_highd_paired_xreuse_dualtmem_producer_r47_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_paired_xreuse_dualtmem_producer_r47_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_highd_splitd_6fcf_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_highd_splitd_6fcf_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_splitd_6fcf_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_highd_splitk_partial_8de8_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_highd_splitk_partial_8de8_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_splitk_partial_8de8_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_highd_splitk_partial_blockn64_g1r4_streamdep_r63_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_highd_splitk_partial_blockn64_g1r4_streamdep_r63_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_splitk_partial_blockn64_g1r4_streamdep_r63_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_highd_splitk_partial_blockn64_g2r4_b5a6_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_highd_splitk_partial_blockn64_g2r4_b5a6_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_splitk_partial_blockn64_g2r4_b5a6_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_highd_splitk_reduce_8de8_v1_edeb5db32b": {
+          "sm_100a": "device/flash_kmeans_assign_highd_splitk_reduce_8de8_v1_edeb5db32b.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_splitk_reduce_8de8_v1_edeb5db32b.cu"
+        },
+        "flash_kmeans_assign_highd_splitk_reduce_blockn64_g1r4_streamdep_r63_v1_6fe708594c": {
+          "sm_100a": "device/flash_kmeans_assign_highd_splitk_reduce_blockn64_g1r4_streamdep_r63_v1_6fe708594c.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_splitk_reduce_blockn64_g1r4_streamdep_r63_v1_6fe708594c.cu"
+        },
+        "flash_kmeans_assign_highd_splitk_reduce_blockn64_g2r4_b5a6_v1_6fe708594c": {
+          "sm_100a": "device/flash_kmeans_assign_highd_splitk_reduce_blockn64_g2r4_b5a6_v1_6fe708594c.cu",
+          "sm_103a": "device/flash_kmeans_assign_highd_splitk_reduce_blockn64_g2r4_b5a6_v1_6fe708594c.cu"
+        },
+        "flash_kmeans_assign_lowdim_e50c_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_lowdim_e50c_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_lowdim_e50c_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_lowdim_pack_e50c_v1_6fe708594c": {
+          "sm_100a": "device/flash_kmeans_assign_lowdim_pack_e50c_v1_6fe708594c.cu",
+          "sm_103a": "device/flash_kmeans_assign_lowdim_pack_e50c_v1_6fe708594c.cu"
+        },
+        "flash_kmeans_assign_microdim_6cd2_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_microdim_6cd2_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_microdim_6cd2_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_microdim_d16_pipeline4_08f9_v4_8c75b970dc": {
+          "sm_100a": "device/flash_kmeans_assign_microdim_d16_pipeline4_08f9_v4_8c75b970dc.cu",
+          "sm_103a": "device/flash_kmeans_assign_microdim_d16_pipeline4_08f9_v4_8c75b970dc.cu"
+        },
+        "flash_kmeans_assign_microdim_direct_9c0d_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_microdim_direct_9c0d_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_microdim_direct_9c0d_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_microdim_pack_6cd2_v1_6fe708594c": {
+          "sm_100a": "device/flash_kmeans_assign_microdim_pack_6cd2_v1_6fe708594c.cu",
+          "sm_103a": "device/flash_kmeans_assign_microdim_pack_6cd2_v1_6fe708594c.cu"
+        },
+        "flash_kmeans_assign_microdim_raw_tma_08f9_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_microdim_raw_tma_08f9_v1_b8e3ecee40.cu",
+          "sm_103a": "device/flash_kmeans_assign_microdim_raw_tma_08f9_v1_b8e3ecee40.cu"
+        }
+      }
+    }
+  ],
+  "loom_rev": "unknown"
+}
