@@ -1,0 +1,22 @@
+{
+  "architectures": [
+    "sm_100a",
+    "sm_103a"
+  ],
+  "domain": "knn_search",
+  "expected_shape_count": 198,
+  "generated_source": {
+    "bytes": 11039727,
+    "device_cu_lines": 202002,
+    "device_kernel_count": 156,
+    "file_count": 178,
+    "host_cpp_lines": 14040,
+    "python_lines": 1591
+  },
+  "loom_runtime_required": false,
+  "runtime_dependency": "tvm_ffi",
+  "schema": "cake-standalone-generated-program-v1",
+  "source_commit": "ff502f39df09ffdb317efc57ebdac3a668bb3aa4",
+  "source_merge_request": "https://gitlab-master.nvidia.com/cake/cake/-/merge_requests/415",
+  "validated_architecture": "sm_100a"
+}
