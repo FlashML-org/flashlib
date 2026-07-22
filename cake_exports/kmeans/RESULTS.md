@@ -2,53 +2,62 @@
 
 ## Outcome
 
-- Standalone export parity with Cake: **124/124 correct**, **124/124 routes
-  identical**, and **124/124 within 5%** of the in-tree GPU span. Export versus
-  Cake geomean is `1.0022x`; the worst export slowdown is `4.40%`.
-- Baseline comparison correctness: **124/124 candidate and exact-07cf baseline
-  rows passed**.
-- Raw-operator CUPTI GPU-span speedup (`07cf / exported`): geomean `1.0440x`,
-  median `0.9421x`, p90 `1.5828x`, min `0.8201x`, max `2.3729x`.
-  `82/124` rows are below `1.0x`; this lane is not a uniform win.
-- Assignment-only CUPTI GPU-span speedup with precomputed norms: geomean
-  `1.4699x`, median `1.3194x`, p90 `3.7766x`, min `0.7491x`, max `8.4707x`.
-  `33/124` rows are below `1.0x`.
-- Raw synchronized-E2E diagnostic: geomean `1.0390x`, median `0.9425x`, min
-  `0.8344x`, max `2.2238x`.
+GB200 (`sm_100a`), full 124-shape Cake Flash K-Means contract, 10-call
+consumer-E2E protocol, zero errors and zero incorrect rows:
 
-The raw lane intentionally computes the same Torch row-norm expression for
-both implementations inside the measured call. It describes the thin MR405
-interface as exported; it is not the fused-row-norm/CUDA-graph runtime used by
-earlier Cake export PRs. The assignment-only lane isolates the generated
-dispatch programs from that shared preprocessing.
+- Head-to-head consumer E2E with precomputed norms on both sides
+  (`baseline / exported`): geomean **1.3327x**, median `1.2101x`, min
+  `0.8892x`, max `3.8320x`.
+- CUPTI GPU-span speedup: geomean **1.7766x**, median `1.5837x`, min
+  `0.8342x`, max `11.0607x`.
+- Amortized lane (exported side computes `c_sq` in-call through the bundled
+  rowwise-sqnorm kernel; baseline receives norms for free — a worst-case
+  bound for the exported side): geomean `0.8020x`, median `0.7098x`.
+- Symmetric real-iteration lane (baseline pays its Torch norm chain, the
+  exported side pays the internal kernel inside `run`; the honest k-means
+  iteration number): geomean **1.2570x**, median `1.197x`, `104/124` rows at
+  or above `1.0x`.
+
+Correctness gate: candidate assignments versus a float64 Torch reference
+with tie-tolerant argmin comparison at bf16 precision — `124/124` passed.
+The packaged demo (`python -m flash_kmeans.demo --assert-no-loom`) passes on
+GB200, including a re-check through the internal norm path.
+
+## What changed since the v9 export (MR 405 head)
+
+- **Hot-path host rework (Cake MR 413, merged)**: per-(device, stream)
+  workspace arena with cached exact-shape views, process-cached device
+  capability probe and family-resolve cascade, `-O3` host dispatch builds,
+  and an explicit CUDA-stream ABI — the compiled `run` takes a trailing
+  `cudaStream_t` handle resolved once per process
+  (`torch._C._cuda_getCurrentRawStream`, public-API fallback). Python host
+  overhead per call dropped from 141-235µs to ~30-90µs.
+- **Fused gap-D padding (Cake MR 415)**: the materialized pad chain (pack
+  kernel + padded scratch + padded-D seed) is replaced by fused seeds that
+  TMA-load the raw tensors through rank-2 feature-major descriptors with
+  hardware out-of-bounds zero-fill. No pack stage, no pad workspaces; 64 of
+  the 124 contract rows use the fused route (`gapfused_oob_v1` children in
+  `benchmarks/expected_routes.json`).
+- **Internal norm path (Cake MR 415)**: the package bundles an auxiliary
+  rowwise squared-norm dispatch family. Passing a norm tensor as `None` to
+  `interface.run` computes it in-package (44.3µs vs the 51.8µs Torch chain
+  at B=2, K=1024, D=112); `interface.compute_norms` exposes it directly.
+
+Progression on this contract's head-to-head E2E lane: `1.222x` (MR 405
+generation) → `1.299x` (fused padding) → **`1.333x`** (fused padding +
+internal norm path + stream-handle fix). Worst-row floor `0.599x` → `0.889x`.
 
 ## Measurement identity
 
-- Candidate: Cake MR 405 commit
-  `9f1df8d0def3d2995a81a1279761e52f32427120`
+- Candidate: Cake MR 415 head, commit
+  `ff502f39df09ffdb317efc57ebdac3a668bb3aa4`
 - Baseline: exact `benchmarks/flash_kmeans_triton_h200.py` from flashlib-cake
   commit `07cf2a27928aacf6790c950a265d8b8dc83c87cf`
-- Baseline source SHA-256:
-  `b451fbba737458dc235bff2af026c666e2782e05e84b530dbcf3d2e54d436596`
-- GPU: NVIDIA B200 (`sm_100a`)
-- Software: NGC PyTorch `25.05`, PyTorch
-  `2.8.0a0+5228986c39.nv25.05`, CUDA `12.9`
-- Timing: strict CUPTI activity correlation through
-  `loom.bench.bench_gpu_time_warm`, cold L2, 10 warmups and 16 measured samples
-  per lane; no event or wall-clock GPU timing
-- Slurm array job: `1493296_0`
+- Hardware: NVIDIA GB200 (aws-dfw), PyTorch 2.8.0a0 (nv25.05), CUDA 12.9
+- Per-row data: `BENCHMARK_RESULTS.json` (`rows`); validation summary:
+  `EXPORT_PARITY_RESULTS.json`
 
-The complete per-shape measurements, activity diagnostics, hardware identity,
-and correctness payloads are in `BENCHMARK_RESULTS.json`. The independent
-export-versus-Cake replay is in `EXPORT_PARITY_RESULTS.json`.
-
-## Gates run
-
-| Gate | Result |
-|---|---:|
-| generated Python compile + ruff | PASS |
-| generated tree contains no Loom import | PASS |
-| build manifest is exactly `sm_100a`, `sm_103a`, one family | PASS |
-| standalone export vs Cake route/correctness/performance replay | PASS (`124/124`) |
-| exact-07cf full-denominator correctness | PASS (`124/124`) |
-| exact-07cf full-denominator CUPTI timing | PASS (`124/124`) |
+Cake-side gates on the same commit: kmeans dispatcher GPU e2e 87 passed;
+`test_ffi_dispatch.py` 34 passed; dispatch-family ship tests (including the
+explicit-stream loader tests) passed; async-dispatch GPU two-stream matrix
+8 passed.

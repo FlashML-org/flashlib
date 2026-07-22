@@ -1,11 +1,20 @@
 # Cake standalone Flash K-Means export
 
 This directory vendors the source-only standalone export of Cake's
-`flash_kmeans` dispatcher from Cake MR 405 at commit
-`9f1df8d0def3d2995a81a1279761e52f32427120`. The generated package contains
+`flash_kmeans` dispatcher from the Cake MR 415 head at commit
+`ff502f39df09ffdb317efc57ebdac3a668bb3aa4`. The generated package contains
 the CUDA device sources, one generated C++ dispatch translation unit, a
 runtime-free `tvm-ffi` loader, and a thin Python interface. It does not import
 or require Loom at build or run time.
+
+New in this refresh: the gap-D shapes load through fused TMA out-of-bounds
+zero-fill seeds (no materialized padding pass), and the package bundles an
+auxiliary rowwise squared-norm dispatch family — passing `x_sq` or `c_sq` as
+`None` to `interface.run` computes the norms in-package on the same stream
+(k-means iterations recompute `c_sq` every round), and
+`interface.compute_norms(t)` exposes the kernel directly. The compiled
+dispatch also carries the merged hot-path host rework (workspace arena,
+process-invariant caches, explicit per-call CUDA-stream ABI).
 
 The export targets Blackwell datacenter GPUs (`sm_100a` and `sm_103a`). Build
 the B200 binary from source with:

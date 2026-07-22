@@ -1,4 +1,4 @@
-"""Runtime-free tvm-ffi loader for the flash_kmeans_assign dispatch-family .so.
+"""Runtime-free tvm-ffi loader for the flash_kmeans_rowwise_sqnorm dispatch-family .so.
 
 The exported package dispatches through the compiled family ``.so``'s C-ABI —
 ``route_of(*scalars) -> route_index`` and raw
@@ -16,11 +16,11 @@ from collections import OrderedDict
 from functools import lru_cache
 from typing import Any
 
-from . import _dispatch_workspace_shapes as _ws
+from . import _dispatch_ws_flash_kmeans_rowwise_sqnorm as _ws
 from ._runtime import detect_gpu_arch
 
 FAMILY_SO = 'family.so'
-N_SCALARS = 4
+N_SCALARS = 2
 # Per-index route metadata (the C ``route_of`` int index -> the route's parent_id
 # string / kernel-stage count); the package interface reports these.
 ROUTE_IDS = _ws.ROUTE_IDS
@@ -34,7 +34,7 @@ def _load(arch: str) -> Any:
 
     import tvm_ffi
 
-    binary = _res.files('flash_kmeans').joinpath(f"_dispatch_so/{arch}/{FAMILY_SO}")
+    binary = _res.files('flash_kmeans').joinpath(f"_dispatch_so/flash_kmeans_rowwise_sqnorm/{arch}/{FAMILY_SO}")
     with _res.as_file(binary) as path:
         return tvm_ffi.load_module(str(path))
 
@@ -151,7 +151,7 @@ def clear_workspaces() -> None:
 
 
 def run(*args: Any, arch: str | None = None) -> None:
-    """Dispatch: tensors, then workspaces, then the 4 scalars."""
+    """Dispatch: tensors, then workspaces, then the 2 scalars."""
     module = _module(arch)
     index = args[0].device.index
     if index is None:
