@@ -1,6 +1,6 @@
 """Vendored by tools/export-generated-programs (standalone build).
 
-Provenance: loom @ unknown. rebuilds each family .so with nvcc + tvm_ffi.cpp.load_inline; mirrors loom.export.dispatch_family.build_family_so.
+Provenance: loom @ ff502f39df09ffdb317efc57ebdac3a668bb3aa4. rebuilds each family .so with nvcc + tvm_ffi.cpp.load_inline; mirrors loom.export.dispatch_family.build_family_so.
 Runtime-free: this module imports no ``loom`` package.
 """
 
@@ -66,6 +66,7 @@ def _build_family(package_dir: Path, family: dict, arch: str, include_dir: str) 
             cpp_sources=host_tu,
             embed_cubin=cubins,
             extra_include_paths=[include_dir],
+            extra_cflags=["-O3"],
             extra_ldflags=["-lcuda"],
             build_directory=str(so_dir),
         )

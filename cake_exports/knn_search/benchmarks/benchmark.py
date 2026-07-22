@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Full-shape MR405 standalone export versus requested production baselines."""
+"""Full-shape Cake standalone export (MR 415 head) versus requested production baselines."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-MR405_COMMIT = "9f1df8d0def3d2995a81a1279761e52f32427120"
+CAKE_COMMIT = "ff502f39df09ffdb317efc57ebdac3a668bb3aa4"
 FLASHLIB_COMMIT = "711204f32871af4aeb3ef7ed952cb5eb74c57f46"
 KMEANS_BASELINE_COMMIT = "07cf2a27928aacf6790c950a265d8b8dc83c87cf"
 EXPECTED_SHAPES = {"flash_kmeans": 124, "knn_build": 112, "knn_search": 198}
@@ -474,7 +474,7 @@ def main() -> None:
             rows.append(row)
             partial = {
                 "schema": "mr405-flashlib-baseline-v1",
-                "candidate_commit": MR405_COMMIT,
+                "candidate_commit": CAKE_COMMIT,
                 "baseline": baseline_identity,
                 "completed": len(rows),
                 "expected": EXPECTED_SHAPES[args.domain],
@@ -491,8 +491,8 @@ def main() -> None:
     payload = {
         "schema": "mr405-flashlib-baseline-v1",
         "candidate": {
-            "name": f"MR405 standalone {args.domain}",
-            "commit": MR405_COMMIT,
+            "name": f"Cake standalone {args.domain}",
+            "commit": CAKE_COMMIT,
             "timing_boundary": "raw inputs, default output, exported interface.run; torch row norms where required",
         },
         "baseline": baseline_identity,
