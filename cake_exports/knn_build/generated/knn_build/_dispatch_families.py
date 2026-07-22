@@ -9,6 +9,8 @@ whose ``route_of`` covers the shape, mirroring the in-repo outer dispatcher's
 
 from __future__ import annotations
 
+import functools
+
 from typing import Any
 
 from . import _dispatch_knn_build_d64 as _f0
@@ -28,11 +30,15 @@ FAMILY_NAMES = ('knn_build_d64', 'knn_build_d128_lowk_fp16', 'knn_build_d128_low
 SCALAR_NAMES = ('B', 'Q', 'M', 'D', 'K', 'dtype', 'build')
 
 
+@functools.cache
 def resolve(*scalars: int, arch: str | None = None) -> tuple[int, int]:
     """First family (cascade order) whose ``.so`` covers the shape.
 
     Returns ``(family_index, route_index)``, or ``(-1, -1)`` when no sub-family
     owns the shape (the outer no-match the interface maps to a rejection).
+    Cached: the route tables are frozen into the family ``.so``s, so the
+    decision for one (scalars, arch) never changes within a process — the
+    cascade of per-family FFI probes runs once per signature.
     """
     for family_index, loader in enumerate(FAMILY_LOADERS):
         route_index = loader.route_of(*scalars, arch=arch)

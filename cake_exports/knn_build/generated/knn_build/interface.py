@@ -1,6 +1,6 @@
 """Vendored by tools/export-generated-programs (runnable adapter).
 
-Provenance: loom @ unknown. k-NN graph build (top-K nearest neighbours); dispatches through the compiled family .so C-ABI.
+Provenance: loom @ ff502f39df09ffdb317efc57ebdac3a668bb3aa4. k-NN graph build (top-K nearest neighbours); dispatches through the compiled family .so C-ABI.
 Runtime-free: this module imports no ``loom`` package.
 """
 

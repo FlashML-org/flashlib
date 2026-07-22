@@ -1,6 +1,6 @@
 """Vendored by tools/export-generated-programs (smoke demo).
 
-Provenance: loom @ unknown. k-NN graph build (top-K nearest neighbours); builds random inputs, runs, checks against a torch brute force.
+Provenance: loom @ ff502f39df09ffdb317efc57ebdac3a668bb3aa4. k-NN graph build (top-K nearest neighbours); builds random inputs, runs, checks against a torch brute force.
 Runtime-free: this module imports no ``loom`` package.
 """
 
@@ -74,6 +74,15 @@ def run_shape(shape, *, device="cuda", seed=0):
     reference = _reference(named, shape)
     ok, detail = _check(named, shape, reference)
     print(f"[knn_build] {'OK  ' if ok else 'FAIL'} {label} route={route} {detail}")
+    norm_sources = getattr(interface, "NORM_SOURCES", None)
+    if ok and norm_sources:
+        # Exercise the internal norm path: pass every declared norm as None so
+        # the shipped rowwise-sqnorm kernel fills it, then re-check.
+        blanked = [None if key in norm_sources else t for key, t in zip(interface.TENSOR_KEYS, tensors)]
+        interface.run(*blanked, *scalars)
+        torch.cuda.synchronize()
+        ok, detail = _check(named, shape, reference)
+        print(f"[knn_build] {'OK  ' if ok else 'FAIL'} {label} route={route} internal-norms {detail}")
     return ok
 
 

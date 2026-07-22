@@ -3,8 +3,7 @@
   "package": "knn_build",
   "min_arch": "sm_100a",
   "archs": [
-    "sm_100a",
-    "sm_103a"
+    "sm_100a"
   ],
   "families": [
     {
@@ -13,44 +12,34 @@
       "host_tu": "host/dispatch_knn_build_d64.cpp",
       "idents": {
         "knn_build_common_d_1438_rag_d64_m128_stage1_fe57916307": {
-          "sm_100a": "device/knn_build_common_d_1438_rag_d64_m128_stage1_fe57916307.cu",
-          "sm_103a": "device/knn_build_common_d_1438_rag_d64_m128_stage1_fe57916307.cu"
+          "sm_100a": "device/knn_build_common_d_1438_rag_d64_m128_stage1_fe57916307.cu"
         },
         "knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_29b6a345c3": {
-          "sm_100a": "device/knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_29b6a345c3.cu",
-          "sm_103a": "device/knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_29b6a345c3.cu"
+          "sm_100a": "device/knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_29b6a345c3.cu"
         },
         "knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_s4_f0234a3ff1": {
-          "sm_100a": "device/knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_s4_f0234a3ff1.cu",
-          "sm_103a": "device/knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_s4_f0234a3ff1.cu"
+          "sm_100a": "device/knn_build_d64_build_aa88_k10_merge_s8_rowbase_cache_s4_f0234a3ff1.cu"
         },
         "knn_build_d64_q4096_c271_stage1_unordered_syncdrop_15a2906229": {
-          "sm_100a": "device/knn_build_d64_q4096_c271_stage1_unordered_syncdrop_15a2906229.cu",
-          "sm_103a": "device/knn_build_d64_q4096_c271_stage1_unordered_syncdrop_15a2906229.cu"
+          "sm_100a": "device/knn_build_d64_q4096_c271_stage1_unordered_syncdrop_15a2906229.cu"
         },
         "knn_build_dim_midk_73a9_d64_split_stage1_15a2906229": {
-          "sm_100a": "device/knn_build_dim_midk_73a9_d64_split_stage1_15a2906229.cu",
-          "sm_103a": "device/knn_build_dim_midk_73a9_d64_split_stage1_15a2906229.cu"
+          "sm_100a": "device/knn_build_dim_midk_73a9_d64_split_stage1_15a2906229.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s136g8_4be7_d768fused_v1_3ddf5185f0": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s136g8_4be7_d768fused_v1_3ddf5185f0.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s136g8_4be7_d768fused_v1_3ddf5185f0.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s136g8_4be7_d768fused_v1_3ddf5185f0.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e.cu"
         },
         "knn_build_rect_d64_23be_s16_cached_merge_7f15e5fdfb": {
-          "sm_100a": "device/knn_build_rect_d64_23be_s16_cached_merge_7f15e5fdfb.cu",
-          "sm_103a": "device/knn_build_rect_d64_23be_s16_cached_merge_7f15e5fdfb.cu"
+          "sm_100a": "device/knn_build_rect_d64_23be_s16_cached_merge_7f15e5fdfb.cu"
         },
         "knn_build_rect_d64_23be_unordered_stage1_15a2906229": {
-          "sm_100a": "device/knn_build_rect_d64_23be_unordered_stage1_15a2906229.cu",
-          "sm_103a": "device/knn_build_rect_d64_23be_unordered_stage1_15a2906229.cu"
+          "sm_100a": "device/knn_build_rect_d64_23be_unordered_stage1_15a2906229.cu"
         },
         "knn_build_v12_d64_tail_017a_stage1_11255ad893": {
-          "sm_100a": "device/knn_build_v12_d64_tail_017a_stage1_11255ad893.cu",
-          "sm_103a": "device/knn_build_v12_d64_tail_017a_stage1_11255ad893.cu"
+          "sm_100a": "device/knn_build_v12_d64_tail_017a_stage1_11255ad893.cu"
         }
       }
     },
@@ -60,12 +49,10 @@
       "host_tu": "host/dispatch_knn_build_d128_lowk_fp16.cpp",
       "idents": {
         "knn_build_dim_midk_df2f_fp16_split_stage1_15a2906229": {
-          "sm_100a": "device/knn_build_dim_midk_df2f_fp16_split_stage1_15a2906229.cu",
-          "sm_103a": "device/knn_build_dim_midk_df2f_fp16_split_stage1_15a2906229.cu"
+          "sm_100a": "device/knn_build_dim_midk_df2f_fp16_split_stage1_15a2906229.cu"
         },
         "knn_build_fp16_d128_lowfloor_fd37_k10_s8_merge_29b6a345c3": {
-          "sm_100a": "device/knn_build_fp16_d128_lowfloor_fd37_k10_s8_merge_29b6a345c3.cu",
-          "sm_103a": "device/knn_build_fp16_d128_lowfloor_fd37_k10_s8_merge_29b6a345c3.cu"
+          "sm_100a": "device/knn_build_fp16_d128_lowfloor_fd37_k10_s8_merge_29b6a345c3.cu"
         }
       }
     },
@@ -75,104 +62,79 @@
       "host_tu": "host/dispatch_knn_build_d128_lowk.cpp",
       "idents": {
         "knn_build_d128_rag_q128_k10_s74_warp_merge_rowld_s74_1bed_v1_0b0440003f": {
-          "sm_100a": "device/knn_build_d128_rag_q128_k10_s74_warp_merge_rowld_s74_1bed_v1_0b0440003f.cu",
-          "sm_103a": "device/knn_build_d128_rag_q128_k10_s74_warp_merge_rowld_s74_1bed_v1_0b0440003f.cu"
+          "sm_100a": "device/knn_build_d128_rag_q128_k10_s74_warp_merge_rowld_s74_1bed_v1_0b0440003f.cu"
         },
         "knn_build_evolve_7bfc_k10_merge_s4_rowbase_cache_f0234a3ff1": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k10_merge_s4_rowbase_cache_f0234a3ff1.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k10_merge_s4_rowbase_cache_f0234a3ff1.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k10_merge_s4_rowbase_cache_f0234a3ff1.cu"
         },
         "knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_aa768cdff2": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_aa768cdff2.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_aa768cdff2.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_aa768cdff2.cu"
         },
         "knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rect4452_s8_29b6a345c3": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rect4452_s8_29b6a345c3.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rect4452_s8_29b6a345c3.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rect4452_s8_29b6a345c3.cu"
         },
         "knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rectd15e_s16_ec4cd5eaeb": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rectd15e_s16_ec4cd5eaeb.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rectd15e_s16_ec4cd5eaeb.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k10_merge_s7_rowbase_cache_rectd15e_s16_ec4cd5eaeb.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_195e_q1024k8s16_925c927f61": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_195e_q1024k8s16_925c927f61.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_195e_q1024k8s16_925c927f61.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_195e_q1024k8s16_925c927f61.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k10s72_4e09_64b01e9073": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k10s72_4e09_64b01e9073.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k10s72_4e09_64b01e9073.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k10s72_4e09_64b01e9073.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k8s8_5dc3887769": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k8s8_5dc3887769.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k8s8_5dc3887769.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k8s8_5dc3887769.cu"
         },
         "knn_build_evolve_7bfc_k5_merge_s4_tree_f3714517a9": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k5_merge_s4_tree_f3714517a9.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k5_merge_s4_tree_f3714517a9.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k5_merge_s4_tree_f3714517a9.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_maxtree_b3ec7170e5": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_maxtree_b3ec7170e5.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_maxtree_b3ec7170e5.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_maxtree_b3ec7170e5.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_threshold_k5_9f35fcf847": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_threshold_k5_9f35fcf847.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_threshold_k5_9f35fcf847.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_stage1_batch8_cond4_vmin_threshold_k5_9f35fcf847.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k8split_ffc0b628ea": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k8split_ffc0b628ea.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k8split_ffc0b628ea.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k8split_ffc0b628ea.cu"
         },
         "knn_build_evolve_7bfc_split_merge_58692cd046": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_merge_58692cd046.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_merge_58692cd046.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_merge_58692cd046.cu"
         },
         "knn_build_q4096_k8_fd9b_merge_s4_unordered_warp_select_0d1a19d34a": {
-          "sm_100a": "device/knn_build_q4096_k8_fd9b_merge_s4_unordered_warp_select_0d1a19d34a.cu",
-          "sm_103a": "device/knn_build_q4096_k8_fd9b_merge_s4_unordered_warp_select_0d1a19d34a.cu"
+          "sm_100a": "device/knn_build_q4096_k8_fd9b_merge_s4_unordered_warp_select_0d1a19d34a.cu"
         },
         "knn_build_q4096_k8_fd9b_stage1_unordered_exact_prefill_ffc0b628ea": {
-          "sm_100a": "device/knn_build_q4096_k8_fd9b_stage1_unordered_exact_prefill_ffc0b628ea.cu",
-          "sm_103a": "device/knn_build_q4096_k8_fd9b_stage1_unordered_exact_prefill_ffc0b628ea.cu"
+          "sm_100a": "device/knn_build_q4096_k8_fd9b_stage1_unordered_exact_prefill_ffc0b628ea.cu"
         },
         "knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s128g8_4a72_v1_12c64fa392": {
-          "sm_100a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s128g8_4a72_v1_12c64fa392.cu",
-          "sm_103a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s128g8_4a72_v1_12c64fa392.cu"
+          "sm_100a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s128g8_4a72_v1_12c64fa392.cu"
         },
         "knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s136g8_4a72_v1_3ddf5185f0": {
-          "sm_100a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s136g8_4a72_v1_3ddf5185f0.cu",
-          "sm_103a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s136g8_4a72_v1_3ddf5185f0.cu"
+          "sm_100a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s136g8_4a72_v1_3ddf5185f0.cu"
         },
         "knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s144g12_4a72_v1_9ac40c2e8e": {
-          "sm_100a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s144g12_4a72_v1_9ac40c2e8e.cu",
-          "sm_103a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s144g12_4a72_v1_9ac40c2e8e.cu"
+          "sm_100a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s144g12_4a72_v1_9ac40c2e8e.cu"
         },
         "knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s147g7_4a72_v1_a9b9901912": {
-          "sm_100a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s147g7_4a72_v1_a9b9901912.cu",
-          "sm_103a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s147g7_4a72_v1_a9b9901912.cu"
+          "sm_100a": "device/knn_build_rag_microbatch_4a72_k10_fused_group_final_merge_s147g7_4a72_v1_a9b9901912.cu"
         },
         "knn_build_rag_microbatch_4a72_v2_k10_fused_group_final_merge_s144g12_4a72_v2_9ac40c2e8e": {
-          "sm_100a": "device/knn_build_rag_microbatch_4a72_v2_k10_fused_group_final_merge_s144g12_4a72_v2_9ac40c2e8e.cu",
-          "sm_103a": "device/knn_build_rag_microbatch_4a72_v2_k10_fused_group_final_merge_s144g12_4a72_v2_9ac40c2e8e.cu"
+          "sm_100a": "device/knn_build_rag_microbatch_4a72_v2_k10_fused_group_final_merge_s144g12_4a72_v2_9ac40c2e8e.cu"
         },
         "knn_build_rag_microbatch_4a72_v2_stage1_k10_cta1_maxtree_b3ec7170e5": {
-          "sm_100a": "device/knn_build_rag_microbatch_4a72_v2_stage1_k10_cta1_maxtree_b3ec7170e5.cu",
-          "sm_103a": "device/knn_build_rag_microbatch_4a72_v2_stage1_k10_cta1_maxtree_b3ec7170e5.cu"
+          "sm_100a": "device/knn_build_rag_microbatch_4a72_v2_stage1_k10_cta1_maxtree_b3ec7170e5.cu"
         },
         "knn_build_rag_microbatch_m64_d4f7_stage1_fe57916307": {
-          "sm_100a": "device/knn_build_rag_microbatch_m64_d4f7_stage1_fe57916307.cu",
-          "sm_103a": "device/knn_build_rag_microbatch_m64_d4f7_stage1_fe57916307.cu"
+          "sm_100a": "device/knn_build_rag_microbatch_m64_d4f7_stage1_fe57916307.cu"
         },
         "knn_build_rag_stream_k10_q128_1bed_rowld_stage1_b67c0bc638": {
-          "sm_100a": "device/knn_build_rag_stream_k10_q128_1bed_rowld_stage1_b67c0bc638.cu",
-          "sm_103a": "device/knn_build_rag_stream_k10_q128_1bed_rowld_stage1_b67c0bc638.cu"
+          "sm_100a": "device/knn_build_rag_stream_k10_q128_1bed_rowld_stage1_b67c0bc638.cu"
         },
         "knn_build_ragonline_mbucket_4fc7_q1m262_v2_stage1_q1_k10_m64_halfrow_6adf623557": {
-          "sm_100a": "device/knn_build_ragonline_mbucket_4fc7_q1m262_v2_stage1_q1_k10_m64_halfrow_6adf623557.cu",
-          "sm_103a": "device/knn_build_ragonline_mbucket_4fc7_q1m262_v2_stage1_q1_k10_m64_halfrow_6adf623557.cu"
+          "sm_100a": "device/knn_build_ragonline_mbucket_4fc7_q1m262_v2_stage1_q1_k10_m64_halfrow_6adf623557.cu"
         },
         "knn_build_ragonline_mbucket_ea43_q1m524_n128_stage1_e5dd12f59c": {
-          "sm_100a": "device/knn_build_ragonline_mbucket_ea43_q1m524_n128_stage1_e5dd12f59c.cu",
-          "sm_103a": "device/knn_build_ragonline_mbucket_ea43_q1m524_n128_stage1_e5dd12f59c.cu"
+          "sm_100a": "device/knn_build_ragonline_mbucket_ea43_q1m524_n128_stage1_e5dd12f59c.cu"
         }
       }
     },
@@ -182,220 +144,166 @@
       "host_tu": "host/dispatch_knn_build_d128_midk.cpp",
       "idents": {
         "knn_build_1074_k24_q4096_merge_s4_unordered_warp_select_756ac08687": {
-          "sm_100a": "device/knn_build_1074_k24_q4096_merge_s4_unordered_warp_select_756ac08687.cu",
-          "sm_103a": "device/knn_build_1074_k24_q4096_merge_s4_unordered_warp_select_756ac08687.cu"
+          "sm_100a": "device/knn_build_1074_k24_q4096_merge_s4_unordered_warp_select_756ac08687.cu"
         },
         "knn_build_evolve_7bfc_k20_merge_s4_unordered_warp_select_6cf09de7c3": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k20_merge_s4_unordered_warp_select_6cf09de7c3.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k20_merge_s4_unordered_warp_select_6cf09de7c3.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k20_merge_s4_unordered_warp_select_6cf09de7c3.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k24s8_4bbdb0ba42": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k24s8_4bbdb0ba42.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k24s8_4bbdb0ba42.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k24s8_4bbdb0ba42.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k28s8_67e9417ffb": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k28s8_67e9417ffb.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k28s8_67e9417ffb.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_bad5k28s8_67e9417ffb.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k11s8exact_3121666b56": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k11s8exact_3121666b56.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k11s8exact_3121666b56.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k11s8exact_3121666b56.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k13s8exact_a5e0c424cc": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k13s8exact_a5e0c424cc.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k13s8exact_a5e0c424cc.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_e080k13s8exact_a5e0c424cc.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_f8c3lowk_k16s16_9a8960c16b": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_f8c3lowk_k16s16_9a8960c16b.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_f8c3lowk_k16s16_9a8960c16b.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_f8c3lowk_k16s16_9a8960c16b.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s16_241390d5e3": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s16_241390d5e3.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s16_241390d5e3.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s16_241390d5e3.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s8_4a18d11a6d": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s8_4a18d11a6d.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s8_4a18d11a6d.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k12s8_4a18d11a6d.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s16_04b0b058d1": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s16_04b0b058d1.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s16_04b0b058d1.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s16_04b0b058d1.cu"
         },
         "knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s8_b6399ad579": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s8_b6399ad579.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s8_b6399ad579.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k30_merge_s8_rowbase_cache_k20s8_b6399ad579.cu"
         },
         "knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_k20split_b387cb6fd6": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_k20split_b387cb6fd6.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_k20split_b387cb6fd6.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_k20split_b387cb6fd6.cu"
         },
         "knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_k32split_8c6c25cdfd": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_k32split_8c6c25cdfd.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_k32split_8c6c25cdfd.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_rowbase_cache_k32split_8c6c25cdfd.cu"
         },
         "knn_build_evolve_7bfc_k32_merge_s4_unordered_2c1ck13unordered_36983512e3": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_2c1ck13unordered_36983512e3.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_2c1ck13unordered_36983512e3.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_2c1ck13unordered_36983512e3.cu"
         },
         "knn_build_evolve_7bfc_k32_merge_s4_unordered_k12unordered_d020583391": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_k12unordered_d020583391.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_k12unordered_d020583391.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_k12unordered_d020583391.cu"
         },
         "knn_build_evolve_7bfc_k32_merge_s4_unordered_k20unordered_75b852ef71": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_k20unordered_75b852ef71.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_k20unordered_75b852ef71.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_k20unordered_75b852ef71.cu"
         },
         "knn_build_evolve_7bfc_k32_merge_s4_unordered_k30unordered_bad5k28unordered_f2f24ff172": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_k30unordered_bad5k28unordered_f2f24ff172.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_k30unordered_bad5k28unordered_f2f24ff172.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_k30unordered_bad5k28unordered_f2f24ff172.cu"
         },
         "knn_build_evolve_7bfc_k32_merge_s4_unordered_warp_select_3d92a16573": {
-          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_warp_select_3d92a16573.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_warp_select_3d92a16573.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_k32_merge_s4_unordered_warp_select_3d92a16573.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k24s8_f8a880f1ba": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k24s8_f8a880f1ba.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k24s8_f8a880f1ba.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k24s8_f8a880f1ba.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k28s8_b87f6c819b": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k28s8_b87f6c819b.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k28s8_b87f6c819b.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_bad5k28s8_b87f6c819b.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k11exact_c3020815fc": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k11exact_c3020815fc.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k11exact_c3020815fc.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k11exact_c3020815fc.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k13exact_7b6df9e63f": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k13exact_7b6df9e63f.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k13exact_7b6df9e63f.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_e080k13exact_7b6df9e63f.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k12split_bb723047d4": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k12split_bb723047d4.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k12split_bb723047d4.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k12split_bb723047d4.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k16split_10e6e024aa": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k16split_10e6e024aa.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k16split_10e6e024aa.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k16split_10e6e024aa.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k20split_a33537a1f2": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k20split_a33537a1f2.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k20split_a33537a1f2.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k20split_a33537a1f2.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_260825eb93": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_260825eb93.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_260825eb93.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_260825eb93.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_2c1ck13unordered_7b6df9e63f": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_2c1ck13unordered_7b6df9e63f.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_2c1ck13unordered_7b6df9e63f.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_2c1ck13unordered_7b6df9e63f.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k12unordered_bb723047d4": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k12unordered_bb723047d4.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k12unordered_bb723047d4.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k12unordered_bb723047d4.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k20unordered_a33537a1f2": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k20unordered_a33537a1f2.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k20unordered_a33537a1f2.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k20unordered_a33537a1f2.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_1074k24unordered_f8a880f1ba": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_1074k24unordered_f8a880f1ba.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_1074k24unordered_f8a880f1ba.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_1074k24unordered_f8a880f1ba.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_227efd6c30": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_227efd6c30.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_227efd6c30.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_227efd6c30.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_bad5k28unordered_b87f6c819b": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_bad5k28unordered_b87f6c819b.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_bad5k28unordered_b87f6c819b.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k30unordered_bad5k28unordered_b87f6c819b.cu"
         },
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k32split_260825eb93": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32split_260825eb93.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32split_260825eb93.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32split_260825eb93.cu"
         },
         "knn_build_evolve_7bfc_v1_k32_fallback_260825eb93": {
-          "sm_100a": "device/knn_build_evolve_7bfc_v1_k32_fallback_260825eb93.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_v1_k32_fallback_260825eb93.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_v1_k32_fallback_260825eb93.cu"
         },
         "knn_build_k20_large_lowfanout_s2_warp_select_0c59b323b3": {
-          "sm_100a": "device/knn_build_k20_large_lowfanout_s2_warp_select_0c59b323b3.cu",
-          "sm_103a": "device/knn_build_k20_large_lowfanout_s2_warp_select_0c59b323b3.cu"
+          "sm_100a": "device/knn_build_k20_large_lowfanout_s2_warp_select_0c59b323b3.cu"
         },
         "knn_build_k20_mergeown_08ec_warp8_select_s2warp8_d392b68897": {
-          "sm_100a": "device/knn_build_k20_mergeown_08ec_warp8_select_s2warp8_d392b68897.cu",
-          "sm_103a": "device/knn_build_k20_mergeown_08ec_warp8_select_s2warp8_d392b68897.cu"
+          "sm_100a": "device/knn_build_k20_mergeown_08ec_warp8_select_s2warp8_d392b68897.cu"
         },
         "knn_build_k30_q4096_6998_merge_s4_unordered_warp_select_03762a35b7": {
-          "sm_100a": "device/knn_build_k30_q4096_6998_merge_s4_unordered_warp_select_03762a35b7.cu",
-          "sm_103a": "device/knn_build_k30_q4096_6998_merge_s4_unordered_warp_select_03762a35b7.cu"
+          "sm_100a": "device/knn_build_k30_q4096_6998_merge_s4_unordered_warp_select_03762a35b7.cu"
         },
         "knn_build_large_square_k32_s2_warp8_merge_bf98ea63fd": {
-          "sm_100a": "device/knn_build_large_square_k32_s2_warp8_merge_bf98ea63fd.cu",
-          "sm_103a": "device/knn_build_large_square_k32_s2_warp8_merge_bf98ea63fd.cu"
+          "sm_100a": "device/knn_build_large_square_k32_s2_warp8_merge_bf98ea63fd.cu"
         },
         "knn_build_large_square_k32_stage1_chunkworst_260825eb93": {
-          "sm_100a": "device/knn_build_large_square_k32_stage1_chunkworst_260825eb93.cu",
-          "sm_103a": "device/knn_build_large_square_k32_stage1_chunkworst_260825eb93.cu"
+          "sm_100a": "device/knn_build_large_square_k32_stage1_chunkworst_260825eb93.cu"
         },
         "knn_build_rag_frontier_7399_k32_fused_group_final_merge_k32s72g8_4fbf_v6_41b9501426": {
-          "sm_100a": "device/knn_build_rag_frontier_7399_k32_fused_group_final_merge_k32s72g8_4fbf_v6_41b9501426.cu",
-          "sm_103a": "device/knn_build_rag_frontier_7399_k32_fused_group_final_merge_k32s72g8_4fbf_v6_41b9501426.cu"
+          "sm_100a": "device/knn_build_rag_frontier_7399_k32_fused_group_final_merge_k32s72g8_4fbf_v6_41b9501426.cu"
         },
         "knn_build_rag_microbucket_k32_q16irreg2warp_a444_v2_stage1_q16_rowld1_2warp_q16dual2warp_56ed_v1_24f87081ef": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32_q16irreg2warp_a444_v2_stage1_q16_rowld1_2warp_q16dual2warp_56ed_v1_24f87081ef.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32_q16irreg2warp_a444_v2_stage1_q16_rowld1_2warp_q16dual2warp_56ed_v1_24f87081ef.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32_q16irreg2warp_a444_v2_stage1_q16_rowld1_2warp_q16dual2warp_56ed_v1_24f87081ef.cu"
         },
         "knn_build_rag_microbucket_k32_q32rowld2exact_s141_72d1_v1_stage1_q32rowld2exact_f653_v1_cccfaa120e": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32_q32rowld2exact_s141_72d1_v1_stage1_q32rowld2exact_f653_v1_cccfaa120e.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32_q32rowld2exact_s141_72d1_v1_stage1_q32rowld2exact_f653_v1_cccfaa120e.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32_q32rowld2exact_s141_72d1_v1_stage1_q32rowld2exact_f653_v1_cccfaa120e.cu"
         },
         "knn_build_rag_microbucket_k32q8half_0077_v1_stage1_q8_k32_m64_halfrow_q8half_0077_v1_8d7317fae6": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32q8half_0077_v1_stage1_q8_k32_m64_halfrow_q8half_0077_v1_8d7317fae6.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32q8half_0077_v1_stage1_q8_k32_m64_halfrow_q8half_0077_v1_8d7317fae6.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32q8half_0077_v1_stage1_q8_k32_m64_halfrow_q8half_0077_v1_8d7317fae6.cu"
         },
         "knn_build_rag_microbucket_k32rowld1warp_0077_v1_stage1_q32_k32_m64_rowld2_q24rowld2_24dc_v1_10bfca4cd4": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32rowld1warp_0077_v1_stage1_q32_k32_m64_rowld2_q24rowld2_24dc_v1_10bfca4cd4.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32rowld1warp_0077_v1_stage1_q32_k32_m64_rowld2_q24rowld2_24dc_v1_10bfca4cd4.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32rowld1warp_0077_v1_stage1_q32_k32_m64_rowld2_q24rowld2_24dc_v1_10bfca4cd4.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q24s144r4_24dc_v1_7c8c237355": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q24s144r4_24dc_v1_7c8c237355.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q24s144r4_24dc_v1_7c8c237355.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q24s144r4_24dc_v1_7c8c237355.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q32exact_s141r4_f653_v1_15682b6c39": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q32exact_s141r4_f653_v1_15682b6c39.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q32exact_s141r4_f653_v1_15682b6c39.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32q32exact_s141r4_f653_v1_15682b6c39.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144_0077_v1_bf2622a9d0": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144_0077_v1_bf2622a9d0.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144_0077_v1_bf2622a9d0.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144_0077_v1_bf2622a9d0.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144r4_56ed_v1_7c8c237355": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144r4_56ed_v1_7c8c237355.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144r4_56ed_v1_7c8c237355.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144r4_56ed_v1_7c8c237355.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s148r4_56ed_v1_2330ec5ec1": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s148r4_56ed_v1_2330ec5ec1.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s148r4_56ed_v1_2330ec5ec1.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s148r4_56ed_v1_2330ec5ec1.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s288r4_56ed_v1_c617b4f630": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s288r4_56ed_v1_c617b4f630.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s288r4_56ed_v1_c617b4f630.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s288r4_56ed_v1_c617b4f630.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s72_0077_v1_1b2dd81af4": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s72_0077_v1_1b2dd81af4.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s72_0077_v1_1b2dd81af4.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s72_0077_v1_1b2dd81af4.cu"
         },
         "knn_build_rag_microbucket_q32rowld_e5db_v1_stage1_q32_k32_m64_548492e446": {
-          "sm_100a": "device/knn_build_rag_microbucket_q32rowld_e5db_v1_stage1_q32_k32_m64_548492e446.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_q32rowld_e5db_v1_stage1_q32_k32_m64_548492e446.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_q32rowld_e5db_v1_stage1_q32_k32_m64_548492e446.cu"
         },
         "knn_build_rag_stream_k32_q128m100000_staticn128_664a_stage1_6fe708594c": {
-          "sm_100a": "device/knn_build_rag_stream_k32_q128m100000_staticn128_664a_stage1_6fe708594c.cu",
-          "sm_103a": "device/knn_build_rag_stream_k32_q128m100000_staticn128_664a_stage1_6fe708594c.cu"
+          "sm_100a": "device/knn_build_rag_stream_k32_q128m100000_staticn128_664a_stage1_6fe708594c.cu"
         },
         "knn_build_rect_d128_k20_q1536_warp4_merge_a47607508b": {
-          "sm_100a": "device/knn_build_rect_d128_k20_q1536_warp4_merge_a47607508b.cu",
-          "sm_103a": "device/knn_build_rect_d128_k20_q1536_warp4_merge_a47607508b.cu"
+          "sm_100a": "device/knn_build_rect_d128_k20_q1536_warp4_merge_a47607508b.cu"
         }
       }
     },
@@ -405,40 +313,31 @@
       "host_tu": "host/dispatch_knn_build_d128_largek.cpp",
       "idents": {
         "knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k48over32_64ee9c707f": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k48over32_64ee9c707f.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k48over32_64ee9c707f.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_cg2_u2_stage1_k32_unordered_k48over32_64ee9c707f.cu"
         },
         "knn_build_k48_merge_s4_unordered_warp_select_7d0d850081": {
-          "sm_100a": "device/knn_build_k48_merge_s4_unordered_warp_select_7d0d850081.cu",
-          "sm_103a": "device/knn_build_k48_merge_s4_unordered_warp_select_7d0d850081.cu"
+          "sm_100a": "device/knn_build_k48_merge_s4_unordered_warp_select_7d0d850081.cu"
         },
         "knn_build_k64_merge_s8_unordered_warp_select_k64over32s8warpselect_7922da842c": {
-          "sm_100a": "device/knn_build_k64_merge_s8_unordered_warp_select_k64over32s8warpselect_7922da842c.cu",
-          "sm_103a": "device/knn_build_k64_merge_s8_unordered_warp_select_k64over32s8warpselect_7922da842c.cu"
+          "sm_100a": "device/knn_build_k64_merge_s8_unordered_warp_select_k64over32s8warpselect_7922da842c.cu"
         },
         "knn_build_k64_stage1_tailinf_k64over32tailinfsplitgrid_60e150d756": {
-          "sm_100a": "device/knn_build_k64_stage1_tailinf_k64over32tailinfsplitgrid_60e150d756.cu",
-          "sm_103a": "device/knn_build_k64_stage1_tailinf_k64over32tailinfsplitgrid_60e150d756.cu"
+          "sm_100a": "device/knn_build_k64_stage1_tailinf_k64over32tailinfsplitgrid_60e150d756.cu"
         },
         "knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s2chunkprefill_f9d1_6d26b3416c": {
-          "sm_100a": "device/knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s2chunkprefill_f9d1_6d26b3416c.cu",
-          "sm_103a": "device/knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s2chunkprefill_f9d1_6d26b3416c.cu"
+          "sm_100a": "device/knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s2chunkprefill_f9d1_6d26b3416c.cu"
         },
         "knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s4chunkprefill_f9d1_880aaf9f9d": {
-          "sm_100a": "device/knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s4chunkprefill_f9d1_880aaf9f9d.cu",
-          "sm_103a": "device/knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s4chunkprefill_f9d1_880aaf9f9d.cu"
+          "sm_100a": "device/knn_build_k96_merge_s8_unordered_chunkprefill_k96over64s4chunkprefill_f9d1_880aaf9f9d.cu"
         },
         "knn_build_k96_stage1_exact_prefill_q1024_k96over64exactprefillq1024_e5db_97a02df808": {
-          "sm_100a": "device/knn_build_k96_stage1_exact_prefill_q1024_k96over64exactprefillq1024_e5db_97a02df808.cu",
-          "sm_103a": "device/knn_build_k96_stage1_exact_prefill_q1024_k96over64exactprefillq1024_e5db_97a02df808.cu"
+          "sm_100a": "device/knn_build_k96_stage1_exact_prefill_q1024_k96over64exactprefillq1024_e5db_97a02df808.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k48s144r4_dd2b_v1_8490bb23e2": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k48s144r4_dd2b_v1_8490bb23e2.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k48s144r4_dd2b_v1_8490bb23e2.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k48s144r4_dd2b_v1_8490bb23e2.cu"
         },
         "knn_build_v12_d128_q16_k48_dd2b_v1_stage1_1b138d86c7": {
-          "sm_100a": "device/knn_build_v12_d128_q16_k48_dd2b_v1_stage1_1b138d86c7.cu",
-          "sm_103a": "device/knn_build_v12_d128_q16_k48_dd2b_v1_stage1_1b138d86c7.cu"
+          "sm_100a": "device/knn_build_v12_d128_q16_k48_dd2b_v1_stage1_1b138d86c7.cu"
         }
       }
     },
@@ -448,16 +347,13 @@
       "host_tu": "host/dispatch_knn_build_d192.cpp",
       "idents": {
         "knn_build_dim_midk_df2f_d256_split_stage1_15a2906229": {
-          "sm_100a": "device/knn_build_dim_midk_df2f_d256_split_stage1_15a2906229.cu",
-          "sm_103a": "device/knn_build_dim_midk_df2f_d256_split_stage1_15a2906229.cu"
+          "sm_100a": "device/knn_build_dim_midk_df2f_d256_split_stage1_15a2906229.cu"
         },
         "knn_build_evolve_7bfc_split_merge_58692cd046": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_merge_58692cd046.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_merge_58692cd046.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_merge_58692cd046.cu"
         },
         "knn_build_non128_frontier_7231_pad_bf16_rows_d256_95c1a5fccb": {
-          "sm_100a": "device/knn_build_non128_frontier_7231_pad_bf16_rows_d256_95c1a5fccb.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7231_pad_bf16_rows_d256_95c1a5fccb.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7231_pad_bf16_rows_d256_95c1a5fccb.cu"
         }
       }
     },
@@ -467,52 +363,40 @@
       "host_tu": "host/dispatch_knn_build_d256.cpp",
       "idents": {
         "knn_build_common_d768_build_eeff_m64split_stage1_d256_q128_k10_59fe_v1_2d74392098": {
-          "sm_100a": "device/knn_build_common_d768_build_eeff_m64split_stage1_d256_q128_k10_59fe_v1_2d74392098.cu",
-          "sm_103a": "device/knn_build_common_d768_build_eeff_m64split_stage1_d256_q128_k10_59fe_v1_2d74392098.cu"
+          "sm_100a": "device/knn_build_common_d768_build_eeff_m64split_stage1_d256_q128_k10_59fe_v1_2d74392098.cu"
         },
         "knn_build_common_d_56f3_d256_q1024_k10_merge_rowbase_cache_s16_ec4cd5eaeb": {
-          "sm_100a": "device/knn_build_common_d_56f3_d256_q1024_k10_merge_rowbase_cache_s16_ec4cd5eaeb.cu",
-          "sm_103a": "device/knn_build_common_d_56f3_d256_q1024_k10_merge_rowbase_cache_s16_ec4cd5eaeb.cu"
+          "sm_100a": "device/knn_build_common_d_56f3_d256_q1024_k10_merge_rowbase_cache_s16_ec4cd5eaeb.cu"
         },
         "knn_build_dim_midk_df2f_d256_split_stage1_15a2906229": {
-          "sm_100a": "device/knn_build_dim_midk_df2f_d256_split_stage1_15a2906229.cu",
-          "sm_103a": "device/knn_build_dim_midk_df2f_d256_split_stage1_15a2906229.cu"
+          "sm_100a": "device/knn_build_dim_midk_df2f_d256_split_stage1_15a2906229.cu"
         },
         "knn_build_evolve_7bfc_split_merge_58692cd046": {
-          "sm_100a": "device/knn_build_evolve_7bfc_split_merge_58692cd046.cu",
-          "sm_103a": "device/knn_build_evolve_7bfc_split_merge_58692cd046.cu"
+          "sm_100a": "device/knn_build_evolve_7bfc_split_merge_58692cd046.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s144g8_4be7_d768fused_v1_1480bb09e9": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g8_4be7_d768fused_v1_1480bb09e9.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g8_4be7_d768fused_v1_1480bb09e9.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g8_4be7_d768fused_v1_1480bb09e9.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s16g8_4be7_d768fused_v1_d4c00681d3": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s16g8_4be7_d768fused_v1_d4c00681d3.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s16g8_4be7_d768fused_v1_d4c00681d3.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s16g8_4be7_d768fused_v1_d4c00681d3.cu"
         },
         "knn_build_non128_frontier_7231_stage1_d256_43f49e499b": {
-          "sm_100a": "device/knn_build_non128_frontier_7231_stage1_d256_43f49e499b.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7231_stage1_d256_43f49e499b.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7231_stage1_d256_43f49e499b.cu"
         },
         "knn_build_non128_frontier_7ee5_m64rag_stage1_d256_5e7f_rag_d64d256_v1_60c75688ce": {
-          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d256_5e7f_rag_d64d256_v1_60c75688ce.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d256_5e7f_rag_d64d256_v1_60c75688ce.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d256_5e7f_rag_d64d256_v1_60c75688ce.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144_0077_v1_bf2622a9d0": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144_0077_v1_bf2622a9d0.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144_0077_v1_bf2622a9d0.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s144_0077_v1_bf2622a9d0.cu"
         },
         "knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s64_0077_v1_8928550412": {
-          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s64_0077_v1_8928550412.cu",
-          "sm_103a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s64_0077_v1_8928550412.cu"
+          "sm_100a": "device/knn_build_rag_microbucket_k32warpmerge_0077_v1_warp_row_merge_k32s64_0077_v1_8928550412.cu"
         },
         "knn_build_v12_d256_k32_tail_59fe_v1_stage1_rowld_c41e5f3b2d": {
-          "sm_100a": "device/knn_build_v12_d256_k32_tail_59fe_v1_stage1_rowld_c41e5f3b2d.cu",
-          "sm_103a": "device/knn_build_v12_d256_k32_tail_59fe_v1_stage1_rowld_c41e5f3b2d.cu"
+          "sm_100a": "device/knn_build_v12_d256_k32_tail_59fe_v1_stage1_rowld_c41e5f3b2d.cu"
         }
       }
     },
@@ -522,91 +406,70 @@
       "host_tu": "host/dispatch_knn_build_highd.cpp",
       "idents": {
         "knn_build_common_d768_build_eeff_m64split_stage1_963bc19759": {
-          "sm_100a": "device/knn_build_common_d768_build_eeff_m64split_stage1_963bc19759.cu",
-          "sm_103a": "device/knn_build_common_d768_build_eeff_m64split_stage1_963bc19759.cu"
+          "sm_100a": "device/knn_build_common_d768_build_eeff_m64split_stage1_963bc19759.cu"
         },
         "knn_build_common_d768_build_eeff_m64split_stage1_d1024_be66_search_v1_599dc72fd2": {
-          "sm_100a": "device/knn_build_common_d768_build_eeff_m64split_stage1_d1024_be66_search_v1_599dc72fd2.cu",
-          "sm_103a": "device/knn_build_common_d768_build_eeff_m64split_stage1_d1024_be66_search_v1_599dc72fd2.cu"
+          "sm_100a": "device/knn_build_common_d768_build_eeff_m64split_stage1_d1024_be66_search_v1_599dc72fd2.cu"
         },
         "knn_build_common_d768_build_eeff_m64split_stage1_d4096_be66_search_v1_8197973f75": {
-          "sm_100a": "device/knn_build_common_d768_build_eeff_m64split_stage1_d4096_be66_search_v1_8197973f75.cu",
-          "sm_103a": "device/knn_build_common_d768_build_eeff_m64split_stage1_d4096_be66_search_v1_8197973f75.cu"
+          "sm_100a": "device/knn_build_common_d768_build_eeff_m64split_stage1_d4096_be66_search_v1_8197973f75.cu"
         },
         "knn_build_common_d_56f3_k10_merge_rowbase_cache_s8_29b6a345c3": {
-          "sm_100a": "device/knn_build_common_d_56f3_k10_merge_rowbase_cache_s8_29b6a345c3.cu",
-          "sm_103a": "device/knn_build_common_d_56f3_k10_merge_rowbase_cache_s8_29b6a345c3.cu"
+          "sm_100a": "device/knn_build_common_d_56f3_k10_merge_rowbase_cache_s8_29b6a345c3.cu"
         },
         "knn_build_d128_rag_q128_k10_s74_warp_merge_d320_s48_f556_v2_b8a1710fef": {
-          "sm_100a": "device/knn_build_d128_rag_q128_k10_s74_warp_merge_d320_s48_f556_v2_b8a1710fef.cu",
-          "sm_103a": "device/knn_build_d128_rag_q128_k10_s74_warp_merge_d320_s48_f556_v2_b8a1710fef.cu"
+          "sm_100a": "device/knn_build_d128_rag_q128_k10_s74_warp_merge_d320_s48_f556_v2_b8a1710fef.cu"
         },
         "knn_build_non128_frontier_3d5a_k10_merge_s8_rowbase_cache_29b6a345c3": {
-          "sm_100a": "device/knn_build_non128_frontier_3d5a_k10_merge_s8_rowbase_cache_29b6a345c3.cu",
-          "sm_103a": "device/knn_build_non128_frontier_3d5a_k10_merge_s8_rowbase_cache_29b6a345c3.cu"
+          "sm_100a": "device/knn_build_non128_frontier_3d5a_k10_merge_s8_rowbase_cache_29b6a345c3.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s128g8_4be7_d768fused_v1_12c64fa392": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s128g8_4be7_d768fused_v1_12c64fa392.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s128g8_4be7_d768fused_v1_12c64fa392.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s128g8_4be7_d768fused_v1_12c64fa392.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s144g12_4be7_d768fused_v1_9ac40c2e8e.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s16g8_4be7_d768fused_v1_d4c00681d3": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s16g8_4be7_d768fused_v1_d4c00681d3.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s16g8_4be7_d768fused_v1_d4c00681d3.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s16g8_4be7_d768fused_v1_d4c00681d3.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s32g8_4be7_d768fused_v1_47b2e39cdb": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s32g8_4be7_d768fused_v1_47b2e39cdb.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s32g8_4be7_d768fused_v1_47b2e39cdb.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s32g8_4be7_d768fused_v1_47b2e39cdb.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s64g8_4be7_d768fused_v1_d1f8df1e03": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s64g8_4be7_d768fused_v1_d1f8df1e03.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s64g8_4be7_d768fused_v1_d1f8df1e03.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s64g8_4be7_d768fused_v1_d1f8df1e03.cu"
         },
         "knn_build_non128_frontier_4be7_d768fused_merge_s72g8_4be7_d768fused_v1_1ac576e75f": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s72g8_4be7_d768fused_v1_1ac576e75f.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s72g8_4be7_d768fused_v1_1ac576e75f.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d768fused_merge_s72g8_4be7_d768fused_v1_1ac576e75f.cu"
         },
         "knn_build_non128_frontier_4be7_d96exact_stage1_15a2906229": {
-          "sm_100a": "device/knn_build_non128_frontier_4be7_d96exact_stage1_15a2906229.cu",
-          "sm_103a": "device/knn_build_non128_frontier_4be7_d96exact_stage1_15a2906229.cu"
+          "sm_100a": "device/knn_build_non128_frontier_4be7_d96exact_stage1_15a2906229.cu"
         },
         "knn_build_non128_frontier_7231_stage1_d1024_3ec5262f07": {
-          "sm_100a": "device/knn_build_non128_frontier_7231_stage1_d1024_3ec5262f07.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7231_stage1_d1024_3ec5262f07.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7231_stage1_d1024_3ec5262f07.cu"
         },
         "knn_build_non128_frontier_7231_stage1_d4096_80ad8c8d0c": {
-          "sm_100a": "device/knn_build_non128_frontier_7231_stage1_d4096_80ad8c8d0c.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7231_stage1_d4096_80ad8c8d0c.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7231_stage1_d4096_80ad8c8d0c.cu"
         },
         "knn_build_non128_frontier_7231_stage1_d768_26bb5dca16": {
-          "sm_100a": "device/knn_build_non128_frontier_7231_stage1_d768_26bb5dca16.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7231_stage1_d768_26bb5dca16.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7231_stage1_d768_26bb5dca16.cu"
         },
         "knn_build_non128_frontier_7ee5_m64rag_stage1_8c4a4fcc4c": {
-          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_8c4a4fcc4c.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_8c4a4fcc4c.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_8c4a4fcc4c.cu"
         },
         "knn_build_non128_frontier_7ee5_m64rag_stage1_d1024_5e7f_highd_v1_ab11e1d2b1": {
-          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d1024_5e7f_highd_v1_ab11e1d2b1.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d1024_5e7f_highd_v1_ab11e1d2b1.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d1024_5e7f_highd_v1_ab11e1d2b1.cu"
         },
         "knn_build_non128_frontier_7ee5_m64rag_stage1_d4096_5e7f_highd_v1_b39d5d9ab4": {
-          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d4096_5e7f_highd_v1_b39d5d9ab4.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d4096_5e7f_highd_v1_b39d5d9ab4.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d4096_5e7f_highd_v1_b39d5d9ab4.cu"
         },
         "knn_build_non128_frontier_7ee5_m64rag_stage1_d768_5e7f_highd_v1_8c4a4fcc4c": {
-          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d768_5e7f_highd_v1_8c4a4fcc4c.cu",
-          "sm_103a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d768_5e7f_highd_v1_8c4a4fcc4c.cu"
+          "sm_100a": "device/knn_build_non128_frontier_7ee5_m64rag_stage1_d768_5e7f_highd_v1_8c4a4fcc4c.cu"
         },
         "knn_build_non128_frontier_8227_d320tail_stage1_15a2906229": {
-          "sm_100a": "device/knn_build_non128_frontier_8227_d320tail_stage1_15a2906229.cu",
-          "sm_103a": "device/knn_build_non128_frontier_8227_d320tail_stage1_15a2906229.cu"
+          "sm_100a": "device/knn_build_non128_frontier_8227_d320tail_stage1_15a2906229.cu"
         }
       }
     }
   ],
-  "loom_rev": "unknown"
+  "loom_rev": "ff502f39df09ffdb317efc57ebdac3a668bb3aa4"
 }

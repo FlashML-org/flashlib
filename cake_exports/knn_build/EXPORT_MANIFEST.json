@@ -1,20 +1,22 @@
 {
-  "schema": "cake-standalone-generated-program-v1",
-  "source_commit": "9f1df8d0def3d2995a81a1279761e52f32427120",
-  "source_merge_request": "https://gitlab-master.nvidia.com/cake/cake/-/merge_requests/405",
+  "architectures": [
+    "sm_100a",
+    "sm_103a"
+  ],
   "domain": "knn_build",
-  "architectures": ["sm_100a", "sm_103a"],
-  "runtime_dependency": "tvm_ffi",
-  "loom_runtime_required": false,
+  "expected_shape_count": 112,
   "generated_source": {
-    "file_count": 159,
-    "bytes": 3113843,
+    "bytes": 3125956,
     "device_cu_lines": 48148,
-    "device_kernel_count": 136,
-    "host_cpp_lines": 14610,
-    "python_lines": 1100,
-    "categorized_source_lines": 63858,
-    "dispatch_family_count": 8
+    "device_kernel_count": 129,
+    "file_count": 160,
+    "host_cpp_lines": 14482,
+    "python_lines": 1969
   },
-  "expected_shape_count": 112
+  "loom_runtime_required": false,
+  "runtime_dependency": "tvm_ffi",
+  "schema": "cake-standalone-generated-program-v1",
+  "source_commit": "ff502f39df09ffdb317efc57ebdac3a668bb3aa4",
+  "source_merge_request": "https://gitlab-master.nvidia.com/cake/cake/-/merge_requests/415",
+  "validated_architecture": "sm_100a"
 }

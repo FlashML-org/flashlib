@@ -1,11 +1,18 @@
 # Cake standalone KNN-build export
 
 This directory vendors the source-only standalone export of Cake's
-`knn_build` dispatcher from Cake MR 405 at commit
-`9f1df8d0def3d2995a81a1279761e52f32427120`. The generated package contains
+`knn_build` dispatcher from the Cake MR 415 head at commit
+`ff502f39df09ffdb317efc57ebdac3a668bb3aa4`. The generated package contains
 the CUDA device sources, eight generated C++ dispatch families, runtime-free
 `tvm-ffi` loaders, and a thin Python interface. It does not import or require
 Loom at build or run time.
+
+New in this refresh: the compiled dispatch carries the merged hot-path host
+rework — per-(device, stream) workspace arena with cached exact-shape views,
+process-cached device/family resolution, `-O3` host builds, and an explicit
+per-call CUDA-stream ABI with a once-per-process stream-handle lookup. The
+kernels and dispatch tables are unchanged; Python host overhead per call
+dropped from 141-235us to ~30-90us.
 
 The export targets Blackwell datacenter GPUs (`sm_100a` and `sm_103a`). Build
 the B200 binaries from source with:

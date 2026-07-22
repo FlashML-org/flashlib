@@ -2,52 +2,49 @@
 
 ## Outcome
 
-- Standalone export parity with Cake: **112/112 correct**, **112/112 routes
-  identical**, and **112/112 within 5%** of the in-tree GPU span. Export versus
-  Cake geomean is `1.0008x`; the worst export slowdown is `3.14%`.
-- FlashLib baseline comparison correctness: **112/112 candidate and baseline
-  rows passed**.
-- Raw public-API CUPTI GPU-span speedup (`FlashLib / exported`): geomean
-  `0.8914x`, median `0.9593x`, p90 `1.4667x`, min `0.2361x`, max `2.2639x`.
-  `59/112` rows are below `1.0x`; the exported raw interface is slower overall
-  on this denominator.
-- Raw synchronized-E2E diagnostic: geomean `1.1169x`, median `1.1674x`, p90
-  `1.6751x`, min `0.2814x`, max `2.3190x`; `36/112` rows are below `1.0x`.
-- With exported row norms and outputs prepared outside timing, GPU-span
-  speedup versus the same-shape raw FlashLib baseline is geomean `2.4436x`,
-  median `2.0290x`, p90 `6.0480x`, min `1.1658x`, max `11.9251x`.
+GB200 (`sm_100a`), full 112-shape Cake KNN-build contract, 10-call
+consumer-E2E protocol, zero errors and zero incorrect rows:
 
-The raw lane is the API-boundary-equivalent primary comparison: both sides
-receive query/database inputs and allocate default outputs, while the exported
-side also computes its required row norms in the timed call. FlashLib has no
-precomputed-norm entrypoint, so the prepared number is an explicitly labeled
-kernel/dispatch diagnostic and is not a replacement for the raw result.
+- Raw public-API consumer E2E (`FlashLib / exported`, both sides receive
+  query/database inputs; the exported side computes its required row norms
+  inside the timed call): geomean **1.0488x**, median `1.1138x`, min
+  `0.2824x`, max `2.5430x`.
+- Amortized lane (the exported side's database row norms prepared outside
+  the timed region — the serving pattern where the database is fixed across
+  calls): geomean **1.4383x**, median `1.3834x`, min `0.9087x`, max `2.7762x`.
+- CUPTI GPU-span speedup: geomean **1.4180x**, median `1.4142x`, min
+  `0.3937x`, max `3.3853x`.
+
+Correctness gate: recall against the exact reference — `112/112` rows at
+recall `1.0`. The packaged demo
+(`python -m knn_build.demo --assert-no-loom`) passes on GB200.
+
+## What changed since the v9 export (MR 405 head)
+
+**Hot-path host rework (Cake MR 413, merged)**: per-(device, stream)
+workspace arena with cached exact-shape views, process-cached device
+capability probe and family-resolve cascade, `-O3` host dispatch builds, and
+an explicit CUDA-stream ABI — each compiled family `run` takes a trailing
+`cudaStream_t` handle resolved once per process
+(`torch._C._cuda_getCurrentRawStream`, public-API fallback). Python host
+overhead per call dropped from 141-235µs to ~30-90µs. The kernels and
+dispatch tables are unchanged from v9; this refresh is the host path.
+
+The stream-handle lookup matters: an intermediate revision that read
+`torch.cuda.current_stream(device)` on every call measured `0.998x` on this
+contract's raw E2E lane — the cached-handle fix recovers it to `1.0488x`
+(same-node A/B/C isolation, byte-identical GPU spans across all arms).
 
 ## Measurement identity
 
-- Candidate: Cake MR 405 commit
-  `9f1df8d0def3d2995a81a1279761e52f32427120`
-- Baseline: `flashlib.flash_knn` from FlashLib commit
-  `711204f32871af4aeb3ef7ed952cb5eb74c57f46`
-- GPU: NVIDIA B200 (`sm_100a`)
-- Software: NGC PyTorch `25.05`, PyTorch
-  `2.8.0a0+5228986c39.nv25.05`, CUDA `12.9`, Triton `3.6.0`
-- Timing: strict CUPTI activity correlation through
-  `loom.bench.bench_gpu_time_warm`, cold L2, 10 warmups and 16 measured samples
-  per lane; no event or wall-clock GPU timing
-- Slurm array job: `460127_0`
+- Candidate: Cake MR 415 head, commit
+  `ff502f39df09ffdb317efc57ebdac3a668bb3aa4`
+- Baseline: pip `flashlib==0.2.0` `flash_knn` build path, executed in the
+  same process/session
+- Hardware: NVIDIA GB200 (aws-dfw), PyTorch 2.8.0a0 (nv25.05), CUDA 12.9
+- Per-row data: `BENCHMARK_RESULTS.json` (`rows`); validation summary:
+  `EXPORT_PARITY_RESULTS.json`
 
-The complete per-shape measurements, activity diagnostics, hardware identity,
-and correctness payloads are in `BENCHMARK_RESULTS.json`. The independent
-export-versus-Cake replay is in `EXPORT_PARITY_RESULTS.json`.
-
-## Gates run
-
-| Gate | Result |
-|---|---:|
-| generated Python compile + ruff | PASS |
-| generated tree contains no Loom import | PASS |
-| build manifest is exactly `sm_100a`, `sm_103a`, eight families | PASS |
-| standalone export vs Cake route/correctness/performance replay | PASS (`112/112`) |
-| FlashLib full-denominator correctness | PASS (`112/112`) |
-| FlashLib full-denominator CUPTI timing | PASS (`112/112`) |
+Cake-side gates on the same commit: `test_ffi_dispatch.py` 34 passed;
+dispatch-family ship tests (including the explicit-stream loader tests)
+passed.

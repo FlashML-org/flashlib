@@ -1,6 +1,6 @@
 """Vendored by tools/export-generated-programs (package init).
 
-Provenance: loom @ unknown. k-NN graph build (top-K nearest neighbours)
+Provenance: loom @ ff502f39df09ffdb317efc57ebdac3a668bb3aa4. k-NN graph build (top-K nearest neighbours)
 Runtime-free: this module imports no ``loom`` package.
 """
 
