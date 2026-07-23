@@ -1,5 +1,5 @@
 {
-  "commit": "7a7cebd73ee298188e1ed3b6d6d8d7e43dbf5f04",
+  "commit": "9dd3df73eea8632ec145151e6ae5c5a88dd59969",
   "correctness": {
     "gate": "candidate output vs float64 torch reference, tie-tolerant argmin at bf16 precision",
     "incorrect": 0,
@@ -16,9 +16,9 @@
   "route_identity": {
     "cake_side_gates": [
       "loom/tests/e2e/test_flash_kmeans_assign_dispatcher.py -m gpu: 87 passed",
-      "loom/tests/test_ffi_dispatch.py + loom/tests/e2e/test_dispatch_family_ship.py: 42 passed",
-      "loom/tests/test_flash_kmeans_assign_async_dispatch.py (full): 13 passed",
-      "compute-sanitizer synccheck clean on the new fused seeds (one pre-existing e50c-schedule finding reproduces on the retired pack path)"
+      "loom/tests/test_ffi_dispatch.py: 34 passed",
+      "loom/tests/e2e/test_dispatch_family_ship.py: passed (incl. explicit-stream loader tests)",
+      "loom/tests/test_flash_kmeans_assign_async_dispatch.py -m gpu: 8 passed"
     ],
     "source": "per-shape route ids recorded by the exported interface during the benchmark run"
   },

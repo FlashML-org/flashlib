@@ -16,7 +16,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-CAKE_COMMIT = "7a7cebd73ee298188e1ed3b6d6d8d7e43dbf5f04"
+CAKE_COMMIT = "9dd3df73eea8632ec145151e6ae5c5a88dd59969"
 FLASHLIB_COMMIT = "711204f32871af4aeb3ef7ed952cb5eb74c57f46"
 KMEANS_BASELINE_COMMIT = "07cf2a27928aacf6790c950a265d8b8dc83c87cf"
 EXPECTED_SHAPES = {"flash_kmeans": 124, "knn_build": 112, "knn_search": 198}

@@ -1,6 +1,6 @@
 """Vendored by tools/export-generated-programs (runnable adapter).
 
-Provenance: loom @ 7a7cebd73ee298188e1ed3b6d6d8d7e43dbf5f04. Flash K-Means assignment; dispatches through the compiled family .so C-ABI.
+Provenance: loom @ 9dd3df73eea8632ec145151e6ae5c5a88dd59969. Flash K-Means assignment; dispatches through the compiled family .so C-ABI.
 Runtime-free: this module imports no ``loom`` package.
 """
 

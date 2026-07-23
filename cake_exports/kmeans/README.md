@@ -1,18 +1,20 @@
 # Cake standalone Flash K-Means export
 
 This directory vendors the source-only standalone export of Cake's
-`flash_kmeans` dispatcher from Cake main (MR 417 merge) at commit
-`7a7cebd73ee298188e1ed3b6d6d8d7e43dbf5f04`. The generated package contains
+`flash_kmeans` dispatcher from the Cake MR 420 head at commit
+`9dd3df73eea8632ec145151e6ae5c5a88dd59969`. The generated package contains
 the CUDA device sources, one generated C++ dispatch translation unit, a
 runtime-free `tvm-ffi` loader, and a thin Python interface. It does not import
 or require Loom at build or run time.
 
-New in this refresh: **materialized padding is fully eliminated** — every
-gap/off-menu D (including the D144/176, D160, D80/96, and tiny-D bands that
-v10 still packed into scratch buffers) loads through fused TMA out-of-bounds
-zero-fill, so no shape runs a padding pass and the raw compiled `run` ABI
-carries three workspace slots instead of five (the public `interface.run`
-signature is unchanged). The package bundles an auxiliary rowwise
+New in this refresh: **one schedule per bucket** — the exact-D routes now
+bind the same fused TMA out-of-bounds seeds that serve their gap bands (at
+exact D the OOB box never goes out of bounds), so the eight near-duplicate
+exact-D originals left the package: **30 device kernels, down from 38** (the
+pre-fused v9 inventory was 34, with the slow materialized-padding chain).
+Materialized padding remains fully eliminated — no shape runs a padding
+pass, and the raw compiled `run` ABI carries three workspace slots instead
+of five (the public `interface.run` signature is unchanged). The package bundles an auxiliary rowwise
 squared-norm dispatch family — passing `x_sq` or `c_sq` as `None` to
 `interface.run` computes the norms in-package on the same stream (k-means
 iterations recompute `c_sq` every round), and `interface.compute_norms(t)`
