@@ -1,6 +1,6 @@
 """Vendored by tools/export-generated-programs (smoke demo).
 
-Provenance: loom @ ff502f39df09ffdb317efc57ebdac3a668bb3aa4. Flash K-Means assignment; builds random inputs, runs, checks against a torch brute force.
+Provenance: loom @ 7a7cebd73ee298188e1ed3b6d6d8d7e43dbf5f04. Flash K-Means assignment; builds random inputs, runs, checks against a torch brute force.
 Runtime-free: this module imports no ``loom`` package.
 """
 

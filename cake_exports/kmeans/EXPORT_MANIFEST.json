@@ -6,17 +6,17 @@
   "domain": "flash_kmeans",
   "expected_shape_count": 124,
   "generated_source": {
-    "bytes": 1345253,
-    "device_cu_lines": 19491,
-    "device_kernel_count": 40,
-    "file_count": 52,
-    "host_cpp_lines": 4827,
-    "python_lines": 782
+    "bytes": 1425194,
+    "device_cu_lines": 20758,
+    "device_kernel_count": 38,
+    "file_count": 50,
+    "host_cpp_lines": 4743,
+    "python_lines": 772
   },
   "loom_runtime_required": false,
   "runtime_dependency": "tvm_ffi",
   "schema": "cake-standalone-generated-program-v1",
-  "source_commit": "ff502f39df09ffdb317efc57ebdac3a668bb3aa4",
-  "source_merge_request": "https://gitlab-master.nvidia.com/cake/cake/-/merge_requests/415",
+  "source_commit": "7a7cebd73ee298188e1ed3b6d6d8d7e43dbf5f04",
+  "source_merge_request": "https://gitlab-master.nvidia.com/cake/cake/-/merge_requests/417",
   "validated_architecture": "sm_100a"
 }

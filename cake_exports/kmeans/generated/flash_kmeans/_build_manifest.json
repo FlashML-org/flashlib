@@ -11,9 +11,6 @@
       "so_subdir": null,
       "host_tu": "host/dispatch.cpp",
       "idents": {
-        "flash_kmeans_assign_cleanroom_tcgen05_d160_pack_padded_b23d_v1_6fe708594c": {
-          "sm_100a": "device/flash_kmeans_assign_cleanroom_tcgen05_d160_pack_padded_b23d_v1_6fe708594c.cu"
-        },
         "flash_kmeans_assign_cleanroom_tcgen05_d192_single_v1_b8e3ecee40": {
           "sm_100a": "device/flash_kmeans_assign_cleanroom_tcgen05_d192_single_v1_b8e3ecee40.cu"
         },
@@ -31,9 +28,6 @@
         },
         "flash_kmeans_assign_d112_consumer_scoped_direct_mma_view_handoff_e5e1_v1_6fe708594c": {
           "sm_100a": "device/flash_kmeans_assign_d112_consumer_scoped_direct_mma_view_handoff_e5e1_v1_6fe708594c.cu"
-        },
-        "flash_kmeans_assign_d160_pad192_pack_f9b2_v1_6fe708594c": {
-          "sm_100a": "device/flash_kmeans_assign_d160_pad192_pack_f9b2_v1_6fe708594c.cu"
         },
         "flash_kmeans_assign_d224_tmem_abi_repair_d17c_v4_b8e3ecee40": {
           "sm_100a": "device/flash_kmeans_assign_d224_tmem_abi_repair_d17c_v4_b8e3ecee40.cu"
@@ -56,6 +50,12 @@
         "flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1_b8e3ecee40": {
           "sm_100a": "device/flash_kmeans_assign_d64_direct_1p2gap_9f2a_v1_b8e3ecee40.cu"
         },
+        "flash_kmeans_assign_gapfused_d192_single_oob_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_gapfused_d192_single_oob_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_gapfused_d192_splitd_oob_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_gapfused_d192_splitd_oob_v1_b8e3ecee40.cu"
+        },
         "flash_kmeans_assign_gapfused_d256_oob_v1_b8e3ecee40": {
           "sm_100a": "device/flash_kmeans_assign_gapfused_d256_oob_v1_b8e3ecee40.cu"
         },
@@ -67,6 +67,12 @@
         },
         "flash_kmeans_assign_gapfused_highd_splitk_partial_oob_v1_b8e3ecee40": {
           "sm_100a": "device/flash_kmeans_assign_gapfused_highd_splitk_partial_oob_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_gapfused_lowdim_oob_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_gapfused_lowdim_oob_v1_b8e3ecee40.cu"
+        },
+        "flash_kmeans_assign_gapfused_microdim_oob_v1_b8e3ecee40": {
+          "sm_100a": "device/flash_kmeans_assign_gapfused_microdim_oob_v1_b8e3ecee40.cu"
         },
         "flash_kmeans_assign_gapfused_paired_oob_v1_b8e3ecee40": {
           "sm_100a": "device/flash_kmeans_assign_gapfused_paired_oob_v1_b8e3ecee40.cu"
@@ -107,23 +113,11 @@
         "flash_kmeans_assign_highd_splitk_reduce_blockn64_g2r4_b5a6_v1_6fe708594c": {
           "sm_100a": "device/flash_kmeans_assign_highd_splitk_reduce_blockn64_g2r4_b5a6_v1_6fe708594c.cu"
         },
-        "flash_kmeans_assign_lowdim_e50c_v1_b8e3ecee40": {
-          "sm_100a": "device/flash_kmeans_assign_lowdim_e50c_v1_b8e3ecee40.cu"
-        },
-        "flash_kmeans_assign_lowdim_pack_e50c_v1_6fe708594c": {
-          "sm_100a": "device/flash_kmeans_assign_lowdim_pack_e50c_v1_6fe708594c.cu"
-        },
-        "flash_kmeans_assign_microdim_6cd2_v1_b8e3ecee40": {
-          "sm_100a": "device/flash_kmeans_assign_microdim_6cd2_v1_b8e3ecee40.cu"
-        },
         "flash_kmeans_assign_microdim_d16_pipeline4_08f9_v4_8c75b970dc": {
           "sm_100a": "device/flash_kmeans_assign_microdim_d16_pipeline4_08f9_v4_8c75b970dc.cu"
         },
         "flash_kmeans_assign_microdim_direct_9c0d_v1_b8e3ecee40": {
           "sm_100a": "device/flash_kmeans_assign_microdim_direct_9c0d_v1_b8e3ecee40.cu"
-        },
-        "flash_kmeans_assign_microdim_pack_6cd2_v1_6fe708594c": {
-          "sm_100a": "device/flash_kmeans_assign_microdim_pack_6cd2_v1_6fe708594c.cu"
         },
         "flash_kmeans_assign_microdim_raw_tma_08f9_v1_b8e3ecee40": {
           "sm_100a": "device/flash_kmeans_assign_microdim_raw_tma_08f9_v1_b8e3ecee40.cu"
@@ -141,5 +135,5 @@
       }
     }
   ],
-  "loom_rev": "ff502f39df09ffdb317efc57ebdac3a668bb3aa4"
+  "loom_rev": "7a7cebd73ee298188e1ed3b6d6d8d7e43dbf5f04"
 }

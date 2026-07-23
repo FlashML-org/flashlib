@@ -1,6 +1,6 @@
 """Vendored by tools/export-generated-programs (standalone build).
 
-Provenance: loom @ ff502f39df09ffdb317efc57ebdac3a668bb3aa4. rebuilds each family .so with nvcc + tvm_ffi.cpp.load_inline; mirrors loom.export.dispatch_family.build_family_so.
+Provenance: loom @ 7a7cebd73ee298188e1ed3b6d6d8d7e43dbf5f04. rebuilds each family .so with nvcc + tvm_ffi.cpp.load_inline; mirrors loom.export.dispatch_family.build_family_so.
 Runtime-free: this module imports no ``loom`` package.
 """
 
