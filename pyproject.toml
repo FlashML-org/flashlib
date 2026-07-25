@@ -32,10 +32,11 @@ classifiers = [
 ]
 dependencies = [
     "torch>=2.0",
-    "triton>=3.6",
+    "triton>=3.6; platform_system == 'Linux'",
+    "triton-windows>=3.6; platform_system == 'Windows'",
     "numpy",
     "numba",                # hdbscan tree-condensation helpers (CPU-side)
-    "nvidia-cutlass-dsl",   # CuteDSL backends for kmeans/knn/dbscan/hdbscan/umap/spectral_clustering/polar/orthonormalize
+    "nvidia-cutlass-dsl; platform_system == 'Linux'",   # CuteDSL backends for kmeans/knn/dbscan/hdbscan/umap/spectral_clustering/polar/orthonormalize
     "tqdm",                 # progress bar in kmeans Lloyd iterations
 ]
 
