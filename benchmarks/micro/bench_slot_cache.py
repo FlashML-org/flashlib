@@ -1,8 +1,12 @@
-"""slot_cache: every selection strategy over (num_cached, K, miss rate).
+"""slot_cache: both selection strategies over (num_cached, K, miss rate).
 
-Part 1 pins FreeToken's actual operating points; part 2 sweeps wide enough to show
-where each strategy stops working. Methodology matches bench_topk_vs_seq: CUDA-graph
-replay, routing from a device pool, achieved miss rate read back from stats.
+Part 1 pins an MoE expert cache's actual operating points; part 2 sweeps wide enough to
+show where the register-resident strategy hands over to the streaming one.
+
+CUDA-graph replay is not optional here: eager launches measure Triton's ~20us dispatch,
+which is several times the kernel and hides every difference between the two. Routing
+comes from a device pool and the achieved miss rate is read back from stats, so the
+reported miss rate is the one the kernel actually saw.
 
     python benchmarks/micro/bench_slot_cache.py
 """
@@ -17,7 +21,7 @@ from flashlib.kernels.slot_cache import N_STATS, lru_ensure
 
 CALLS, POOL, COLD = 32, 64, 1 << 21
 ITERS, WARMUP = 60, 15
-IMPLS = tuple((s, partial(lru_ensure, strategy=s)) for s in ("seq", "topk", "insert"))
+IMPLS = tuple((s, partial(lru_ensure, strategy=s)) for s in ("seq", "insert"))
 
 
 @dataclass
@@ -110,7 +114,7 @@ def row(cache, k, hot, label=""):
 def header(title):
     print(f"\n=== {title} ===")
     print(f"{'':>10} {'cache':>7} {'K':>4} {'miss':>6} "
-          f"{'seq':>8} {'topk':>8} {'insert':>8}  best")
+          f"{'seq':>8} {'insert':>8}  best")
 
 
 def main() -> None:

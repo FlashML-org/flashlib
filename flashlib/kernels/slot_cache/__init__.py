@@ -16,9 +16,9 @@ Admission runs on device: no host sync and fixed shapes, so the look-up -> evict
 The caller owns the state tensors and passes them in, so a consumer with an existing
 cache aliases its own arrays rather than allocating a second set.
 
-Three selection strategies sit behind the one entry point and produce bit-identical
+Two selection strategies sit behind the one entry point and produce bit-identical
 results, so the routing is purely a cost decision; see
-:mod:`flashlib.kernels.slot_cache.cost` for the crossovers.
+:mod:`flashlib.kernels.slot_cache.cost` for the crossover.
 """
 from flashlib.kernels.slot_cache import cost
 from flashlib.kernels.slot_cache.triton import lru_ensure

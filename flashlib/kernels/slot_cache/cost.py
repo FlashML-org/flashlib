@@ -5,41 +5,73 @@ latency-bound end to end -- quadrupling the thread count changes nothing, so pea
 bandwidth and peak FLOPs both predict the wrong thing. Hence ``bound="latency"`` and
 ``confidence="measured"``.
 
-    T(num_cached, K, m) = L + P1(K) + [m > 0] * (E(C) + m * S(C))
+The numbers describe **CUDA-graph replay**, which is how this kernel is meant to run. An
+eager Triton launch adds ~20us of host-side dispatch -- several times the kernel itself,
+and enough to hide the entire difference between the two strategies. Add it back if the
+caller launches eagerly.
 
-    L      ~ 0.98us     launch, independent of everything (an empty kernel measures this)
-    P1(K)  = 0.43 / 0.49 / 1.21 / 3.84 / 57.5 / 985us at K = 8 / 32 / 64 / 128 / 256 / 512
-             -- the [K, K] dedup block; the cliff at 256 is a register spill
-    E(C)   ~ 0.6-1.0us  entering the victim scan (load + fence)
-    S(C)   = 0.44 + 0.026 * (C / 256) us per miss, and *not* reducible by more warps
+    T(num_cached, K, m) = P1(K) + SELECT(num_cached, m)
+
+    P1(K)   the ``[K, K]`` dedup block: flat to K=128, then spills hard (+55us at 256)
+    SELECT  ~1.3us when m == 0 -- both strategies early out -- and otherwise
+              seq     base(C) + slope(C) * m, both terms growing with C
+              insert  flat(C), independent of m but roughly linear in MAX_K
 """
 from __future__ import annotations
 
 from flashlib.info.estimate import Estimate
 
-# P1(K), measured; interpolate in log2(K) between these and extrapolate as K^2 past 128.
-_PHASE1_US = {8: 0.43, 16: 0.46, 32: 0.49, 64: 1.21, 128: 3.84, 256: 57.5, 512: 985.0}
-_LAUNCH_US = 0.98
-_ENTER_US = 0.8
+# Routing, mirrored in the kernel module. Streaming needs *both*: a cache too large for a
+# register-resident scan, and a query narrow enough that its MAX_K-wide insert loop stays
+# cheap. Measured crossovers below.
+STREAMING_THRESHOLD = 40_000
+STREAMING_MAX_K = 8
 
-# num_cached past which the register-resident strategies stop paying (and, further up,
-# stop compiling); the streaming one degrades ~1.6x per doubling instead of ~2.2x.
-STREAMING_THRESHOLD = 24_000
+# Phase 1 over the K=8 baseline, at num_cached=512, m=1.
+_P1_EXTRA_US = {8: 0.0, 16: 0.05, 32: 0.02, 64: 1.25, 128: 4.17, 256: 55.3, 512: 195.7}
+
+# Phase 2, K=8. seq: (base, slope) of base + slope * m. The 4x jumps at 24K and 48K are
+# where the [BLOCK_C] key block spills to local memory.
+_SEQ_US = {
+    512: (1.6, 0.56), 1024: (1.8, 0.63), 2048: (2.0, 0.70), 4096: (2.9, 0.89),
+    8192: (3.0, 1.26), 16384: (3.6, 2.11), 24576: (8.0, 6.22), 32768: (8.4, 6.22),
+    49152: (21.7, 14.8), 65536: (23.0, 14.9), 131072: (21.9, 30.0),
+}
+# insert: flat in m, ~linear in num_cached (it tiles, so it never spills).
+_INSERT_US = {
+    512: 5.3, 1024: 6.0, 2048: 6.9, 4096: 11.8, 8192: 19.3, 16384: 31.8,
+    24576: 39.9, 32768: 50.8, 49152: 65.9, 65536: 75.0, 131072: 103.8,
+}
+_EARLY_OUT_US = 1.33  # m == 0: phase 2 is skipped entirely
+_EAGER_LAUNCH_US = 20.0  # Triton's host-side dispatch, if not replaying a graph
 
 
-def _phase1_us(k: int) -> float:
-    if k in _PHASE1_US:
-        return _PHASE1_US[k]
-    lo = max((x for x in _PHASE1_US if x <= k), default=8)
-    hi = min((x for x in _PHASE1_US if x >= k), default=512)
+def _interp(table, x, log=True):
+    """Linear between the bracketing measured points (in log2 x by default)."""
+    if x in table:
+        return table[x]
+    lo = max((k for k in table if k <= x), default=min(table))
+    hi = min((k for k in table if k >= x), default=max(table))
     if lo == hi:
-        return _PHASE1_US[lo] * (k / lo) ** 2
-    f = (k - lo) / (hi - lo)
-    return _PHASE1_US[lo] + f * (_PHASE1_US[hi] - _PHASE1_US[lo])
+        return table[lo]
+    import math
+    f = ((math.log2(x) - math.log2(lo)) / (math.log2(hi) - math.log2(lo)) if log
+         else (x - lo) / (hi - lo))
+    a, b = table[lo], table[hi]
+    if isinstance(a, tuple):
+        return tuple(p + f * (q - p) for p, q in zip(a, b))
+    return a + f * (b - a)
 
 
-def _per_miss_us(num_cached: int) -> float:
-    return 0.44 + 0.026 * (num_cached / 256.0)
+def _select_us(strategy, num_cached, k, m):
+    if m <= 0:
+        return _EARLY_OUT_US
+    if strategy == "insert":
+        # MAX_K is the next power of two at or above 8; the loop cost tracks it.
+        max_k = max(8, 1 << (k - 1).bit_length())
+        return _interp(_INSERT_US, num_cached) * (max_k / 8.0)
+    base, slope = _interp(_SEQ_US, num_cached)
+    return base + slope * m
 
 
 def estimate(shape, params=None, tol=None, dtype="int32", device="H100", **_):
@@ -54,9 +86,8 @@ def estimate(shape, params=None, tol=None, dtype="int32", device="H100", **_):
     params = params or {}
     m = params.get("num_missing", max(1.0, k / 8.0))
 
-    us = _LAUNCH_US + _phase1_us(k)
-    if m > 0:
-        us += _ENTER_US + m * _per_miss_us(num_cached)
+    rec = recommend(shape, params, tol, dtype, device)
+    us = _interp(_P1_EXTRA_US, k) + _select_us(rec["strategy"], num_cached, k, m)
 
     # Metadata only: the payload is the caller's, and the kernel never reads it.
     bytes_moved = 4 * k + 12 * num_cached + 8 * k
@@ -69,11 +100,13 @@ def estimate(shape, params=None, tol=None, dtype="int32", device="H100", **_):
         bound="latency",
         confidence="measured",
         n_kernel_launches=1,
-        suggested_config=recommend(shape, params, tol, dtype, device),
+        suggested_config=rec,
         notes=[
             f"num_total={num_total} num_cached={num_cached} K={k} num_missing={m:g}",
-            "single CTA; more warps does not help (measured flat from 4 to 16)",
-            f"{100 * _LAUNCH_US / us:.0f}% of this is launch overhead",
+            f"strategy={rec['strategy']}; single CTA, and more warps does not help "
+            f"(measured flat from 4 to 16)",
+            f"CUDA-graph replay; an eager launch adds ~{_EAGER_LAUNCH_US:.0f}us of "
+            f"Triton dispatch on top",
         ],
         expected_residual=None,
         precision_tier=None,
@@ -84,29 +117,42 @@ def estimate(shape, params=None, tol=None, dtype="int32", device="H100", **_):
 def recommend(shape, params=None, tol=None, dtype="int32", device="H100", **_):
     """Which selection strategy ``lru_ensure`` will use for this shape, and why.
 
-    Informational: the router picks the same thing on its own. Pass the result's
-    ``strategy`` back via ``lru_ensure(..., strategy=...)`` only to override it.
+    Informational: the router picks the same thing from the same two constants. Pass the
+    result's ``strategy`` back via ``lru_ensure(..., strategy=...)`` only to override it.
 
-    Measured crossovers (H100):
+    The router sees only the shape, but the real crossover also moves with the miss
+    count, so when ``num_missing`` is known this reports whether the other strategy
+    would have been cheaper. Measured on H100:
 
-    * ``num_cached >= 24K`` -- only ``lru_ensure_insert`` still scales; the other two hold
-      the cache in registers and spill (``lru_ensure_topk`` stops compiling past ~64K).
-      At 65K slots it is 2.2x ``topk`` and 3.3x the sequential scan.
-    * below that, cost is decided by the miss count: the sequential scan is
-      ``floor + slope * m`` while the select is flat, crossing near ``m = 0.5 * K``.
-    * miss rate unknown -> ``lru_ensure_auto`` branches at runtime, measured within 1-4%
-      of whichever would have won.
+    * ``num_cached < 40K`` -- the sequential scan wins at every miss count. Its block is
+      register-resident, and below that size it does not spill.
+    * ``num_cached >= 40K`` **and** ``K <= 8`` -- streaming wins once the miss count
+      passes roughly ``K/2``; below that the scan is still ahead, so a shape-only router
+      is choosing on the worst case, which streaming bounds far better (flat vs
+      ``15us * m`` at 64K slots).
+    * ``K > 8`` -- the scan wins regardless of cache size: streaming's insert loop is
+      linear in MAX_K and reaches 1.5ms at K=128, 36x the scan.
     """
     _, num_cached, k = shape
     params = params or {}
     m = params.get("num_missing")
 
-    if num_cached >= STREAMING_THRESHOLD:
-        return {"strategy": "insert", "block_c_tile": 2048,
-                "why": "register-resident strategies spill past ~24K slots"}
-    if m is None:
-        return {"strategy": "auto", "thresh": max(2, k // 4),
-                "why": "miss count unknown; the kernel branches on it at runtime"}
-    if m < 0.5 * k:
-        return {"strategy": "seq", "why": f"m={m:g} below the ~0.5*K crossover"}
-    return {"strategy": "topk", "why": f"m={m:g} above the ~0.5*K crossover"}
+    streaming = num_cached >= STREAMING_THRESHOLD and k <= STREAMING_MAX_K
+    if streaming:
+        why = f"num_cached>={STREAMING_THRESHOLD} with K<={STREAMING_MAX_K}"
+    elif num_cached >= STREAMING_THRESHOLD:
+        why = f"K={k} above {STREAMING_MAX_K}: the insert loop is linear in MAX_K"
+    else:
+        why = f"num_cached<{STREAMING_THRESHOLD}: the scan does not spill yet"
+
+    out = {"strategy": "insert" if streaming else "seq", "why": why}
+    if streaming:
+        out["block_c_tile"] = 2048
+    if m is not None:
+        other = "seq" if streaming else "insert"
+        mine_us = _select_us(out["strategy"], num_cached, k, m)
+        other_us = _select_us(other, num_cached, k, m)
+        if other_us < mine_us:
+            out["note"] = (f"at num_missing={m:g}, strategy={other!r} would be "
+                           f"{mine_us / other_us:.1f}x faster; pass it explicitly")
+    return out
