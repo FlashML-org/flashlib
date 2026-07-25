@@ -109,6 +109,7 @@ _OP_REGISTRY: dict[str, str] = {
     "pairwise_l2":          "flashlib.kernels.distance.cost",
     "connected_components": "flashlib.kernels.connected_components.cost",
     "flash_mst": "flashlib.kernels.flash_mst.cost",
+    "slot_cache":           "flashlib.kernels.slot_cache.cost",
 }
 
 
