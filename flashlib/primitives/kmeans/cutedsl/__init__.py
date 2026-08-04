@@ -19,6 +19,11 @@ from flashlib.primitives.kmeans.cutedsl.assign import (
 from flashlib.primitives.kmeans.cutedsl.assign_kernel import (
     HopperFlashKmeansAssign,
 )
+from flashlib.primitives.kmeans.cutedsl.blackwell_assign import (
+    blackwell_assign_available,
+    blackwell_assign_euclid,
+    blackwell_assign_supported,
+)
 
 __all__ = [
     "cutedsl_assign_euclid",
@@ -26,4 +31,7 @@ __all__ = [
     "cutedsl_finalize",
     "cutedsl_info",
     "HopperFlashKmeansAssign",
+    "blackwell_assign_available",
+    "blackwell_assign_euclid",
+    "blackwell_assign_supported",
 ]

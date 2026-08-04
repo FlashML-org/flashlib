@@ -58,6 +58,14 @@ cutedsl_kmeans_Euclid = lazy_attr(
     "flashlib.primitives.kmeans.cutedsl",
     "cutedsl_kmeans_Euclid",
 )
+blackwell_assign_euclid = lazy_attr(
+    "flashlib.primitives.kmeans.cutedsl",
+    "blackwell_assign_euclid",
+)
+blackwell_assign_supported = lazy_attr(
+    "flashlib.primitives.kmeans.cutedsl",
+    "blackwell_assign_supported",
+)
 
 
 __all__ = [
@@ -79,5 +87,7 @@ __all__ = [
     "kmeans_largeN_assign",
     "cutedsl_assign_euclid",
     "cutedsl_kmeans_Euclid",
+    "blackwell_assign_euclid",
+    "blackwell_assign_supported",
     "cost",
 ]
