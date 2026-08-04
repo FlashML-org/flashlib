@@ -121,21 +121,24 @@ def _cutedsl_autopick(x: torch.Tensor, c: torch.Tensor, k: int,
     is_build = (x.data_ptr() == c.data_ptr() and N == M)
 
     if hw.is_blackwell:
-        if Dd != 128:
-            return False
         try:
             from flashlib.primitives.knn.cutedsl.blackwell_impl import (
-                blackwell_supported)
+                blackwell_supported, search_tc_supported)
         except Exception:  # noqa: BLE001
             return False
         if is_build:
-            if k > _CUTEDSL_BUILD_KMAX:
+            if Dd != 128 or k > _CUTEDSL_BUILD_KMAX:
                 return False
             return blackwell_supported(x, c, k)
-        # search: only where Triton's MMA-batched path can't run (small Q).
-        if N >= _CUTEDSL_SMALLQ:
-            return False
-        return blackwell_supported(x, c, k)
+        # search: the tcgen05 kernel (D % 64 == 0, D <= 512, k <= 16) beats
+        # Triton across Q/M on B200 (1.1-3.7x measured) except tiny corpora,
+        # where kernel+merge launch overhead dominates.
+        if search_tc_supported(Dd, k) and M >= 4096:
+            return blackwell_supported(x, c, k)
+        # D=128 small-Q fallback: Triton's MMA path can't run (tl.dot M>=16).
+        if Dd == 128 and N < _CUTEDSL_SMALLQ:
+            return blackwell_supported(x, c, k)
+        return False
 
     if hw.is_hopper:
         if not is_build:
