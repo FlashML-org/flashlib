@@ -38,9 +38,10 @@ dependencies = [
     "numpy",
     "numba",                # hdbscan tree-condensation helpers (CPU-side)
     # CuteDSL backends for kmeans/knn/dbscan/hdbscan/umap/spectral_clustering/polar/orthonormalize.
-    # <4.6: cutlass-dsl 4.6.x removed cutlass.base_dsl._mlir_helpers, which the
-    # knn hopper kernel imports (hard ImportError on flash_knn with 4.6.1).
-    "nvidia-cutlass-dsl>=4.4,<4.6; platform_system == 'Linux'",
+    # Upper bound tracks the newest cutlass-dsl release validated against the
+    # private MLIR helper imports in the knn hopper kernel (they moved from
+    # cutlass.base_dsl._mlir_helpers to cutlass._mlir_helpers in 4.6).
+    "nvidia-cutlass-dsl>=4.4,<4.7; platform_system == 'Linux'",
     "tqdm",                 # progress bar in kmeans Lloyd iterations
 ]
 
