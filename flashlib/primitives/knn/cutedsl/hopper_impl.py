@@ -494,7 +494,11 @@ from cutlass.pipeline import pipeline_init_arrive, pipeline_init_wait
 # back into a CuTeDSL Numeric.
 from cutlass._mlir.extras import types as _mlir_types  # type: ignore
 from cutlass._mlir.dialects import llvm as _llvm  # type: ignore
-from cutlass.base_dsl._mlir_helpers import arith as _arith_helper  # type: ignore
+
+try:  # cutlass-dsl <= 4.5.x
+    from cutlass.base_dsl._mlir_helpers import arith as _arith_helper  # type: ignore
+except ImportError:  # cutlass-dsl >= 4.6 moved _mlir_helpers to the top level
+    from cutlass._mlir_helpers import arith as _arith_helper  # type: ignore
 
 
 def _bitcast_f32_to_i32(val_f32):
