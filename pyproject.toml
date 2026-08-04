@@ -37,7 +37,10 @@ dependencies = [
     "triton-windows>=3.6; platform_system == 'Windows'",
     "numpy",
     "numba",                # hdbscan tree-condensation helpers (CPU-side)
-    "nvidia-cutlass-dsl; platform_system == 'Linux'",   # CuteDSL backends for kmeans/knn/dbscan/hdbscan/umap/spectral_clustering/polar/orthonormalize
+    # CuteDSL backends for kmeans/knn/dbscan/hdbscan/umap/spectral_clustering/polar/orthonormalize.
+    # <4.6: cutlass-dsl 4.6.x removed cutlass.base_dsl._mlir_helpers, which the
+    # knn hopper kernel imports (hard ImportError on flash_knn with 4.6.1).
+    "nvidia-cutlass-dsl>=4.4,<4.6; platform_system == 'Linux'",
     "tqdm",                 # progress bar in kmeans Lloyd iterations
 ]
 
