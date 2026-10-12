@@ -25,27 +25,14 @@ from __future__ import annotations
 
 import torch
 
-from flashlib._optional import has_cutedsl
+from flashlib._optional import has_cutedsl_sm90
 from flashlib.info.estimate import Estimate
 from flashlib.info.roofline import roofline
 from flashlib.linalg.gemm.fp32 import _shape_mkn
 
 
-_CUTE_AVAILABLE: bool | None = None
-
-
 def _cute_available() -> bool:
-    global _CUTE_AVAILABLE
-    if _CUTE_AVAILABLE is None:
-        try:
-            _CUTE_AVAILABLE = (
-                has_cutedsl()
-                and torch.cuda.is_available()
-                and torch.cuda.get_device_properties(0).major >= 9
-            )
-        except Exception:
-            _CUTE_AVAILABLE = False
-    return _CUTE_AVAILABLE
+    return has_cutedsl_sm90()
 
 
 def _python_3call(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:

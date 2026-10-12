@@ -40,12 +40,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# CuteDSL backends (NVIDIA only). Ops with a Triton path fall back to it without this extra.
+# CuteDSL backends (NVIDIA only). Without this extra every op runs on its Triton / torch path.
 # Upper bound tracks the newest cutlass-dsl release validated against the
 # private MLIR helper imports in the knn hopper kernel (they moved from
 # cutlass.base_dsl._mlir_helpers to cutlass._mlir_helpers in 4.6).
 cutedsl = ["nvidia-cutlass-dsl>=4.4,<4.7; platform_system == 'Linux'"]
-numba = ["numba"]           # hdbscan tree-condensation helpers (CPU-side)
+numba = ["numba"]           # JIT for the hdbscan tree helpers (pure Python without it)
 dev = ["pytest>=7", "scikit-learn>=1.5,<1.8", "tqdm", "flashlib[cutedsl,numba]"]
 bench = [
     "scikit-learn>=1.5,<1.8",

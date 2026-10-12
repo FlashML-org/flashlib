@@ -8,7 +8,7 @@ inner loop, ill-conditioned solves).
 """
 import torch
 
-from flashlib._optional import require_cutedsl
+from flashlib._optional import has_cutedsl_sm90
 from flashlib.info.estimate import Estimate
 from flashlib.info.roofline import roofline
 from flashlib.linalg.gemm.fp32 import _shape_mkn
@@ -23,8 +23,15 @@ def gemm(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
     Note: the underlying fast-gemm cuTe kernel expects ``B`` shaped ``(N, K)``;
     we transpose at the boundary so callers can pass ``B`` in PyTorch's
     standard ``(K, N)`` shape (i.e. computes ``A @ B``).
+
+    The kernel needs the CuTe DSL on Hopper (sm_90). Elsewhere this falls
+    back to 3xTF32 (:func:`flashlib.linalg.gemm.tf32_x3.gemm`), which is at
+    least as accurate but slower.
     """
-    require_cutedsl("gemm_fp16_x9")
+    if not has_cutedsl_sm90():
+        from flashlib.linalg.gemm import tf32_x3
+
+        return tf32_x3.gemm(A.to(torch.float32), B.to(torch.float32))
     from flashlib.linalg.gemm.cutedsl.fp16x9 import matmul_fp16x9_cute_fused
     A32 = A.to(torch.float32).contiguous()
     B32 = B.to(torch.float32).t().contiguous()  # (K,N) -> kernel-native (N,K)

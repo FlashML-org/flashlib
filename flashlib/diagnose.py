@@ -65,10 +65,12 @@ def _print_optional_status() -> None:
         print("  [--]   cutedsl (CuTe DSL backends): NVIDIA GPUs only")
     else:
         print(f"  [--]   cutedsl (CuTe DSL backends): {problem}; pip install 'flashlib[cutedsl]'")
-    if _optional.has_numba():
-        print(f"  [OK]   numba   (flash_hdbscan, numba {_safe_version('numba')})")
+    numba_problem = _optional._numba_problem()
+    if numba_problem is None:
+        print(f"  [OK]   numba   (fast flash_hdbscan tree steps, numba {_safe_version('numba')})")
     else:
-        print("  [--]   numba   (flash_hdbscan): pip install 'flashlib[numba]'")
+        print(f"  [--]   numba   (flash_hdbscan tree steps run in pure Python): {numba_problem}; "
+              f"pip install 'flashlib[numba]'")
 
 
 def _print_primitive_status() -> None:

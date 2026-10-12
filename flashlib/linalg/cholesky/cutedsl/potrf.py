@@ -20,7 +20,7 @@ factored rel err stays ≲ 1e-5. For ill-conditioned A, fall back to fp32.
 """
 import torch
 
-from flashlib.linalg.gemm.cutedsl.bf16_chained import gemm_3xbf16
+from flashlib.linalg.gemm.bf16_x3 import gemm_padded as gemm_3xbf16
 from flashlib.linalg.trsm import trsm_3xbf16
 
 # cuSOLVER's POTRF is very well tuned (uses tensor cores internally); at

@@ -21,8 +21,8 @@ pip install flashlib
 Optional extras:
 
 ```bash
-pip install 'flashlib[cutedsl]' # CuTe DSL backends (NVIDIA); ops with a Triton path work without it
-pip install 'flashlib[numba]'   # needed by flash_hdbscan
+pip install 'flashlib[cutedsl]' # faster CuTe DSL kernels (NVIDIA); every op also runs without it
+pip install 'flashlib[numba]'   # faster flash_hdbscan tree steps (pure Python without it)
 ```
 
 From source:

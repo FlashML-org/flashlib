@@ -26,8 +26,11 @@ from typing import Any, Callable
 
 from flashlib._optional import has_cutedsl, require_cutedsl
 
-# These ``cutedsl`` backends keep the name for API compatibility but run on torch / Triton / cuBLAS only.
+# These ``cutedsl`` backends import and run without the CuTe DSL (torch / Triton / cuBLAS, or a Triton fallback).
 _CUTEDSL_NAME_ONLY = frozenset({
+    "flashlib.linalg.cholesky.cutedsl",
+    "flashlib.linalg.qr.cutedsl",
+    "flashlib.linalg.trsm.cutedsl",
     "flashlib.primitives.linear_regression.cutedsl",
     "flashlib.primitives.pca.cutedsl",
     "flashlib.primitives.random_forest.cutedsl",
