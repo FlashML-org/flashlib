@@ -78,16 +78,8 @@ def _wrap(t: torch.Tensor, dtype):
     return ct.mark_layout_dynamic(leading_dim=leading_dim)
 
 
-_OUT_CACHE: dict[tuple, torch.Tensor] = {}
-
-
-def _get_output(M: int, N: int, device):
-    key = (M, N, str(device))
-    out = _OUT_CACHE.get(key)
-    if out is None:
-        out = torch.empty((M, N, 1), device=device, dtype=torch.float32)
-        _OUT_CACHE[key] = out
-    return out
+def _round_up(x: int, m: int) -> int:
+    return (x + m - 1) // m * m
 
 
 def matmul_bf16x3_cute_fused_presplit(
@@ -104,11 +96,22 @@ def matmul_bf16x3_cute_fused_presplit(
     M, K = a_hi.shape
     N, _ = b_hi.shape
 
+    # TMA needs 16-byte-aligned rows: K % 8 for the bf16 operands, N % 4 for the fp32 output.
+    K_pad, N_pad = _round_up(K, 8), _round_up(N, 4)
+    if (K_pad, N_pad) != (K, N):
+        pad = torch.nn.functional.pad
+        a_hi, a_lo = pad(a_hi, (0, K_pad - K)), pad(a_lo, (0, K_pad - K))
+        b_hi, b_lo = pad(b_hi, (0, K_pad - K, 0, N_pad - N)), pad(b_lo, (0, K_pad - K, 0, N_pad - N))
+        out = matmul_bf16x3_cute_fused_presplit(
+            a_hi, a_lo, b_hi, b_lo, tile_shape_mn, cluster_shape_mn, swizzle_size,
+        )
+        return out[:, :N].contiguous()
+
     a_hi3 = a_hi.unsqueeze(-1).contiguous()
     a_lo3 = a_lo.unsqueeze(-1).contiguous()
     b_hi3 = b_hi.unsqueeze(-1).contiguous()
     b_lo3 = b_lo.unsqueeze(-1).contiguous()
-    c = _get_output(M, N, a_hi.device)
+    c = torch.empty((M, N, 1), device=a_hi.device, dtype=torch.float32)
 
     compiled = _compile_for(M, N, K, 1, tile_shape_mn, cluster_shape_mn,
                               swizzle_size, raster_along_m=True)

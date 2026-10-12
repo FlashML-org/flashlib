@@ -117,10 +117,13 @@ def _gemm_int8_kernel(
     A, B, C, M, N, K,
     sa_m, sa_k, sb_n, sb_k, sc_m, sc_n,
     BM: tl.constexpr, BN: tl.constexpr, BK: tl.constexpr,
+    EVEN: tl.constexpr,
 ):
     """C = A @ B.T where A is (M, K) int8, B is (N, K) int8 → C is (M, N) int32.
     Triton's tl.dot with INT8 inputs and INT32 accumulator hits ~1325 TOPS at
     BM=BN=BK=128 on H200 (vs torch._int_mm's ~935 TOPS).
+
+    ``EVEN`` (M, N, K all multiples of the block) skips the bounds masks.
     """
     pid_m = tl.program_id(0)
     pid_n = tl.program_id(1)
@@ -131,13 +134,20 @@ def _gemm_int8_kernel(
     B_ptrs = B + on[None, :] * sb_n + ok[:, None] * sb_k
     acc = tl.zeros((BM, BN), dtype=tl.int32)
     for k in range(0, K, BK):
-        a = tl.load(A_ptrs)
-        b = tl.load(B_ptrs)
+        if EVEN:
+            a = tl.load(A_ptrs)
+            b = tl.load(B_ptrs)
+        else:
+            a = tl.load(A_ptrs, mask=(om[:, None] < M) & (k + ok[None, :] < K), other=0)
+            b = tl.load(B_ptrs, mask=(on[None, :] < N) & (k + ok[:, None] < K), other=0)
         acc = tl.dot(a, b, acc, out_dtype=tl.int32)
         A_ptrs += BK * sa_k
         B_ptrs += BK * sb_k
     C_ptrs = C + om[:, None] * sc_m + on[None, :] * sc_n
-    tl.store(C_ptrs, acc)
+    if EVEN:
+        tl.store(C_ptrs, acc)
+    else:
+        tl.store(C_ptrs, acc, mask=(om[:, None] < M) & (on[None, :] < N))
 
 
 def _triton_int_mm(A: torch.Tensor, B: torch.Tensor, out: torch.Tensor) -> None:
@@ -152,7 +162,8 @@ def _triton_int_mm(A: torch.Tensor, B: torch.Tensor, out: torch.Tensor) -> None:
         A, B, out, M, N, K,
         A.stride(0), A.stride(1), B.stride(0), B.stride(1),
         out.stride(0), out.stride(1),
-        BM=BM, BN=BN, BK=BK, num_warps=4, num_stages=3,
+        BM=BM, BN=BN, BK=BK, EVEN=(M % BM == 0 and N % BN == 0 and K % BK == 0),
+        num_warps=4, num_stages=3,
     )
 
 

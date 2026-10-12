@@ -99,6 +99,10 @@ def gemm_bf16_kn(A: torch.Tensor, B: torch.Tensor,
     M, K = A.shape
     N, K2 = B.shape
     assert K == K2, f"K mismatch: {K} vs {K2}"
+    assert K % 8 == 0 and N % 4 == 0, (
+        f"TMA needs 16-byte-aligned rows (K % 8 == 0, N % 4 == 0); got K={K}, N={N}. "
+        f"Use gemm_3xbf16_padded for arbitrary shapes."
+    )
 
     if out is None:
         out = torch.empty(M, N, device=A.device, dtype=torch.float32)
@@ -139,6 +143,9 @@ def gemm_3xbf16(A: torch.Tensor, B: torch.Tensor,
     A: (M, K) fp32; B: (K, N) fp32; C: (M, N) fp32.
     """
     assert A.dtype == torch.float32 and B.dtype == torch.float32
+    if A.shape[1] % 8 or B.shape[1] % 4:
+        C = gemm_3xbf16_padded(A, B, tile_mn=tile_mn)
+        return C if out is None else out.copy_(C)
     if not A.is_contiguous():
         A = A.contiguous()
     # Standard form: B is (K, N). Kernel wants (N, K) k-major.
