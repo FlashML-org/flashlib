@@ -22,6 +22,10 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
+from flashlib._optional import has_cutedsl
+
+needs_cutedsl = pytest.mark.skipif(not has_cutedsl(), reason="needs flashlib[cutedsl]")
+
 if not torch.cuda.is_available():
     pytest.skip("CUDA required for backend parity tests", allow_module_level=True)
 
@@ -78,6 +82,7 @@ def test_kmeans_assign_triton_matches_torch_reference():
 
 
 @pytest.mark.skipif(not _is_hopper(), reason="cutedsl assign requires Hopper SM90")
+@needs_cutedsl
 def test_kmeans_assign_cutedsl_matches_triton():
     _seeded()
     B, N, D, K = 1, 4096, 128, 64
@@ -302,6 +307,7 @@ def _hopper_sm90() -> bool:
 
 
 @pytest.mark.skipif(not _hopper_sm90(), reason="Hopper sm_90 FA3 path")
+@needs_cutedsl
 @pytest.mark.parametrize("q", [1, 4, 8, 13, 100])
 def test_knn_cutedsl_fa3_smallq_search_exact(q):
     """FA3 search kernel handles partial / small query tiles (Q not a multiple
@@ -323,6 +329,7 @@ def test_knn_cutedsl_fa3_smallq_search_exact(q):
 
 
 @pytest.mark.skipif(not _hopper_sm90(), reason="Hopper sm_90 build auto-route")
+@needs_cutedsl
 def test_knn_autopick_hopper_build_band():
     """Lock the Hopper transparent-routing policy: large-N low/mid-k self-kNN
     builds auto-route to CuteDSL (1.4-2.4x); high-k, narrow-N, wide-D, and any

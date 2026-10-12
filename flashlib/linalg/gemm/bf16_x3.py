@@ -4,7 +4,7 @@ A = A_hi + A_lo  (each cast to bf16)
 B = B_hi + B_lo
 out = (A_hi @ B_hi) + (A_hi @ B_lo) + (A_lo @ B_hi)   [LoLo dropped]
 
-Two implementations are exposed by :func:`gemm`. The dispatcher picks the
+Three implementations are exposed by :func:`gemm`. The dispatcher picks the
 fastest available; the user never has to choose.
 
 * ``cute_fused`` (CuTeDSL, single launch). Pareto-best in BOTH precision
@@ -14,7 +14,9 @@ fastest available; the user never has to choose.
   Python wrapper (which truncated each of the 3 GEMM outputs to BF16
   before summing in FP32, costing ~6 effective bits).
 
-* ``triton`` (Triton Ozaki ``mm_3xbf16``). Used when CUTLASS DSL is unavailable.
+* ``triton`` (Triton Ozaki ``mm_3xbf16``). Used for 2D CUDA inputs when CUTLASS DSL is unavailable.
+
+* ``python_3call`` (3 ``torch.matmul`` calls + FP32 sum). Used for CPU and batched inputs. ~1.7e-3 RMS, ~6 ms at 8192³.
 
 Reference: Ootomo & Yokota 2022; Markidis et al. 2018; STATUS.md iter 12
 in fast-gemm (single-launch fused path closes the precision gap).
@@ -46,12 +48,29 @@ def _cute_available() -> bool:
     return _CUTE_AVAILABLE
 
 
+def _python_3call(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
+    """Legacy 3-matmul Python path, used for inputs the kernels do not take (CPU, batched).
+    Note: ``torch.matmul(bf16, bf16)`` returns BF16, so each partial is BF16-truncated before the FP32 sum."""
+    A = A.to(torch.float32)
+    B = B.to(torch.float32)
+    A_hi = A.to(torch.bfloat16)
+    A_lo = (A - A_hi.to(torch.float32)).to(torch.bfloat16)
+    B_hi = B.to(torch.bfloat16)
+    B_lo = (B - B_hi.to(torch.float32)).to(torch.bfloat16)
+    p1 = torch.matmul(A_hi, B_hi).to(torch.float32)
+    p2 = torch.matmul(A_hi, B_lo).to(torch.float32)
+    p3 = torch.matmul(A_lo, B_hi).to(torch.float32)
+    return p1 + p2 + p3
+
+
 def gemm(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
-    """3xbf16 GEMM. Auto-routes to the CuTeDSL fused single-launch kernel
-    when available (Pareto win in both precision and throughput); falls
-    back to the Triton Ozaki kernel otherwise. Standard PyTorch convention:
-    ``A`` is ``(M, K)``, ``B`` is ``(K, N)`` — computes ``A @ B``.
+    """3xbf16 GEMM computing ``A @ B`` with ``A`` ``(M, K)`` and ``B`` ``(K, N)``.
+
+    2D CUDA inputs go to the CuTeDSL fused single-launch kernel when available (Pareto win in both precision and throughput), else to the Triton Ozaki kernel.
+    CPU and batched inputs take the 3-matmul Python path.
     """
+    if not (A.is_cuda and A.ndim == 2 and B.ndim == 2):
+        return _python_3call(A, B)
     if _cute_available():
         try:
             from flashlib.linalg.gemm.cutedsl.bf16x3_fused import matmul_bf16x3_cute_fused
