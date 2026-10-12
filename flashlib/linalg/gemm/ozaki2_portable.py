@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import torch
 
+from flashlib._optional import require_cutedsl
 from flashlib.info.estimate import Estimate
 from flashlib.info.roofline import roofline
 from flashlib.linalg.gemm.fp32 import _shape_mkn
@@ -73,6 +74,7 @@ def gemm_ozaki2_cute(A: torch.Tensor, B: torch.Tensor, *,
             f"ozaki2_cute supports num_moduli in [2, 9]; got {num_moduli}. "
             f"For higher precision use gemm_ozaki2_int8 (GEMMul8)."
         )
+    require_cutedsl("gemm_ozaki2_cute")
     from flashlib.linalg.gemm.ozaki2_dispatch import matmul_ozaki2_triton
     A_ = A.contiguous()
     B_ = B.t().contiguous()

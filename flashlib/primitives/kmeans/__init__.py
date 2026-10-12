@@ -45,7 +45,7 @@ def flash_kmeans_cutedsl(x, n_clusters, **kw):
 
     Constraints: B=1, fp16/bf16 input, D in [16, 512] with D % 16 == 0,
     Hopper SM90 (H100/H200). Falls back to Triton if any constraint is
-    violated or CUTLASS DSL is unavailable.
+    violated. Needs ``flashlib[cutedsl]``.
     """
     return flash_kmeans(x, n_clusters, backend="cutedsl", **kw)
 

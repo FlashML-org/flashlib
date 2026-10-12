@@ -54,6 +54,7 @@ import cutlass
 import cutlass.cute as cute
 import cutlass.cute.runtime as cute_rt
 
+from flashlib._optional import require_numba
 from flashlib.kernels.flash_mst import flash_mst
 from flashlib.kernels.distance.triton import triton_pairwise_mrd
 from flashlib.primitives.hdbscan.triton import (
@@ -172,6 +173,7 @@ def cutedsl_hdbscan(X: torch.Tensor,
     the input dtype intact (exact). flash_knn / sparse Boruvka MST /
     numba dendrogram are shared with the Triton path.
     """
+    require_numba("cutedsl_hdbscan")
     assert X.is_cuda
     N, D = X.shape
 

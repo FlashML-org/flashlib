@@ -22,7 +22,7 @@ import torch
 
 from flashlib.linalg.gemm.triton.triton_mm import mm_tf32_lt
 from flashlib.linalg.orthonormalize.btrtri import btrtri
-from flashlib.linalg.gemm.cutedsl.bf16_chained import gemm_3xbf16_padded
+from flashlib.linalg.gemm.bf16_x3 import gemm_padded as gemm_3xbf16_padded
 
 
 def _chol_qr_once(C, jitter=0.0, syrk_mm=None, trsm_method='trsm'):

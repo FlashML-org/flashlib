@@ -48,6 +48,7 @@ from typing import Optional
 
 import torch
 
+from flashlib._optional import require_cutedsl
 from flashlib.kernels.cute_helpers import is_cutedsl_available
 from flashlib.primitives.ivf_pq.index import IvfPqIndex
 from flashlib.primitives.ivf_pq.torch_fallback import _pad_features
@@ -258,6 +259,7 @@ def _search_cute(
     decode+WGMMA GEMM (``cute_gemm``). Coarse + reduce mirror the Triton
     ``"gemm"`` path; only the fine-scan kernel differs. Returns ``(vals, ids)``.
     """
+    require_cutedsl(f"flash_ivf_pq search (variant={method!r})")
     # Lazy import so non-CUTLASS environments still load the Triton path.
     if method == "cute_lut":
         from flashlib.primitives.ivf_pq.cutedsl.shared_lut import (

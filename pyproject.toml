@@ -36,16 +36,16 @@ dependencies = [
     "triton>=3.6; platform_system == 'Linux'",
     "triton-windows>=3.6; platform_system == 'Windows'",
     "numpy",
-    "numba",                # hdbscan tree-condensation helpers (CPU-side)
-    # CuteDSL backends for kmeans/knn/dbscan/hdbscan/umap/spectral_clustering/polar/orthonormalize.
-    # Upper bound tracks the newest cutlass-dsl release validated against the
-    # private MLIR helper imports in the knn hopper kernel (they moved from
-    # cutlass.base_dsl._mlir_helpers to cutlass._mlir_helpers in 4.6).
-    "nvidia-cutlass-dsl>=4.4,<4.7; platform_system == 'Linux'",
     "tqdm",                 # progress bar in kmeans Lloyd iterations
 ]
 
 [project.optional-dependencies]
+# CuteDSL backends (NVIDIA only). Ops with a Triton path fall back to it without this extra.
+# Upper bound tracks the newest cutlass-dsl release validated against the
+# private MLIR helper imports in the knn hopper kernel (they moved from
+# cutlass.base_dsl._mlir_helpers to cutlass._mlir_helpers in 4.6).
+cutedsl = ["nvidia-cutlass-dsl>=4.4,<4.7; platform_system == 'Linux'"]
+numba = ["numba"]           # hdbscan tree-condensation helpers (CPU-side)
 dev = ["pytest>=7", "scikit-learn>=1.5,<1.8", "tqdm"]
 bench = [
     "scikit-learn>=1.5,<1.8",

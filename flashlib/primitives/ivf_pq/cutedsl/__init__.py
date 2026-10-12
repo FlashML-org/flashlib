@@ -28,11 +28,14 @@ re-rank an oversampled pool, so returned distances are ADC-exact.
 """
 from __future__ import annotations
 
-from flashlib.primitives.ivf_pq.cutedsl.shared_lut import (
-    ivf_pq_fine_scan_shared_lut,
+from flashlib._lazy import lazy_attr
+
+# Lazy so the Triton path can import ``fine_scan_host`` from this package without the CuTe DSL.
+ivf_pq_fine_scan_shared_lut = lazy_attr(
+    "flashlib.primitives.ivf_pq.cutedsl.shared_lut", "ivf_pq_fine_scan_shared_lut",
 )
-from flashlib.primitives.ivf_pq.cutedsl.decode_gemm import (
-    ivf_pq_fine_scan_decode_gemm,
+ivf_pq_fine_scan_decode_gemm = lazy_attr(
+    "flashlib.primitives.ivf_pq.cutedsl.decode_gemm", "ivf_pq_fine_scan_decode_gemm",
 )
 
 __all__ = [

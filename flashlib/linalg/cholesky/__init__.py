@@ -6,6 +6,8 @@ Variants:
                         and is routed through 3xBF16; leaf POTRF stays
                         fp32 via cuSOLVER.
 """
-from flashlib.linalg.cholesky.cutedsl import potrf_3xbf16
+from flashlib._lazy import lazy_attr
+
+potrf_3xbf16 = lazy_attr("flashlib.linalg.cholesky.cutedsl", "potrf_3xbf16")
 
 __all__ = ["potrf_3xbf16"]

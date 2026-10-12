@@ -8,7 +8,7 @@ Backends:
     backend="cutedsl"  -- Hopper FA3-style fused TMA+WGMMA assign
                           (H100/H200, B=1, fp16/bf16, D <= 512). Falls
                           back to Triton when the kernel cannot run
-                          (B>1, large D, no CUTLASS DSL).
+                          (B>1, large D). Needs ``flashlib[cutedsl]``.
     backend="torch"    -- pure-torch chunked reference (CPU-OK).
 
 Variant aliases inside Triton:
@@ -30,7 +30,7 @@ from typing import Optional, Tuple
 import torch
 
 from flashlib import _hw
-from flashlib.primitives.kmeans.cutedsl import cutedsl_kmeans_Euclid
+from flashlib._optional import has_cutedsl, require_cutedsl
 from flashlib.primitives.kmeans.torch_fallback import (
     batch_kmeans_Euclid_torch_native,
 )
@@ -146,6 +146,8 @@ def flash_kmeans(
         B=B_, N=N_, D=D_, K=n_clusters, metric=metric,
         backend=backend, variant=variant,
     )
+    if chosen == "cutedsl" and backend is None and not has_cutedsl():
+        chosen = "triton"
     if chosen == "torch":
         if metric != "euclidean":
             raise NotImplementedError(
@@ -156,6 +158,9 @@ def flash_kmeans(
             init_centroids=init_centroids, verbose=verbose, **kwargs,
         )
     elif chosen == "cutedsl":
+        require_cutedsl("flash_kmeans(backend='cutedsl')")
+        from flashlib.primitives.kmeans.cutedsl import cutedsl_kmeans_Euclid
+
         if metric != "euclidean":
             raise NotImplementedError(
                 f"cutedsl backend currently supports euclidean only "

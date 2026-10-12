@@ -24,8 +24,8 @@ from typing import Optional
 import torch
 
 from flashlib import _hw
+from flashlib._optional import has_cutedsl, require_cutedsl
 from flashlib.kernels.distance.triton.knn_gather_l2sq import triton_knn_gather_sqdist
-from flashlib.primitives.knn.cutedsl import cutedsl_available, cutedsl_flash_knn
 from flashlib.primitives.knn.torch_fallback import knn_torch_naive
 from flashlib.primitives.knn.triton.dispatch import flash_knn_triton
 
@@ -119,6 +119,10 @@ def _cutedsl_autopick(x: torch.Tensor, c: torch.Tensor, k: int,
     if x.dtype != torch.bfloat16 or c.dtype != torch.bfloat16:
         return False
     is_build = (x.data_ptr() == c.data_ptr() and N == M)
+    if not has_cutedsl():
+        if hw.is_blackwell and not is_build and Dd == 128 and N < _CUTEDSL_SMALLQ:
+            require_cutedsl(f"flash_knn with fewer than {_CUTEDSL_SMALLQ} queries on Blackwell")
+        return False
 
     if hw.is_blackwell:
         try:
@@ -147,7 +151,7 @@ def _cutedsl_autopick(x: torch.Tensor, c: torch.Tensor, k: int,
             return False
         if N < _HOPPER_BUILD_NMIN or k > _HOPPER_BUILD_KMAX:
             return False
-        return cutedsl_available()
+        return True
 
     return False
 
@@ -160,6 +164,8 @@ def _cutedsl_knn(x: torch.Tensor, c: torch.Tensor, k: int,
         from flashlib.primitives.knn.cutedsl.blackwell_impl import (
             blackwell_flash_knn)
         return blackwell_flash_knn(x, c, k)
+    from flashlib.primitives.knn.cutedsl import cutedsl_flash_knn
+
     return cutedsl_flash_knn(x, c, k, **kwargs)
 
 
@@ -245,6 +251,8 @@ def flash_knn_dispatch(
     B, N, D = x.shape
 
     chosen = _route(B=B, N=N, D=D, k=k, backend=backend)
+    if chosen == "cutedsl":
+        require_cutedsl("flash_knn(backend='cutedsl')")
 
     if chosen == "torch":
         vals, idxs = knn_torch_naive(x, c, k)

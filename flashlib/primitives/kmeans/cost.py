@@ -19,6 +19,7 @@ the same compute budget. CuteDSL gets ~15-30 % wins at the
 ``(K=4096, D=512)`` extreme corner only -- those are encoded as a
 shape-conditional ``eff_factor``.
 """
+from flashlib._optional import has_cutedsl
 from flashlib.info.estimate import Estimate
 from flashlib.info.roofline import roofline
 
@@ -147,7 +148,7 @@ def recommend(shape, params=None, tol=None, dtype="float32", device="H100", **_)
     B, N, D, K, niter = common(shape, params)
     backend = "triton"
     fa3_eligible = (B == 1 and 16 <= D <= 512 and D % 16 == 0)
-    if fa3_eligible and K >= 1024 and D >= 256:
+    if fa3_eligible and K >= 1024 and D >= 256 and has_cutedsl():
         backend = "cutedsl"
     return {
         "backend": backend,

@@ -5,9 +5,7 @@ Backends:
                                 solves the normal equations with
                                 :mod:`flashlib.linalg.gemm` + iterative
                                 refinement).
-    backend="cutedsl"        -> CuteDSL bf16 symmetric XtX kernel; falls
-                                back to the triton path when the CUTLASS
-                                DSL is unavailable on the running install.
+    backend="cutedsl"        -> CuteDSL bf16 symmetric XtX kernel; needs ``flashlib[cutedsl]``.
 """
 from __future__ import annotations
 
@@ -15,7 +13,7 @@ from typing import Optional
 
 import torch
 
-from flashlib.primitives.ridge.cutedsl import cutedsl_ridge_regression
+from flashlib._optional import require_cutedsl
 from flashlib.primitives.ridge.triton.ridge import triton_ridge_regression
 
 
@@ -35,6 +33,9 @@ def flash_ridge_regression(
     ``tol`` to opt into a low-precision storage cast.
     """
     if backend == "cutedsl":
+        require_cutedsl("flash_ridge_regression(backend='cutedsl')")
+        from flashlib.primitives.ridge.cutedsl import cutedsl_ridge_regression
+
         return cutedsl_ridge_regression(X, y, alpha=alpha, n_refine=n_refine)
     return triton_ridge_regression(X, y, alpha=alpha, tol=tol, n_refine=n_refine)
 

@@ -8,6 +8,7 @@ inner loop, ill-conditioned solves).
 """
 import torch
 
+from flashlib._optional import require_cutedsl
 from flashlib.info.estimate import Estimate
 from flashlib.info.roofline import roofline
 from flashlib.linalg.gemm.fp32 import _shape_mkn
@@ -23,6 +24,7 @@ def gemm(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
     we transpose at the boundary so callers can pass ``B`` in PyTorch's
     standard ``(K, N)`` shape (i.e. computes ``A @ B``).
     """
+    require_cutedsl("gemm_fp16_x9")
     from flashlib.linalg.gemm.cutedsl.fp16x9 import matmul_fp16x9_cute_fused
     A32 = A.to(torch.float32).contiguous()
     B32 = B.to(torch.float32).t().contiguous()  # (K,N) -> kernel-native (N,K)

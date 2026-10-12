@@ -21,7 +21,17 @@ at the call site.
 from __future__ import annotations
 
 import importlib
+import sys
 from typing import Any, Callable
+
+from flashlib._optional import has_cutedsl, require_cutedsl
+
+# These ``cutedsl`` backends keep the name for API compatibility but run on torch / Triton / cuBLAS only.
+_CUTEDSL_NAME_ONLY = frozenset({
+    "flashlib.primitives.linear_regression.cutedsl",
+    "flashlib.primitives.pca.cutedsl",
+    "flashlib.primitives.random_forest.cutedsl",
+})
 
 
 def lazy_attr(module_path: str, name: str) -> Callable[..., Any]:
@@ -37,12 +47,22 @@ def lazy_attr(module_path: str, name: str) -> Callable[..., Any]:
         Attribute (typically a function or class) to fetch from the
         module.
     """
+    needs_cutedsl = ".cutedsl" in module_path and module_path not in _CUTEDSL_NAME_ONLY
+    # Capability probes answer False instead of raising when the backend is missing.
+    is_probe = name.endswith(("_available", "_supported"))
+
     def _f(*args, **kwargs):
+        if needs_cutedsl and not has_cutedsl():
+            if is_probe:
+                return False
+            require_cutedsl(name)
         mod = importlib.import_module(module_path)
         return getattr(mod, name)(*args, **kwargs)
 
     _f.__name__ = name
     _f.__qualname__ = name
+    # Same trick as collections.namedtuple: lets pickle find the proxy in the module that defines it.
+    _f.__module__ = sys._getframe(1).f_globals.get("__name__", __name__)
     _f.__doc__ = f"Lazy proxy for ``{module_path}.{name}``."
     return _f
 
