@@ -18,6 +18,13 @@ Install with `pip`:
 pip install flashlib
 ```
 
+Optional extras:
+
+```bash
+pip install 'flashlib[cutedsl]' # CuTe DSL backends (NVIDIA); ops with a Triton path work without it
+pip install 'flashlib[numba]'   # needed by flash_hdbscan
+```
+
 From source:
 
 ```bash

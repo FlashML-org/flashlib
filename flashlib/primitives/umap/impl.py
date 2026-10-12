@@ -4,8 +4,7 @@ Backends:
     backend=None / "triton" -> :func:`flash_umap` (default; flash_knn
                                 graph + fused fuzzy simplicial set +
                                 Triton SGD step).
-    backend="cutedsl"        -> CuteDSL fused-fuzzy variant; falls back
-                                to triton when CUTLASS DSL is unavailable.
+    backend="cutedsl"        -> CuteDSL fused-fuzzy variant; needs ``flashlib[cutedsl]``.
 """
 from __future__ import annotations
 
@@ -13,7 +12,7 @@ from typing import Optional
 
 import torch
 
-from flashlib.primitives.umap.cutedsl import cutedsl_flash_umap
+from flashlib._optional import require_cutedsl
 from flashlib.primitives.umap.triton.flash_umap import (
     flash_umap as triton_flash_umap,
 )
@@ -36,6 +35,9 @@ def flash_umap(
 ):
     """UMAP -- exact in input dtype by default; ``tol`` opts into bf16 KNN."""
     if backend == "cutedsl":
+        require_cutedsl("flash_umap(backend='cutedsl')")
+        from flashlib.primitives.umap.cutedsl import cutedsl_flash_umap
+
         return cutedsl_flash_umap(
             X,
             n_neighbors=n_neighbors, n_components=n_components,

@@ -52,7 +52,7 @@ from flashlib.linalg.polar import (  # noqa: F401
 from flashlib.linalg.orthonormalize import _chol_qr_once, _split_basis  # noqa: F401
 
 from flashlib.linalg.gemm.triton.triton_mm import mm_tf32_lt
-from flashlib.linalg.gemm.cutedsl.bf16_chained import gemm_3xbf16_padded
+from flashlib.linalg.gemm.bf16_x3 import gemm_padded as gemm_3xbf16_padded
 from flashlib.linalg.gemm.triton.fused_kernels import fused_diag_shift, fused_sym
 
 from flashlib.linalg.polar import msign as _msign

@@ -34,17 +34,25 @@ from flashlib.kernels.distance.triton import (
 from flashlib.kernels.flash_mst import flash_mst
 from flashlib.primitives.knn import flash_knn
 
-from flashlib.primitives.hdbscan.triton._tree_helpers import (
-    _bfs_into_buffer,
-    _bfs_from_hierarchy,
-    _fast_condense_tree,
-    _fast_compute_stability,
-    _fast_get_clusters,
-    _fast_label,
-)
+from flashlib._optional import require_numba
+
+
+def _fast_label(mst):
+    """Single-linkage tree from sorted MST edges (numba CPU, imported on first use)."""
+    require_numba("flash_hdbscan")
+    from flashlib.primitives.hdbscan.triton._tree_helpers import _fast_label as _label
+
+    return _label(mst)
 
 def _fast_tree_to_labels(slt, min_cluster_size):
     """E2E numba pipeline: SLT -> condensed -> stability -> labels."""
+    require_numba("flash_hdbscan")
+    from flashlib.primitives.hdbscan.triton._tree_helpers import (
+        _fast_compute_stability,
+        _fast_condense_tree,
+        _fast_get_clusters,
+    )
+
     parents, children, lambdas, sizes = _fast_condense_tree(slt, min_cluster_size)
     cluster_ids, stab = _fast_compute_stability(parents, children, lambdas, sizes)
     num_points = slt.shape[0] + 1
@@ -138,6 +146,7 @@ def flash_hdbscan_sparse(X: torch.Tensor,
         tol: residual tolerance forwarded to :func:`flash_knn`. ``None``
             (default) keeps the input dtype intact (exact).
     """
+    require_numba("flash_hdbscan_sparse")
     from flashlib.primitives.hdbscan.triton.sparse_mst import sparse_boruvka_mst
 
     assert X.is_cuda
@@ -215,6 +224,7 @@ def flash_hdbscan(X: torch.Tensor,
     Returns:
         labels: (N,) numpy int32 — cluster label per point (-1 = noise).
     """
+    require_numba("flash_hdbscan")
     assert X.is_cuda
     N, D = X.shape
 

@@ -19,7 +19,7 @@ from typing import Optional
 
 import torch
 
-from flashlib.primitives.truncated_svd.cutedsl import cutedsl_truncated_svd
+from flashlib._optional import has_cutedsl, require_cutedsl
 from flashlib.primitives.truncated_svd.triton import triton_truncated_svd
 
 
@@ -28,7 +28,7 @@ def _resolve_backend(N: int, D: int, *, tol: Optional[float],
     if backend is not None:
         return backend
     # CuteDSL bf16-fused path is approximation -- only opt-in via tol.
-    if tol is not None and tol >= 1e-3 and N <= 4 * D:
+    if tol is not None and tol >= 1e-3 and N <= 4 * D and has_cutedsl():
         return "cutedsl"
     return "triton"
 
@@ -63,5 +63,8 @@ def flash_truncated_svd(
     N, D = X.shape
     chosen = _resolve_backend(N, D, tol=tol, backend=backend)
     if chosen == "cutedsl":
+        require_cutedsl("flash_truncated_svd(backend='cutedsl')")
+        from flashlib.primitives.truncated_svd.cutedsl import cutedsl_truncated_svd
+
         return cutedsl_truncated_svd(X, K)
     return triton_truncated_svd(X, K, tol=tol)

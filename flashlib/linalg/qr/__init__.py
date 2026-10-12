@@ -6,6 +6,8 @@ Variants:
                         to the precision floor; a third pass is auto-added if
                         orthogonality residual overruns the budget.
 """
-from flashlib.linalg.qr.cutedsl import geqrf_3xbf16
+from flashlib._lazy import lazy_attr
+
+geqrf_3xbf16 = lazy_attr("flashlib.linalg.qr.cutedsl", "geqrf_3xbf16")
 
 __all__ = ["geqrf_3xbf16"]

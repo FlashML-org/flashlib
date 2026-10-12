@@ -3,15 +3,8 @@
 Re-exports the public Python wrappers from each component file.
 ``@triton.jit`` kernels stay private to their file.
 """
-from flashlib.primitives.hdbscan.triton._tree_helpers import (
-    _bfs_into_buffer,
-    _bfs_from_hierarchy,
-    _fast_condense_tree,
-    _fast_compute_stability,
-    _fast_get_clusters,
-    _fast_label,
-)
 from flashlib.primitives.hdbscan.triton.hdbscan import (
+    _fast_label,
     _fast_tree_to_labels,
     _core_distances,
     _flash_knn_mrd_edges,

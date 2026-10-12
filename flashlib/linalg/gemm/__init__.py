@@ -60,7 +60,7 @@ gemm_fp32           = fp32.gemm
 gemm_tf32           = tf32.gemm
 gemm_bf16           = bf16.gemm
 gemm_fp16           = fp16.gemm
-gemm_3xbf16         = bf16_x3.gemm           # auto-routes cute_fused / python_3call
+gemm_3xbf16         = bf16_x3.gemm           # auto-routes cute_fused / triton
 gemm_3xfp16         = fp16_x3.gemm
 gemm_3xtf32         = tf32_x3.gemm
 gemm_fp16_x9        = fp16_x9.gemm
@@ -83,11 +83,10 @@ gemm_ozaki2_int8    = ozaki2_int8.gemm
 
 
 def _has_cute() -> bool:
+    from flashlib._optional import has_cutedsl
+
     try:
-        import cutlass  # noqa: F401
-        import cutlass.cute  # noqa: F401
-        import torch
-        return torch.cuda.is_available() and torch.cuda.get_device_properties(0).major >= 9
+        return has_cutedsl() and torch.cuda.is_available() and torch.cuda.get_device_properties(0).major >= 9
     except Exception:
         return False
 
@@ -229,7 +228,7 @@ def _is_available(name: str) -> bool:
     if name == "ozaki2_int8":
         return _has_gemmul8()
     if name in ("ozaki2_cute", "fp16_x9", "3xbf16"):
-        return _has_cute() or name == "3xbf16"  # 3xbf16 has python fallback
+        return _has_cute() or name == "3xbf16"  # 3xbf16 has a Triton fallback
     return True
 
 

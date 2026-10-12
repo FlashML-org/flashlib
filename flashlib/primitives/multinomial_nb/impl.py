@@ -3,9 +3,7 @@
 Backends:
     backend=None / "triton" -> :func:`triton_multinomial_nb` (fit kernel
                                 + GEMM predict via flashlib.gemm).
-    backend="cutedsl"        -> CuteDSL fused-predict argmax kernel; falls
-                                back to Triton when CUTLASS DSL is
-                                unavailable on the install.
+    backend="cutedsl"        -> CuteDSL fused-predict argmax kernel; needs ``flashlib[cutedsl]``.
 """
 from __future__ import annotations
 
@@ -13,7 +11,7 @@ from typing import Optional
 
 import torch
 
-from flashlib.primitives.multinomial_nb.cutedsl import cutedsl_multinomial_nb
+from flashlib._optional import require_cutedsl
 from flashlib.primitives.multinomial_nb.triton.nb import (
     flash_multinomial_nb_fit,
     flash_multinomial_nb_predict,
@@ -41,6 +39,9 @@ def flash_multinomial_nb(
     backend's :func:`flashlib.linalg.gemm.gemm` call).
     """
     if backend == "cutedsl":
+        require_cutedsl("flash_multinomial_nb(backend='cutedsl')")
+        from flashlib.primitives.multinomial_nb.cutedsl import cutedsl_multinomial_nb
+
         return cutedsl_multinomial_nb(
             X_train, y_train, X_test, n_classes,
             alpha=alpha,

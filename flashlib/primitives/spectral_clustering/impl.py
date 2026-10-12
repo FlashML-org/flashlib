@@ -12,9 +12,7 @@ from typing import Optional
 
 import torch
 
-from flashlib.primitives.spectral_clustering.cutedsl import (
-    cutedsl_spectral_clustering,
-)
+from flashlib._optional import require_cutedsl
 from flashlib.primitives.spectral_clustering.triton.spectral import (
     flash_spectral_clustering as triton_flash_spectral,
     triton_spectral_clustering,
@@ -34,6 +32,9 @@ def flash_spectral_clustering(
 ):
     """Spectral clustering -- exact in input dtype by default."""
     if backend == "cutedsl":
+        require_cutedsl("flash_spectral_clustering(backend='cutedsl')")
+        from flashlib.primitives.spectral_clustering.cutedsl import cutedsl_spectral_clustering
+
         return cutedsl_spectral_clustering(
             X,
             n_clusters=n_clusters,

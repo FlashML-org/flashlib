@@ -26,6 +26,10 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
+from flashlib._optional import has_cutedsl
+
+needs_cutedsl = pytest.mark.skipif(not has_cutedsl(), reason="needs flashlib[cutedsl]")
+
 if not torch.cuda.is_available():
     pytest.skip("CUDA required for advantage-boundary tests", allow_module_level=True)
 
@@ -88,6 +92,7 @@ def _save_row(primitive: str, row: dict):
     (512,  4096),
 ])
 @pytest.mark.skipif(not _is_hopper(), reason="kmeans cutedsl needs Hopper SM90")
+@needs_cutedsl
 def test_kmeans_assign_advantage_boundary(D, K):
     torch.manual_seed(SEED)
     N = 65536

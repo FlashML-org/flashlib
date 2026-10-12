@@ -5,8 +5,7 @@ Backends:
                                 (default; cuBLAS GEMV + L-BFGS, exact in
                                 input dtype unless ``tol`` is given).
     backend="cutedsl"        -> CuteDSL fused forward GEMV variant.
-                                Falls back to triton when CUTLASS DSL is
-                                unavailable on the install.
+                                Needs ``flashlib[cutedsl]``.
 """
 from __future__ import annotations
 
@@ -14,9 +13,7 @@ from typing import Optional
 
 import torch
 
-from flashlib.primitives.logistic_regression.cutedsl import (
-    cutedsl_logistic_regression,
-)
+from flashlib._optional import require_cutedsl
 from flashlib.primitives.logistic_regression.triton.logistic_regression import (
     triton_logistic_regression,
 )
@@ -44,6 +41,9 @@ def flash_logistic_regression(
     L-BFGS loop).
     """
     if backend == "cutedsl":
+        require_cutedsl("flash_logistic_regression(backend='cutedsl')")
+        from flashlib.primitives.logistic_regression.cutedsl import cutedsl_logistic_regression
+
         return cutedsl_logistic_regression(
             X, y, n_iter=n_iter, lr=lr, C=C, gtol=gtol, m_lbfgs=m_lbfgs,
         )

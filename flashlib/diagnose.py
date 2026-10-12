@@ -17,6 +17,8 @@ def diagnose() -> None:
     print()
     _print_cuda_info()
     print()
+    _print_optional_status()
+    print()
     _print_primitive_status()
 
 
@@ -50,6 +52,23 @@ def _print_cuda_info() -> None:
                   f"{p.total_memory / 1e9:.0f}GB")
     except Exception as e:
         print(f"  CUDA:    error ({e})")
+
+
+def _print_optional_status() -> None:
+    from flashlib import _optional
+
+    print("optional extras:")
+    problem = _optional._cutedsl_problem()
+    if problem is None:
+        print(f"  [OK]   cutedsl (CuTe DSL backends, nvidia-cutlass-dsl {_safe_version('cutlass')})")
+    elif problem == "rocm":
+        print("  [--]   cutedsl (CuTe DSL backends): NVIDIA GPUs only")
+    else:
+        print(f"  [--]   cutedsl (CuTe DSL backends): {problem}; pip install 'flashlib[cutedsl]'")
+    if _optional.has_numba():
+        print(f"  [OK]   numba   (flash_hdbscan, numba {_safe_version('numba')})")
+    else:
+        print("  [--]   numba   (flash_hdbscan): pip install 'flashlib[numba]'")
 
 
 def _print_primitive_status() -> None:

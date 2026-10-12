@@ -18,12 +18,9 @@ from typing import Any
 
 def is_cutedsl_available() -> bool:
     """Return True iff the NVIDIA CUTLASS Python DSL is importable."""
-    try:
-        import cutlass  # noqa: F401
-        import cutlass.cute  # noqa: F401
-        return True
-    except Exception:
-        return False
+    from flashlib._optional import has_cutedsl
+
+    return has_cutedsl()
 
 
 def torch_to_cute(t, dtype, leading_dim: int):

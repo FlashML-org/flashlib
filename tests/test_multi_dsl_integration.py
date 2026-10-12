@@ -72,6 +72,9 @@ def test_triton_backend_imports(primitive):
     importlib.import_module(f"flashlib.primitives.{primitive}.triton")
 
 
+_CUTLASS_AT_IMPORT = {"kmeans", "knn", "dbscan", "hdbscan", "spectral_clustering"}
+
+
 @pytest.mark.parametrize("primitive", CUTEDSL_PRIMITIVES)
 def test_cutedsl_backend_imports(primitive):
     """Every primitive's CuteDSL backend module is importable on CPU.
@@ -81,6 +84,9 @@ def test_cutedsl_backend_imports(primitive):
     cutlass is missing.
     """
     import importlib
+    from flashlib._optional import has_cutedsl
+    if primitive in _CUTLASS_AT_IMPORT and not has_cutedsl():
+        pytest.skip("imports cutlass at module level; needs flashlib[cutedsl]")
     importlib.import_module(f"flashlib.primitives.{primitive}.cutedsl")
 
 
