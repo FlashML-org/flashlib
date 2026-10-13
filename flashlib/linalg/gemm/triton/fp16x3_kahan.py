@@ -23,7 +23,9 @@ def _fp16x3_kahan_kernel(
     M, N, K,
     sa_m, sa_k, sb_n, sb_k, sc_m, sc_n,
     BM: tl.constexpr, BN: tl.constexpr, BK: tl.constexpr,
+    EVEN: tl.constexpr,
 ):
+    """``EVEN`` (M, N, K all multiples of the block) skips the bounds masks."""
     pid_m = tl.program_id(0)
     pid_n = tl.program_id(1)
     om = pid_m * BM + tl.arange(0, BM)
@@ -39,8 +41,14 @@ def _fp16x3_kahan_kernel(
     B_lo_p = b_lo + on[None, :] * sb_n + ok[:, None] * sb_k
 
     for k in range(0, K, BK):
-        ahi = tl.load(A_hi_p); alo = tl.load(A_lo_p)
-        bhi = tl.load(B_hi_p); blo = tl.load(B_lo_p)
+        if EVEN:
+            ahi = tl.load(A_hi_p); alo = tl.load(A_lo_p)
+            bhi = tl.load(B_hi_p); blo = tl.load(B_lo_p)
+        else:
+            a_mask = (om[:, None] < M) & (k + ok[None, :] < K)
+            b_mask = (on[None, :] < N) & (k + ok[:, None] < K)
+            ahi = tl.load(A_hi_p, mask=a_mask, other=0.0); alo = tl.load(A_lo_p, mask=a_mask, other=0.0)
+            bhi = tl.load(B_hi_p, mask=b_mask, other=0.0); blo = tl.load(B_lo_p, mask=b_mask, other=0.0)
         chunk = tl.zeros((BM, BN), dtype=tl.float32)
         chunk = tl.dot(ahi, bhi, chunk, out_dtype=tl.float32)
         chunk = tl.dot(ahi, blo, chunk, out_dtype=tl.float32)
@@ -54,7 +62,10 @@ def _fp16x3_kahan_kernel(
         B_hi_p += BK * sb_k; B_lo_p += BK * sb_k
 
     C_p = c + om[:, None] * sc_m + on[None, :] * sc_n
-    tl.store(C_p, acc)
+    if EVEN:
+        tl.store(C_p, acc)
+    else:
+        tl.store(C_p, acc, mask=(om[:, None] < M) & (on[None, :] < N))
 
 
 def matmul_fp16x3_kahan(a: torch.Tensor, b: torch.Tensor,
@@ -77,6 +88,7 @@ def matmul_fp16x3_kahan(a: torch.Tensor, b: torch.Tensor,
         a_hi.stride(0), a_hi.stride(1),
         b_hi.stride(0), b_hi.stride(1),
         out.stride(0), out.stride(1),
-        BM=BM, BN=BN, BK=BK, num_warps=4, num_stages=3,
+        BM=BM, BN=BN, BK=BK, EVEN=(M % BM == 0 and N % BN == 0 and K % BK == 0),
+        num_warps=4, num_stages=3,
     )
     return out

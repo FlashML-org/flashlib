@@ -236,6 +236,7 @@ def _variant_fn(variant):
     return {
         "3xbf16": g.gemm_3xbf16,
         "fp16_x9": g.gemm_fp16_x9,
+        "fp16_x3_kahan": lambda A, B: g.gemm_fp16_x3_kahan(A * 0.1, B * 0.1) * 100,
         "ozaki2_triton": lambda A, B: g.gemm_ozaki2_triton(A, B, num_moduli=8),
         "ozaki2_cute": lambda A, B: g.gemm_ozaki2_cute(A, B, num_moduli=8),
     }[variant]
@@ -243,7 +244,8 @@ def _variant_fn(variant):
 
 @pytest.mark.parametrize("M,K,N", [(1000, 333, 777), (512, 1001, 512), (512, 512, 1001), (8, 7, 7)])
 @pytest.mark.parametrize("variant,threshold", [
-    ("3xbf16", 1e-4), ("fp16_x9", 1e-5), ("ozaki2_triton", 1e-6), ("ozaki2_cute", 1e-6),
+    ("3xbf16", 1e-4), ("fp16_x9", 1e-5), ("fp16_x3_kahan", 1e-5),
+    ("ozaki2_triton", 1e-6), ("ozaki2_cute", 1e-6),
 ])
 def test_gemm_variants_unaligned_shapes(variant, threshold, M, K, N):
     """Shapes off the kernels' TMA / block alignment must still be exact to the variant's tier."""
@@ -254,7 +256,33 @@ def test_gemm_variants_unaligned_shapes(variant, threshold, M, K, N):
     assert rms < threshold, f"{variant} {M}x{K}x{N} RMS rel-err {rms:.2e}"
 
 
-@pytest.mark.parametrize("variant", ["3xbf16", "fp16_x9", "ozaki2_cute"])
+@pytest.mark.parametrize("tol", [1e-5, 1e-6])
+def test_gemm_dispatcher_unaligned_shape(tol):
+    """``gemm(tol=...)`` must meet its tolerance off the kernels' block alignment."""
+    from flashlib.linalg.gemm import gemm
+    _seeded()
+    A = torch.randn(1000, 333, device=DEVICE)
+    B = torch.randn(333, 777, device=DEVICE)
+    C = gemm(A, B, tol=tol)
+    rms = _rms_relerr(C, _fp64_reference(A, B))
+    assert torch.isfinite(C).all() and rms < 3 * tol, f"gemm(tol={tol}) RMS rel-err {rms:.2e}"
+
+
+@pytest.mark.parametrize("before", [False, True])
+def test_gemm_tf32_x6_restores_allow_tf32(before):
+    """tf32_x6 enables TF32 for its own GEMMs only; the caller's global flag must survive."""
+    from flashlib.linalg.gemm import gemm_tf32_x6
+    prev = torch.backends.cuda.matmul.allow_tf32
+    try:
+        torch.backends.cuda.matmul.allow_tf32 = before
+        gemm_tf32_x6(torch.randn(64, 32, device=DEVICE, dtype=torch.float64),
+                     torch.randn(32, 48, device=DEVICE, dtype=torch.float64))
+        assert torch.backends.cuda.matmul.allow_tf32 is before
+    finally:
+        torch.backends.cuda.matmul.allow_tf32 = prev
+
+
+@pytest.mark.parametrize("variant", ["3xbf16", "fp16_x9", "fp16_x3_kahan", "ozaki2_cute"])
 def test_gemm_result_not_overwritten_by_next_call(variant):
     """A second same-shape call must not write into the tensor returned by the first."""
     _seeded()
