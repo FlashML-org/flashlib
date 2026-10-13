@@ -342,8 +342,12 @@ def cutedsl_flash_umap(X: torch.Tensor, n_neighbors: int = 15,
                        n_components: int = 2, n_epochs: int = 200,
                        learning_rate: float = 1.0,
                        spread: float = 1.0, min_dist: float = 0.1,
-                       n_neg_samples: int = 5, seed: int = 42):
+                       n_neg_samples: int = 5, seed: int = 42,
+                       return_graph: bool = False):
     """flash_umap with CuteDSL where it ties or beats Triton, Triton elsewhere.
+
+    Same return contract as the Triton ``flash_umap``: ``emb``, or
+    ``(emb, (head, tail, weights))`` with ``return_graph=True``.
 
     Stage breakdown of the swap:
       - flash_knn:     unchanged (bf16 cuBLAS-like; CuteDSL has no advantage)
@@ -393,4 +397,6 @@ def cutedsl_flash_umap(X: torch.Tensor, n_neighbors: int = 15,
             seed=seed,
         )
 
+    if return_graph:
+        return emb, (head, tail, weights)
     return emb

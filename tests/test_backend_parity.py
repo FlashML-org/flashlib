@@ -609,3 +609,27 @@ def test_multinomial_nb_fit_runs():
     # Random labels: an in-sample accuracy below 1/C for chance is fine; we
     # just want to ensure the fit/predict path runs end-to-end.
     assert preds.min().item() >= 0 and preds.max().item() < C
+
+
+@needs_cutedsl
+def test_umap_cutedsl_return_graph():
+    _seeded()
+    from flashlib.primitives.umap import flash_umap
+    X = torch.randn(2001, 32, device=DEVICE)
+    emb, graph = flash_umap(X, n_epochs=20, return_graph=True, backend="cutedsl")
+    assert emb.shape == (2001, 2) and torch.isfinite(emb).all()
+    assert len(graph) == 3
+
+
+@needs_cutedsl
+@pytest.mark.parametrize("D", [37, 64])
+def test_logistic_regression_cutedsl_matches_triton(D):
+    """D=64 runs the CuTe forward GEMV; D=37 (D % 8 != 0) runs the exact Triton solver."""
+    _seeded()
+    from flashlib.primitives.logistic_regression import flash_logistic_regression
+    X = torch.randn(4001, D, device=DEVICE)
+    y = (X[:, 0] + 0.5 * X[:, 1] > 0).long()
+    w, b = flash_logistic_regression(X, y, backend="cutedsl")
+    w_t, _ = flash_logistic_regression(X, y)
+    assert ((torch.sigmoid(X @ w + b) > 0.5).long() == y).float().mean().item() > 0.97
+    assert ((w - w_t).norm() / w_t.norm()).item() < 2e-2

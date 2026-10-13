@@ -34,19 +34,17 @@ def _alloc_fn(size, alignment, stream):
 triton.set_allocator(_alloc_fn)
 
 
-_OUT_CACHE: dict[tuple, tuple] = {}
+_SCRATCH_CACHE: dict[tuple, tuple] = {}
 
 
-def _get_outputs(M: int, N: int, device):
+def _get_scratch(M: int, N: int, device):
+    """Per-shape scratch for the three partial products (never returned to callers)."""
     key = (M, N, str(device))
-    bufs = _OUT_CACHE.get(key)
+    bufs = _SCRATCH_CACHE.get(key)
     if bufs is None:
         c1 = torch.empty((M, N), device=device, dtype=torch.float32)
-        c2 = torch.empty_like(c1)
-        c3 = torch.empty_like(c1)
-        out = torch.empty_like(c1)
-        bufs = (c1, c2, c3, out)
-        _OUT_CACHE[key] = bufs
+        bufs = (c1, torch.empty_like(c1), torch.empty_like(c1))
+        _SCRATCH_CACHE[key] = bufs
     return bufs
 
 
@@ -60,25 +58,24 @@ def matmul_tf32x6_cublas_presplit(
     a_hi/a_lo/b_hi/b_lo are FP32 with TF32-rounded mantissas (the split
     helpers in triton_split.py guarantee this).
 
-    NOTE: caller must have set ``torch.backends.cuda.matmul.allow_tf32 = True``
-    before calling. We don't toggle per call because the read-modify-restore
-    pattern adds ~15% overhead at 8192³ (107 TF vs 124 TF). The split kernel
-    has already TF32-rounded the operands so allow_tf32=False actually still
-    gives us the same numerical result (just slower on cuBLAS path that
-    refuses TC).
+    TF32 tensor cores are enabled only for these three GEMMs; the caller's
+    ``torch.backends.cuda.matmul.allow_tf32`` is restored afterwards. The
+    operands are already TF32-rounded, so TF32 changes speed, not results.
     """
     assert a_hi.dtype == torch.float32 and b_hi.dtype == torch.float32
-    if not torch.backends.cuda.matmul.allow_tf32:
-        # Quietly enable; the inputs are already TF32-rounded so this is
-        # safe wrt accuracy, and toggling avoids the 15% overhead.
-        torch.backends.cuda.matmul.allow_tf32 = True
     M, K = a_hi.shape
     N, _ = b_hi.shape
-    c1, c2, c3, out = _get_outputs(M, N, a_hi.device)
+    c1, c2, c3 = _get_scratch(M, N, a_hi.device)
+    out = torch.empty_like(c1)
 
-    torch.matmul(a_hi, b_hi.T, out=c1)
-    torch.matmul(a_hi, b_lo.T, out=c2)
-    torch.matmul(a_lo, b_hi.T, out=c3)
+    prev = torch.backends.cuda.matmul.allow_tf32
+    torch.backends.cuda.matmul.allow_tf32 = True
+    try:
+        torch.matmul(a_hi, b_hi.T, out=c1)
+        torch.matmul(a_hi, b_lo.T, out=c2)
+        torch.matmul(a_lo, b_hi.T, out=c3)
+    finally:
+        torch.backends.cuda.matmul.allow_tf32 = prev
     # Single-pass fused sum (read 3 fp32 + write 1 fp32) instead of
     # `c1 + c2 + c3` which materialises an intermediate.
     _fused_sum3(c1, c2, c3, out)

@@ -27,7 +27,7 @@ class LogisticRegression:
     def fit(self, X: torch.Tensor, y: torch.Tensor) -> "LogisticRegression":
         if not X.is_cuda or X.ndim != 2 or y.ndim != 1:
             raise ValueError("LogisticRegression requires 2D X and 1D y on CUDA")
-        result = flash_logistic_regression(X, y, C=self.C, max_iter=self.max_iter)
+        result = flash_logistic_regression(X, y, C=self.C, n_iter=self.max_iter)
         if isinstance(result, tuple) and len(result) == 2:
             self.coef_, self.intercept_ = result
         else:
