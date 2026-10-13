@@ -18,11 +18,10 @@ Install with `pip`:
 pip install flashlib
 ```
 
-Optional extras:
+Optional extra:
 
 ```bash
 pip install 'flashlib[cutedsl]' # faster CuTe DSL kernels (NVIDIA); every op also runs without it
-pip install 'flashlib[numba]'   # faster flash_hdbscan tree steps (pure Python without it)
 ```
 
 From source:

@@ -150,6 +150,43 @@ def test_knn_triton_matches_torch_reference_bf16():
     assert overlap > 0.95, f"knn triton/torch index overlap {overlap:.3f} too low"
 
 
+@pytest.mark.parametrize("dtype", [torch.bfloat16, torch.float32])
+@pytest.mark.parametrize("b,n,m,d,k", [
+    (1, 1, 100_000, 128, 10), (2, 5, 7777, 300, 17), (1, 15, 20_000, 64, 64), (1, 3, 50, 16, 50),
+])
+def test_knn_small_query_on_blackwell_runs_triton(monkeypatch, dtype, b, n, m, d, k):
+    """Without the CuTe DSL, Blackwell small-query search runs Triton with >= 16-row tiles."""
+    import dataclasses
+    from flashlib import _hw
+    from flashlib.primitives.knn import flash_knn, impl
+    blackwell = dataclasses.replace(_hw.current(), sm_arch=100)
+    monkeypatch.setattr(impl._hw, "current", lambda device=None: blackwell)
+    monkeypatch.setattr(impl, "has_cutedsl", lambda: False)
+    _seeded()
+    x = torch.randn(b, n, d, device=DEVICE, dtype=dtype)
+    c = torch.randn(b, m, d, device=DEVICE, dtype=dtype)
+    vals, idxs = flash_knn(x, c, k)
+    vals_r, _ = _torch_knn_topk(x, c, k)
+    assert idxs.shape == (b, n, k)
+    assert (idxs.long().sort(-1).values.diff(dim=-1) > 0).all(), "duplicate neighbours"
+    assert torch.allclose(vals, vals_r, rtol=1e-4, atol=1e-3 * d)
+
+
+def test_knn_dispatch_min_bn_floor():
+    """``min_bn=16`` (Blackwell) keeps every heuristic, autotune and OOR-shrink config at BN >= 16."""
+    from flashlib.primitives.knn.triton.dispatch import (
+        _gen_configs, _heuristic_config, _shrink_cfg_on_oor)
+    for shape in [(1, 1, 100_000, 128, 10), (1, 8, 1_000_000, 128, 4), (1, 16, 20_000, 64, 64),
+                  (2, 5, 7777, 300, 17), (1, 4, 100_000, 128, 64), (1, 100_000, 100_000, 64, 8)]:
+        cfg = _heuristic_config(*shape, dtype_bytes=4, smem_limit=100_000, min_bn=16)
+        assert cfg["BN"] >= 16, (shape, cfg)
+        while cfg is not None:
+            assert cfg["BN"] >= 16, (shape, cfg)
+            cfg = _shrink_cfg_on_oor(cfg, 16)
+    assert min(c["BN"] for c in _gen_configs(128, 32, min_bn=16)) == 16
+    assert min(c["BN"] for c in _gen_configs(128, 32)) == 8
+
+
 def test_knn_triton_small_n_large_n_index_parity():
     """The two Triton routings (``small_n`` M-split vs ``large_n``
     single-pass) share one insert kernel but pick different BN / BM /

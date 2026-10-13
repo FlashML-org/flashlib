@@ -1,4 +1,4 @@
-"""HDBSCAN CPU-side tree-manipulation helpers (numba @njit).
+"""HDBSCAN CPU-side tree-manipulation helpers.
 
 Used by both ``flash_hdbscan`` and ``flash_hdbscan_sparse`` for:
   • iterative BFS over the single-linkage tree
@@ -6,24 +6,18 @@ Used by both ``flash_hdbscan`` and ``flash_hdbscan_sparse`` for:
   • computing per-cluster stability
   • extracting flat labels from the condensed tree (EOM / leaf)
 
-Without numba the same functions run as plain Python (slower, same results).
+The ``_fast_*`` entry points run the C ports in :mod:`._tree_helpers_c`
+(compiled on first use); the ``_py_*`` functions here are the reference
+implementations and the fallback when no C compiler is available.
 """
+import functools
+import warnings
+
 import numpy as np
 
-from flashlib._optional import has_numba, warn_no_numba
-
-if has_numba():
-    import numba
-
-    _njit = numba.njit
-else:
-    warn_no_numba("flash_hdbscan")
-
-    def _njit(**_kwargs):
-        return lambda f: f
+from flashlib.primitives.hdbscan.triton import _tree_helpers_c
 
 
-@_njit(cache=True)
 def _bfs_into_buffer(hierarchy, root, num_points, queue, out):
     """Iterative BFS over SLT — writes nodes in BFS order to `out`, returns count.
     `queue` and `out` must be pre-allocated (size >= 2*num_points)."""
@@ -41,7 +35,6 @@ def _bfs_into_buffer(hierarchy, root, num_points, queue, out):
     return n_out
 
 
-@_njit(cache=True)
 def _bfs_from_hierarchy(hierarchy, root, num_points):
     """Allocating wrapper — kept for backwards compatibility within this module."""
     queue = np.empty(2 * num_points, dtype=np.int64)
@@ -50,9 +43,8 @@ def _bfs_from_hierarchy(hierarchy, root, num_points):
     return out[:n]
 
 
-@_njit(cache=True)
-def _fast_condense_tree(hierarchy, min_cluster_size):
-    """Port of upstream condense_tree to numba. Returns 4 parallel arrays:
+def _py_fast_condense_tree(hierarchy, min_cluster_size):
+    """Port of upstream condense_tree. Returns 4 parallel arrays:
     parent, child, lambda_val, child_size.
 
     Pre-allocates BFS scratch buffers ONCE outside the main loop. The original
@@ -155,8 +147,7 @@ def _fast_condense_tree(hierarchy, min_cluster_size):
             out_lambda[:n_out], out_size[:n_out])
 
 
-@_njit(cache=True)
-def _fast_compute_stability(parents, children, lambdas, sizes):
+def _py_fast_compute_stability(parents, children, lambdas, sizes):
     """Port of compute_stability. Returns (cluster_ids, stability) parallel arrays.
 
     Two-pass O(N) implementation — no sort. births[c] is computed by single
@@ -207,8 +198,7 @@ def _fast_compute_stability(parents, children, lambdas, sizes):
     return cluster_ids, result
 
 
-@_njit(cache=True)
-def _fast_get_clusters(parents, children, lambdas, sizes,
+def _py_fast_get_clusters(parents, children, lambdas, sizes,
                        cluster_ids, stability_arr, num_points):
     """Port of get_clusters (eom strategy, no allow_single_cluster, no epsilon).
     Returns labels[num_points] int64.
@@ -315,8 +305,7 @@ def _fast_get_clusters(parents, children, lambdas, sizes,
     return labels
 
 
-@_njit(cache=True, fastmath=True)
-def _fast_label(mst_sorted):
+def _py_fast_label(mst_sorted):
     """Single-linkage dendrogram from sorted MST edges.
 
     mst_sorted: (N-1, 3) float64 array of [u, v, weight] sorted by weight.
@@ -356,3 +345,41 @@ def _fast_label(mst_sorted):
         next_id += 1
 
     return result
+
+
+@functools.lru_cache(maxsize=None)
+def _use_c() -> bool:
+    if _tree_helpers_c.library() is not None:
+        return True
+    warnings.warn(
+        f"flashlib: could not build the HDBSCAN C helpers ({_tree_helpers_c.build_problem()}), so "
+        f"flash_hdbscan runs its CPU tree steps in pure Python, which is slower on large inputs.",
+        RuntimeWarning,
+        stacklevel=3,
+    )
+    return False
+
+
+def _fast_label(mst_sorted):
+    if _use_c():
+        return _tree_helpers_c.fast_label(mst_sorted)
+    return _py_fast_label(mst_sorted)
+
+
+def _fast_condense_tree(hierarchy, min_cluster_size):
+    if _use_c():
+        return _tree_helpers_c.fast_condense_tree(hierarchy, min_cluster_size)
+    return _py_fast_condense_tree(hierarchy, min_cluster_size)
+
+
+def _fast_compute_stability(parents, children, lambdas, sizes):
+    if _use_c():
+        return _tree_helpers_c.fast_compute_stability(parents, children, lambdas, sizes)
+    return _py_fast_compute_stability(parents, children, lambdas, sizes)
+
+
+def _fast_get_clusters(parents, children, lambdas, sizes, cluster_ids, stability_arr, num_points):
+    if _use_c():
+        return _tree_helpers_c.fast_get_clusters(
+            parents, children, lambdas, sizes, cluster_ids, stability_arr, num_points)
+    return _py_fast_get_clusters(parents, children, lambdas, sizes, cluster_ids, stability_arr, num_points)

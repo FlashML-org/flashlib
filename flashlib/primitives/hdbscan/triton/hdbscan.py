@@ -5,8 +5,8 @@ Two pipelines:
       1. Core distances via flash_knn(X, k=min_samples+1)
       2. Dense MRD matrix (N×N bf16) via triton_pairwise_mrd
       3. MST via dense-graph Boruvka (flash_mst)
-      4. MST → single-linkage tree (numba)
-      5. Condense + extract (numba)
+      4. MST → single-linkage tree (CPU, C helper)
+      5. Condense + extract (CPU, C helpers)
     Kept as the default for correctness compatibility on real-data
     workloads (BERTopic-style fine-grained density clustering on
     UMAP-reduced embeddings) where the bf16 dense MRD quantization
@@ -17,7 +17,7 @@ Two pipelines:
       2. Fused Triton MRD-edge kernel (`triton_fused_mrd_edges`).
       3. Sparse Boruvka MST on N×K edges (`sparse_mst.py`).
       4. Bridge synthesis (residual components → fake weight 1e10).
-      5. SLT label + condense + extract on CPU (numba).
+      5. SLT label + condense + extract on CPU (C helpers).
     Intended for very large N (≥150K) and high-D data; opt in via
     `prefer="sparse"` or call `flash_hdbscan_sparse(X, ...)` directly.
 
@@ -36,13 +36,13 @@ from flashlib.primitives.knn import flash_knn
 
 
 def _fast_label(mst):
-    """Single-linkage tree from sorted MST edges (numba CPU, imported on first use)."""
+    """Single-linkage tree from sorted MST edges (CPU, imported on first use)."""
     from flashlib.primitives.hdbscan.triton._tree_helpers import _fast_label as _label
 
     return _label(mst)
 
 def _fast_tree_to_labels(slt, min_cluster_size):
-    """E2E numba pipeline: SLT -> condensed -> stability -> labels."""
+    """CPU pipeline: SLT -> condensed -> stability -> labels."""
     from flashlib.primitives.hdbscan.triton._tree_helpers import (
         _fast_compute_stability,
         _fast_condense_tree,
@@ -94,7 +94,7 @@ def _flash_hdbscan_dense_impl(X: torch.Tensor,
     del MRD
     torch.cuda.empty_cache()
 
-    # Stage 4: MST -> single-linkage tree -> condensed -> labels (numba CPU)
+    # Stage 4: MST -> single-linkage tree -> condensed -> labels (CPU)
     slt = _fast_label(mst)
     return _fast_tree_to_labels(slt, min_cluster_size)
 
@@ -182,7 +182,7 @@ def flash_hdbscan_sparse(X: torch.Tensor,
                         mst_dst[sort_idx].to(torch.float32),
                         mst_w[sort_idx]], dim=1).cpu().numpy().astype(np.float64)
 
-    # Stage 5+6: SLT + condense + extract (numba CPU)
+    # Stage 5+6: SLT + condense + extract (CPU)
     slt = _fast_label(mst)
     return _fast_tree_to_labels(slt, min_cluster_size)
 
