@@ -9,7 +9,7 @@ and D >= 40)`` is False, so the dispatcher picks
   * N=20K  D=16  mcs=20  ms=5  (the headline 28.1x vs cuML row)
   * N=50K  D=16  mcs=50  ms=5
 
-The body is INLINED here so each GPU kernel and numba CPU stage can
+The body is INLINED here so each GPU kernel and CPU stage can
 sit in its own ``Stage`` context (CPU stages are timed by paired CUDA
 events on the default stream: the events fire in submission order
 while the GPU queue is empty, so ``elapsed_time`` ≈ host wall).
@@ -24,7 +24,7 @@ Stages (matches the order in ``_flash_hdbscan_dense_impl``):
   mst          : ``flash_mst`` (dense Borůvka on the N×N MRD).
   d2h          : ``mst_gpu.cpu().numpy().astype(float64)``  -- the only
                   H2D copy on the hot path.
-  slt_label    : ``_fast_label`` (numba CPU: union-find dendrogram).
+  slt_label    : ``_fast_label`` (CPU C helper: union-find dendrogram).
   condense_tree: ``_fast_condense_tree``.
   stability    : ``_fast_compute_stability`` + ``_fast_get_clusters``.
 """
@@ -128,7 +128,7 @@ def main() -> None:
         stage_names=STAGES,
         notes=(
             "Dense path: core_dists + mrd + mst run on GPU; "
-            "slt_label / condense_tree / stability are numba CPU "
+            "slt_label / condense_tree / stability are CPU C helpers "
             "(timed by paired CUDA events on the default stream while "
             "the GPU queue is empty, so elapsed_time ≈ host wall). "
             "Body inlined from `_flash_hdbscan_dense_impl` + "
@@ -137,7 +137,7 @@ def main() -> None:
         sensitivity=(
             "As **N grows from 10K to 50K**, the GPU stages scale "
             "super-linearly (`mrd` is N², `mst` is N²·log N for dense "
-            "Borůvka) while the numba CPU tree stages "
+            "Borůvka) while the CPU tree stages "
             "(`slt_label`/`condense_tree`/`stability`) scale only "
             "O(N) -- so the CPU stages' SHARE of the wall shrinks even "
             "as their absolute ms grows. At N=10K the CPU tree pipeline "

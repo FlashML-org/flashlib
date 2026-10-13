@@ -4,8 +4,8 @@ Pre-refactor pipeline (kept for parity testing):
   1. Core distances via ``flash_knn(X, k=min_samples)``.
   2. Dense MRD matrix via :func:`triton_pairwise_mrd`.
   3. MST via dense-graph Boruvka (:func:`flash_mst`).
-  4. MST -> single-linkage tree via numba.
-  5. Condense + extract via numba.
+  4. MST -> single-linkage tree on CPU.
+  5. Condense + extract on CPU.
 """
 
 import numpy as np
@@ -26,7 +26,7 @@ from flashlib.primitives.knn import flash_knn
 
 
 def _fast_tree_to_labels(slt, min_cluster_size):
-    """E2E numba pipeline: SLT -> condensed -> stability -> labels."""
+    """CPU pipeline: SLT -> condensed -> stability -> labels."""
     parents, children, lambdas, sizes = _fast_condense_tree(slt, min_cluster_size)
     cluster_ids, stab = _fast_compute_stability(parents, children, lambdas, sizes)
     num_points = slt.shape[0] + 1

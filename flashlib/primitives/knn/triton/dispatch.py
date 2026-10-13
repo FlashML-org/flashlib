@@ -59,6 +59,7 @@ from typing import Optional
 
 import torch
 
+from flashlib import _hw
 from flashlib.primitives.knn.triton._common import _next_pow2, _bench_quick
 from flashlib.primitives.knn.triton.sortmerge import _flash_knn_sortmerge_kernel
 from flashlib.primitives.knn.triton.insert import _flash_knn_insert_kernel
@@ -121,8 +122,13 @@ def _smem_limit(device) -> int:
     return 48 * 1024
 
 
+def _min_bn(device) -> int:
+    """Smallest legal BN: ``tl.dot`` needs M >= 16 on Blackwell (Triton pads M=8 to 16 only on sm_90)."""
+    return 16 if _hw.current(device.index).is_blackwell else 8
+
+
 def _fit_config_to_smem(cfg: dict, D: int, K: int,
-                        dtype_bytes: int, smem_limit: int) -> dict:
+                        dtype_bytes: int, smem_limit: int, min_bn: int = 8) -> dict:
     """Shrink ``(BN, BM, NUM_STAGES_PIPE)`` until the kernel fits SMEM.
 
     Returns ``cfg`` unchanged when it already fits. Otherwise enumerates
@@ -162,10 +168,10 @@ triton.assign._fit_config_to_smem`.
             x //= 2
         return out
 
-    # BN must stay >= 8 (matches _gen_configs lowest BN rung);
+    # BN must stay >= min_bn (matches _gen_configs lowest BN rung);
     # BM must stay >= 32 for the inner loop to keep WGMMA shape;
     # NUM_STAGES_PIPE must stay >= 1.
-    bn_cands = _pow2_down_to(BN0, 8)
+    bn_cands = _pow2_down_to(BN0, min_bn)
     bm_cands = _pow2_down_to(BM0, 32)
     ns_cands = list(range(NS0, 0, -1))
 
@@ -225,7 +231,7 @@ def _pipe_stages_for(K, d_inner, D):
     return [1, 2, 3]
 
 
-def _gen_configs(D, K, *, dtype_bytes=2, smem_limit=None):
+def _gen_configs(D, K, *, dtype_bytes=2, smem_limit=None, min_bn=8):
     """Generate candidate kernel configs (sortmerge + insert), SRAM-validated.
 
     Covers ``BN ∈ {8, 16, 32, 64, 128}`` × ``num_warps ∈ {2, 4}`` × the
@@ -236,7 +242,8 @@ def _gen_configs(D, K, *, dtype_bytes=2, smem_limit=None):
     (``B*N <= 8`` + ``K ∈ {16, 32, 64, 128}``) where a small row tile +
     sortmerge ``BM = max(32, K)`` wins over insert. ``tl.dot`` silently
     pads the M dimension to 16 on Triton 3.x sm_90, so BN=8 still
-    compiles.
+    compiles there; ``min_bn=16`` drops that rung where it does not
+    (Blackwell).
 
     ``dtype_bytes`` and ``smem_limit`` parameterise the SMEM check so
     fp32 inputs don't slip through with a config that OOR's at launch.
@@ -256,7 +263,7 @@ def _gen_configs(D, K, *, dtype_bytes=2, smem_limit=None):
     # sort-merge: BM == TOPK_PAD; BN ∈ {8, 16, 32} (BN >= 64 never wins
     # for sortmerge in autotune data).
     bm_sm = topk_pad_sm
-    for bn in [8, 16, 32]:
+    for bn in [b for b in (8, 16, 32) if b >= min_bn]:
         for nw in [2, 4]:
             for d_inner in d_inner_cands:
                 num_d_iters = math.ceil(D / d_inner)
@@ -276,7 +283,7 @@ def _gen_configs(D, K, *, dtype_bytes=2, smem_limit=None):
                         })
 
     # iterative insert: BM decoupled from K, BN ∈ {8, 16, 32, 64, 128}.
-    for bn in [8, 16, 32, 64, 128]:
+    for bn in [b for b in (8, 16, 32, 64, 128) if b >= min_bn]:
         for nw in [2, 4]:
             for bm in [64, 128, 256]:
                 for d_inner in d_inner_cands:
@@ -336,7 +343,7 @@ def _gen_m_splits(M, BM, *, B=1, N=1, BN=16):
 
 
 def _heuristic_config(B, N, M, D, K, *, force_path=None,
-                      dtype_bytes=2, smem_limit=None):
+                      dtype_bytes=2, smem_limit=None, min_bn=8):
     """Pick a kernel config from shape alone -- no autotune.
 
     When ``dtype_bytes`` and ``smem_limit`` are supplied (the dispatcher
@@ -393,6 +400,7 @@ def _heuristic_config(B, N, M, D, K, *, force_path=None,
         B, N, M, D, K: shape parameters.
         force_path: ``"large_n"`` for single-pass (one M-split per CTA),
             ``None`` for the wave-targeted M-split.
+        min_bn: lower bound on ``BN`` (16 on Blackwell, see :func:`_min_bn`).
 
     Returns:
         Config dict: ``BN, BM, D_INNER, TOPK_PAD, kernel_mode,
@@ -617,6 +625,7 @@ def _heuristic_config(B, N, M, D, K, *, force_path=None,
         else:
             BM = 64
         num_warps = 4
+    BN = max(BN, min_bn)
 
     # ───────────────────────────────────────────────────────────────
     # Step 2: M_PER_SPLIT (target waves)
@@ -781,7 +790,7 @@ def _heuristic_config(B, N, M, D, K, *, force_path=None,
     # by powers of 2 until the kernel fits — leaving D_INNER and
     # kernel_mode (which encode different perf regimes) alone.
     if smem_limit is not None:
-        cfg = _fit_config_to_smem(cfg, D, K, dtype_bytes, smem_limit)
+        cfg = _fit_config_to_smem(cfg, D, K, dtype_bytes, smem_limit, min_bn=min_bn)
 
     return cfg
 
@@ -815,7 +824,8 @@ def _autotune(x, c, k, *, force_path=None):
     smem_limit = _smem_limit(x.device)
     configs = _gen_configs(D, k,
                            dtype_bytes=dtype_bytes,
-                           smem_limit=min(smem_limit, 220_000))
+                           smem_limit=min(smem_limit, 220_000),
+                           min_bn=_min_bn(x.device))
     if not configs:
         raise RuntimeError(
             f"No valid flash_knn config for D={D}, K={k}, "
@@ -994,7 +1004,7 @@ def _try_launch(x, c, cfg, B, N, M, D, k):
     return out_idxs
 
 
-def _shrink_cfg_on_oor(cfg: dict) -> Optional[dict]:
+def _shrink_cfg_on_oor(cfg: dict, min_bn: int = 8) -> Optional[dict]:
     """Halve the cheapest SMEM-bearing axis. ``None`` when nothing left.
 
     Order:
@@ -1007,7 +1017,8 @@ def _shrink_cfg_on_oor(cfg: dict) -> Optional[dict]:
          regime) this gives BN=64 BM=64 in one step, which empirically
          matches the kmeans-style ``_fit_config_to_smem`` choice and
          beats BN=128 BM=32 by ~20 % at D=1024 fp32.
-      3. Floors: BN ≥ 8, BM ≥ 32 (both required by the WGMMA atom).
+      3. Floors: BN ≥ ``min_bn`` (8, or 16 on Blackwell), BM ≥ 32
+         (both required by the MMA atom).
 
     sortmerge requires ``BM == TOPK_PAD``; skip BM shrinks and only
     halve BN.
@@ -1025,12 +1036,12 @@ def _shrink_cfg_on_oor(cfg: dict) -> Optional[dict]:
         out["NUM_STAGES_PIPE"] = ns - 1
         return out
     if sortmerge:
-        if bn > 8:
+        if bn > min_bn:
             out["BN"] = bn // 2
             return out
         return None
     # Non-sortmerge: prefer shrinking the larger axis.
-    if bn > bm and bn > 8:
+    if bn > bm and bn > min_bn:
         out["BN"] = bn // 2
         return out
     if bm > 32:
@@ -1039,7 +1050,7 @@ def _shrink_cfg_on_oor(cfg: dict) -> Optional[dict]:
         out["M_PER_SPLIT"] = ((int(out["M_PER_SPLIT"]) + new_bm - 1)
                               // new_bm) * new_bm
         return out
-    if bn > 8:
+    if bn > min_bn:
         out["BN"] = bn // 2
         return out
     return None
@@ -1068,6 +1079,7 @@ def _run(x: torch.Tensor, c: torch.Tensor, k: int, *,
     assert c.shape == (B, M, D)
     assert 1 <= k <= M
 
+    min_bn = _min_bn(x.device)
     if autotune:
         cfg = _autotune(x, c, k, force_path=force_path)
     else:
@@ -1076,6 +1088,7 @@ def _run(x: torch.Tensor, c: torch.Tensor, k: int, *,
             force_path=force_path,
             dtype_bytes=x.element_size(),
             smem_limit=min(_smem_limit(x.device), 220_000),
+            min_bn=min_bn,
         )
 
     # Surviving-config cache keyed on the parts the dispatcher can't
@@ -1125,7 +1138,7 @@ def _run(x: torch.Tensor, c: torch.Tensor, k: int, *,
             return result
         except OutOfResources as e:
             last_err = e
-            new_cfg = _shrink_cfg_on_oor(cfg)
+            new_cfg = _shrink_cfg_on_oor(cfg, min_bn)
             if new_cfg is None:
                 break
             cfg = new_cfg

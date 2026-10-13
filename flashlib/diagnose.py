@@ -65,12 +65,15 @@ def _print_optional_status() -> None:
         print("  [--]   cutedsl (CuTe DSL backends): NVIDIA GPUs only")
     else:
         print(f"  [--]   cutedsl (CuTe DSL backends): {problem}; pip install 'flashlib[cutedsl]'")
-    numba_problem = _optional._numba_problem()
-    if numba_problem is None:
-        print(f"  [OK]   numba   (fast flash_hdbscan tree steps, numba {_safe_version('numba')})")
+
+    from flashlib.primitives.hdbscan.triton import _tree_helpers_c
+
+    print("C helpers (built on first use with the system C compiler):")
+    c_problem = _tree_helpers_c.build_problem()
+    if c_problem is None:
+        print("  [OK]   hdbscan tree steps")
     else:
-        print(f"  [--]   numba   (flash_hdbscan tree steps run in pure Python): {numba_problem}; "
-              f"pip install 'flashlib[numba]'")
+        print(f"  [--]   hdbscan tree steps run in pure Python: {c_problem}")
 
 
 def _print_primitive_status() -> None:

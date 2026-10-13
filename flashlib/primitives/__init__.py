@@ -6,8 +6,8 @@ All primitives are first-class:
     from flashlib.primitives.kmeans import batch_kmeans_Euclid       # qualified
 
 Subpackages are loaded lazily — importing flashlib.primitives itself does
-not pull in any of the heavy primitive modules (e.g. hdbscan needs numba,
-random_forest is 1400 LOC).
+not pull in any of the heavy primitive modules (e.g. hdbscan builds C
+helpers on first use, random_forest is 1400 LOC).
 
 v0.1 surface (15 ops):
   - clustering:        kmeans, dbscan, hdbscan, spectral_clustering
