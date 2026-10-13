@@ -123,7 +123,9 @@ def cutedsl_logistic_regression(X: torch.Tensor, y: torch.Tensor,
     fused fwd kernel was specialised for bf16; pass ``backend=None`` /
     ``"triton"`` plus ``tol=None`` if you need an exact-dtype GEMV.
     """
-    if not _ensure_cutedsl():
+    # The CuTe GEMV needs D % 8 == 0 (TMA row alignment); without it there is
+    # nothing to gain from the bf16 cast, so run the exact Triton solver.
+    if not _ensure_cutedsl() or X.shape[1] % 8:
         from flashlib.primitives.logistic_regression.triton import (
             triton_logistic_regression,
         )
@@ -131,10 +133,9 @@ def cutedsl_logistic_regression(X: torch.Tensor, y: torch.Tensor,
                                            C=C, gtol=gtol, m_lbfgs=m_lbfgs)
 
     # Use Triton infra for everything except the forward GEMV.
-    from flashlib.primitives.logistic_regression.triton import (
-        _initial_step_analytical, _eval_loss_grad, _lbfgs_two_loop,
+    from flashlib.primitives.logistic_regression.triton.logistic_regression import (
+        _initial_step_analytical, _lbfgs_two_loop,
         _matvec, _matvec_t, _fused_logits_to_loss_resid,
-        _should_use_bf16,
     )
 
     N, D = X.shape
@@ -146,7 +147,7 @@ def cutedsl_logistic_regression(X: torch.Tensor, y: torch.Tensor,
     C_inv = (1.0 / (C * N)) if C > 0 else 0.0
 
     # bf16 conversion (cached).
-    if _should_use_bf16(X) and X.dtype == torch.float32:
+    if X.dtype == torch.float32:
         cache_key = (X.data_ptr(), X.numel(), X.stride(0))
         cache = getattr(X, "_flash_lr_bf16_cache", None)
         if cache is not None and cache[0] == cache_key:
@@ -168,8 +169,7 @@ def cutedsl_logistic_regression(X: torch.Tensor, y: torch.Tensor,
     if grad_inf < gtol:
         return w_aug[:D], w_aug[D:D+1]
 
-    # CuteDSL fwd GEMV requires bf16 X. If we didn't auto-convert (too small),
-    # fall back to cuBLAS fp32 matmul for the forward.
+    # CuteDSL fwd GEMV requires bf16 X; other input dtypes use the cuBLAS matvec.
     use_cute_fwd = X_bf.dtype == torch.bfloat16
 
     def eval_loss_grad_cutedsl(w_aug):
