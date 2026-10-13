@@ -73,8 +73,9 @@ _OP_NAME = {
     "torch":   "knn_torch",
 }
 
-# Small-Q threshold below which Triton's tl.dot (min M=16) cannot run on
-# sm_100 -- the CuteDSL backend (Blackwell kernel) is auto-routed there.
+# Below this many queries, Blackwell D=128 search is auto-routed to the CuteDSL
+# Blackwell kernel when available; otherwise Triton serves it with 16-row tiles
+# (see ``dispatch._min_bn``).
 _CUTEDSL_SMALLQ = 16
 
 # Largest k for which the Blackwell build is auto-routed. It wins for k<=20 on
