@@ -1,0 +1,77 @@
+# Tagged releases: build the sdist + pure-Python wheel and publish both to PyPI.
+# A v* tag push builds, checks and publishes. workflow_dispatch only builds and checks.
+#
+# PyPI auth uses the PYPI_API_TOKEN environment secret. One-time owner setup:
+#   - GitHub environment `pypi` with required reviewers and deployment tags restricted to `v*`.
+#   - Store a flashlib-scoped PyPI API token as `PYPI_API_TOKEN` in that environment.
+# The publishing job can access this secret only after an environment reviewer approves it.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  build:
+    if: github.repository == 'FlashML-org/flashlib'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Build sdist and wheel
+        run: pipx run build
+      - name: Check the dist set
+        run: |
+          ls -l dist/
+          version="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          if [ "${{ github.event_name }}" = "push" ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "tag $GITHUB_REF_NAME does not match pyproject.toml version $version" >&2; exit 1
+          fi
+          test -f "dist/flashlib-$version.tar.gz"
+          test -f "dist/flashlib-$version-py3-none-any.whl"
+          [ "$(ls dist | wc -l)" -eq 2 ]
+          pipx run twine check --strict dist/*
+      # `import flashlib` loads no torch, so the wheel can be checked without the GPU stack.
+      - name: Import the wheel
+        run: |
+          python3 -m venv "$RUNNER_TEMP/smoke"
+          "$RUNNER_TEMP/smoke/bin/pip" install --no-deps dist/*.whl
+          cd "$RUNNER_TEMP" && "$RUNNER_TEMP/smoke/bin/python" -c "import flashlib; print(flashlib.__version__)"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+          # Must outlast the `pypi` review gate, which can stay pending for up to 30 days.
+          retention-days: 30
+
+  publish-pypi:
+    needs: build
+    # Tag push only: a workflow_dispatch pointed at a tag ref must never reach PyPI.
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/project/flashlib/
+    permissions: {}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: dist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          # Attestations require Trusted Publishing; this workflow uses an API token.
+          attestations: false
+          # PyPI never accepts a filename twice, so a rerun after a partial upload would fail without this.
+          skip-existing: true
