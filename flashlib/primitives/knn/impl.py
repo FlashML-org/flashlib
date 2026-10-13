@@ -26,7 +26,7 @@ import torch
 from flashlib import _hw
 from flashlib._optional import has_cutedsl, require_cutedsl
 from flashlib.kernels.distance.triton.knn_gather_l2sq import triton_knn_gather_sqdist
-from flashlib.primitives.knn.torch_fallback import knn_torch_chunked, knn_torch_naive
+from flashlib.primitives.knn.torch_fallback import knn_torch_naive
 from flashlib.primitives.knn.triton.dispatch import flash_knn_triton
 
 
@@ -103,8 +103,8 @@ def _cutedsl_autopick(x: torch.Tensor, c: torch.Tensor, k: int,
       * build, k<=``_CUTEDSL_BUILD_KMAX``: tcgen05 split-K build beats Triton
         2-3x at large N. Higher k stays on Triton (top-K O(k^2) crosses over;
         Triton is MMA-bound, ~flat in k).
-      * search, Q<``_CUTEDSL_SMALLQ``: Triton's ``tl.dot`` needs M>=16 and
-        can't run; the Blackwell search kernel restores it and wins.
+      * search, Q<``_CUTEDSL_SMALLQ``: the Blackwell search kernel (Triton
+        has to run 16-row tiles here, see ``dispatch._min_bn``).
 
     Hopper (sm_90): only the large-N build band (D<=``_HOPPER_BUILD_DMAX``,
     N>=``_HOPPER_BUILD_NMIN``, k<=``_HOPPER_BUILD_KMAX``) is a win; search
@@ -137,7 +137,7 @@ def _cutedsl_autopick(x: torch.Tensor, c: torch.Tensor, k: int,
         # where kernel+merge launch overhead dominates.
         if search_tc_supported(Dd, k) and M >= 4096:
             return blackwell_supported(x, c, k)
-        # D=128 small-Q fallback: Triton's MMA path can't run (tl.dot M>=16).
+        # D=128 small-Q: Triton would pad these queries to a 16-row tile.
         if Dd == 128 and N < _CUTEDSL_SMALLQ:
             return blackwell_supported(x, c, k)
         return False
@@ -165,11 +165,6 @@ def _cutedsl_knn(x: torch.Tensor, c: torch.Tensor, k: int,
     from flashlib.primitives.knn.cutedsl import cutedsl_flash_knn
 
     return cutedsl_flash_knn(x, c, k, **kwargs)
-
-
-def _triton_cannot_run(x: torch.Tensor, hw: _hw.HwProps) -> bool:
-    """Blackwell with fewer than ``_CUTEDSL_SMALLQ`` queries: Triton's ``tl.dot`` needs M>=16."""
-    return hw.is_cuda and hw.is_blackwell and x.shape[1] < _CUTEDSL_SMALLQ
 
 
 def route_op_name(*, B: int, N: int, M: int, D: int, k: int,
@@ -281,8 +276,6 @@ def flash_knn_dispatch(
         use_cutedsl = _cutedsl_autopick(x_p, c_p, k, hw)
     if use_cutedsl:
         idxs = _cutedsl_knn(x_p, c_p, k, hw, **kwargs)
-    elif backend is None and _triton_cannot_run(x_p, hw):
-        idxs = knn_torch_chunked(x_p, c_p, k, chunk_size=1 << 20)[1]
     else:
         idxs = flash_knn_triton(x_p, c_p, k, **kwargs)
 
