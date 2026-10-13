@@ -48,8 +48,7 @@ from typing import Optional
 
 import torch
 
-from flashlib._optional import require_cutedsl
-from flashlib.kernels.cute_helpers import is_cutedsl_available
+from flashlib._optional import has_cutedsl_sm90, require_cutedsl
 from flashlib.primitives.ivf_pq.index import IvfPqIndex
 from flashlib.primitives.ivf_pq.torch_fallback import _pad_features
 from flashlib.primitives.ivf_pq.triton.fine_scan import ivf_pq_fine_scan
@@ -111,15 +110,7 @@ def _cutedsl_hopper() -> bool:
     and need the CUTLASS Python DSL; otherwise the router falls back to the
     portable Triton kernels. Device arch is fixed per process, so cache it.
     """
-    if not is_cutedsl_available():
-        return False
-    try:
-        return (
-            torch.cuda.is_available()
-            and torch.cuda.get_device_properties(0).major >= 9
-        )
-    except Exception:
-        return False
+    return has_cutedsl_sm90()
 
 
 def _pick_regime(

@@ -1,17 +1,19 @@
 """Optional dependencies: availability checks and the error an op raises when one is missing.
 
 * CuTe DSL (``nvidia-cutlass-dsl``, NVIDIA only): ``pip install 'flashlib[cutedsl]'``
-* numba (HDBSCAN tree helpers): ``pip install 'flashlib[numba]'``
+* numba (faster HDBSCAN tree helpers; pure Python without it): ``pip install 'flashlib[numba]'``
 """
 from __future__ import annotations
 
 import functools
 import importlib.metadata
 import re
+import warnings
 from typing import Optional
 
 # Keep in sync with the ``cutedsl`` extra in pyproject.toml.
 _CUTLASS_DSL_RANGE = ((4, 4), (4, 7))
+_CUTEDSL_NOT_INSTALLED = "nvidia-cutlass-dsl is not installed"
 
 
 @functools.lru_cache(maxsize=None)
@@ -24,7 +26,7 @@ def _cutedsl_problem() -> Optional[str]:
     try:
         version = importlib.metadata.version("nvidia-cutlass-dsl")
     except importlib.metadata.PackageNotFoundError:
-        return "nvidia-cutlass-dsl is not installed"
+        return _CUTEDSL_NOT_INSTALLED
     m = re.match(r"(\d+)\.(\d+)", version)
     lo, hi = _CUTLASS_DSL_RANGE
     if m is None or not lo <= (int(m.group(1)), int(m.group(2))) < hi:
@@ -36,17 +38,64 @@ def _cutedsl_problem() -> Optional[str]:
     return None
 
 
+@functools.lru_cache(maxsize=None)
+def _warn_cutedsl_unusable(problem: str) -> None:
+    warnings.warn(
+        f"flashlib: nvidia-cutlass-dsl is installed but cannot be used ({problem}). "
+        f"CuTe DSL backends are disabled and ops use their Triton paths. "
+        f"Reinstall it with: pip install 'flashlib[cutedsl]'",
+        RuntimeWarning,
+        stacklevel=3,
+    )
+
+
 def has_cutedsl() -> bool:
-    return _cutedsl_problem() is None
+    problem = _cutedsl_problem()
+    # Not installed is the normal Triton-only setup; installed-but-broken is a misconfiguration worth surfacing.
+    if problem is not None and problem not in ("rocm", _CUTEDSL_NOT_INSTALLED):
+        _warn_cutedsl_unusable(problem)
+    return problem is None
 
 
 @functools.lru_cache(maxsize=None)
-def has_numba() -> bool:
+def has_cutedsl_sm90() -> bool:
+    """True iff the CuTe DSL is usable and device 0 is Hopper (the WGMMA kernels are sm_90-only)."""
+    if not has_cutedsl():
+        return False
+    import torch
+
     try:
-        import numba  # noqa: F401
+        return torch.cuda.is_available() and torch.cuda.get_device_properties(0).major == 9
     except Exception:  # noqa: BLE001
         return False
-    return True
+
+
+@functools.lru_cache(maxsize=None)
+def _numba_problem() -> Optional[str]:
+    """Why numba cannot be imported, or None if it can."""
+    try:
+        import numba  # noqa: F401
+    except Exception as e:  # noqa: BLE001  (e.g. numba built against a different numpy)
+        return f"{type(e).__name__}: {e}"
+    return None
+
+
+def has_numba() -> bool:
+    return _numba_problem() is None
+
+
+@functools.lru_cache(maxsize=None)
+def warn_no_numba(op: str) -> None:
+    """Warn once that ``op`` runs its numba helpers as plain Python."""
+    problem = _numba_problem()
+    if problem is None:
+        return
+    warnings.warn(
+        f"flashlib: numba is unavailable ({problem}), so {op} runs its CPU tree steps in pure Python, "
+        f"which is slower on large inputs. Install it with: pip install 'flashlib[numba]'",
+        RuntimeWarning,
+        stacklevel=3,
+    )
 
 
 def require_cutedsl(op: str) -> None:
@@ -62,10 +111,4 @@ def require_cutedsl(op: str) -> None:
     )
 
 
-def require_numba(op: str) -> None:
-    """Raise ImportError naming ``op`` when numba is unavailable."""
-    if not has_numba():
-        raise ImportError(f"flashlib: {op} requires numba. Install it with: pip install 'flashlib[numba]'")
-
-
-__all__ = ["has_cutedsl", "has_numba", "require_cutedsl", "require_numba"]
+__all__ = ["has_cutedsl", "has_cutedsl_sm90", "has_numba", "require_cutedsl", "warn_no_numba"]

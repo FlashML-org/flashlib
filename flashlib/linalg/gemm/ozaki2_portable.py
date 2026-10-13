@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import torch
 
-from flashlib._optional import require_cutedsl
+from flashlib._optional import has_cutedsl_sm90
 from flashlib.info.estimate import Estimate
 from flashlib.info.roofline import roofline
 from flashlib.linalg.gemm.fp32 import _shape_mkn
@@ -67,18 +67,19 @@ def gemm_ozaki2_triton(A: torch.Tensor, B: torch.Tensor, *,
 def gemm_ozaki2_cute(A: torch.Tensor, B: torch.Tensor, *,
                       num_moduli: int = 7) -> torch.Tensor:
     """Ozaki II GEMM, CuTeDSL INT8 GEMM backend. ~10-15% faster than the
-    pure-Triton path. Requires CUTLASS DSL.
+    pure-Triton path. Without the CuTe DSL on Hopper (sm_90) it runs the
+    Triton INT8 GEMM instead (same precision).
     """
     if not (2 <= num_moduli <= 9):
         raise ValueError(
             f"ozaki2_cute supports num_moduli in [2, 9]; got {num_moduli}. "
             f"For higher precision use gemm_ozaki2_int8 (GEMMul8)."
         )
-    require_cutedsl("gemm_ozaki2_cute")
     from flashlib.linalg.gemm.ozaki2_dispatch import matmul_ozaki2_triton
     A_ = A.contiguous()
     B_ = B.t().contiguous()
-    return matmul_ozaki2_triton(A_, B_, num_moduli=num_moduli, backend="cute")
+    backend = "cute" if has_cutedsl_sm90() else "triton"
+    return matmul_ozaki2_triton(A_, B_, num_moduli=num_moduli, backend=backend)
 
 
 def estimate(backend: str, shape, params=None, tol=None,

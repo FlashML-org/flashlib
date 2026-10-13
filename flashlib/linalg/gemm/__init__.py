@@ -83,12 +83,9 @@ gemm_ozaki2_int8    = ozaki2_int8.gemm
 
 
 def _has_cute() -> bool:
-    from flashlib._optional import has_cutedsl
+    from flashlib._optional import has_cutedsl_sm90
 
-    try:
-        return has_cutedsl() and torch.cuda.is_available() and torch.cuda.get_device_properties(0).major >= 9
-    except Exception:
-        return False
+    return has_cutedsl_sm90()
 
 
 def _has_gemmul8() -> bool:

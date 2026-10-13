@@ -11,7 +11,7 @@ from typing import Optional
 
 import torch
 
-from flashlib._optional import require_cutedsl, require_numba
+from flashlib._optional import require_cutedsl
 from flashlib.primitives.hdbscan.triton import (
     flash_hdbscan as triton_hdbscan,
     flash_hdbscan_sparse,
@@ -45,7 +45,6 @@ def flash_hdbscan(
         backend: ``"cutedsl"`` to use the CuteDSL fused MRD-edge kernel
             for the sparse path.
     """
-    require_numba("flash_hdbscan")
     if backend == "cutedsl":
         require_cutedsl("flash_hdbscan(backend='cutedsl')")
         from flashlib.primitives.hdbscan.cutedsl import cutedsl_hdbscan

@@ -26,7 +26,7 @@ import torch
 from flashlib import _hw
 from flashlib._optional import has_cutedsl, require_cutedsl
 from flashlib.kernels.distance.triton.knn_gather_l2sq import triton_knn_gather_sqdist
-from flashlib.primitives.knn.torch_fallback import knn_torch_naive
+from flashlib.primitives.knn.torch_fallback import knn_torch_chunked, knn_torch_naive
 from flashlib.primitives.knn.triton.dispatch import flash_knn_triton
 
 
@@ -120,8 +120,6 @@ def _cutedsl_autopick(x: torch.Tensor, c: torch.Tensor, k: int,
         return False
     is_build = (x.data_ptr() == c.data_ptr() and N == M)
     if not has_cutedsl():
-        if hw.is_blackwell and not is_build and Dd == 128 and N < _CUTEDSL_SMALLQ:
-            require_cutedsl(f"flash_knn with fewer than {_CUTEDSL_SMALLQ} queries on Blackwell")
         return False
 
     if hw.is_blackwell:
@@ -167,6 +165,11 @@ def _cutedsl_knn(x: torch.Tensor, c: torch.Tensor, k: int,
     from flashlib.primitives.knn.cutedsl import cutedsl_flash_knn
 
     return cutedsl_flash_knn(x, c, k, **kwargs)
+
+
+def _triton_cannot_run(x: torch.Tensor, hw: _hw.HwProps) -> bool:
+    """Blackwell with fewer than ``_CUTEDSL_SMALLQ`` queries: Triton's ``tl.dot`` needs M>=16."""
+    return hw.is_cuda and hw.is_blackwell and x.shape[1] < _CUTEDSL_SMALLQ
 
 
 def route_op_name(*, B: int, N: int, M: int, D: int, k: int,
@@ -278,6 +281,8 @@ def flash_knn_dispatch(
         use_cutedsl = _cutedsl_autopick(x_p, c_p, k, hw)
     if use_cutedsl:
         idxs = _cutedsl_knn(x_p, c_p, k, hw, **kwargs)
+    elif backend is None and _triton_cannot_run(x_p, hw):
+        idxs = knn_torch_chunked(x_p, c_p, k, chunk_size=1 << 20)[1]
     else:
         idxs = flash_knn_triton(x_p, c_p, k, **kwargs)
 

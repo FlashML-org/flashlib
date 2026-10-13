@@ -34,19 +34,15 @@ from flashlib.kernels.distance.triton import (
 from flashlib.kernels.flash_mst import flash_mst
 from flashlib.primitives.knn import flash_knn
 
-from flashlib._optional import require_numba
-
 
 def _fast_label(mst):
     """Single-linkage tree from sorted MST edges (numba CPU, imported on first use)."""
-    require_numba("flash_hdbscan")
     from flashlib.primitives.hdbscan.triton._tree_helpers import _fast_label as _label
 
     return _label(mst)
 
 def _fast_tree_to_labels(slt, min_cluster_size):
     """E2E numba pipeline: SLT -> condensed -> stability -> labels."""
-    require_numba("flash_hdbscan")
     from flashlib.primitives.hdbscan.triton._tree_helpers import (
         _fast_compute_stability,
         _fast_condense_tree,
@@ -72,6 +68,12 @@ def _core_distances(X: torch.Tensor, min_samples: int,
     dists_sq, _ = flash_knn(X[None], X[None], k=min_samples + 1, tol=tol)
     cd_sq = dists_sq[0, :, min_samples].clamp(min=0.0)
     return torch.sqrt(cd_sq)
+
+def _dense_mrd_fits(X: torch.Tensor) -> bool:
+    """Whether the dense path's N×N MRD matrix fits in free device memory, with headroom for flash_mst."""
+    N = X.shape[0]
+    free, _ = torch.cuda.mem_get_info(X.device)
+    return N * N * X.element_size() * 1.25 < free
 
 def _flash_hdbscan_dense_impl(X: torch.Tensor,
                                min_cluster_size: int = 25,
@@ -146,7 +148,6 @@ def flash_hdbscan_sparse(X: torch.Tensor,
         tol: residual tolerance forwarded to :func:`flash_knn`. ``None``
             (default) keeps the input dtype intact (exact).
     """
-    require_numba("flash_hdbscan_sparse")
     from flashlib.primitives.hdbscan.triton.sparse_mst import sparse_boruvka_mst
 
     assert X.is_cuda
@@ -216,7 +217,8 @@ def flash_hdbscan(X: torch.Tensor,
         min_samples: k for core distance.
         approximate: if True (default), prefer the sparse path; auto
             dispatch falls back to dense at small N / low D where dense
-            is faster anyway. If False, force the strict dense path.
+            is faster anyway, as long as the N×N MRD matrix fits in free
+            GPU memory. If False, force the strict dense path.
         prefer: explicit dispatch override — "auto" / "sparse" / "dense".
             Only consulted when `approximate=True`.
         k: kNN size for sparse path (default 32; ignored on dense path).
@@ -224,7 +226,6 @@ def flash_hdbscan(X: torch.Tensor,
     Returns:
         labels: (N,) numpy int32 — cluster label per point (-1 = noise).
     """
-    require_numba("flash_hdbscan")
     assert X.is_cuda
     N, D = X.shape
 
@@ -236,7 +237,7 @@ def flash_hdbscan(X: torch.Tensor,
     elif prefer == "dense":
         use_sparse = False
     else:
-        use_sparse = (N >= 150_000 and D >= 40)
+        use_sparse = (N >= 150_000 and D >= 40) or not _dense_mrd_fits(X)
 
     if use_sparse:
         return flash_hdbscan_sparse(X,

@@ -23,7 +23,7 @@ residual overruns the budget.
 import torch
 
 from flashlib.linalg.orthonormalize.btrtri import btrtri
-from flashlib.linalg.gemm.cutedsl.bf16_chained import gemm_3xbf16
+from flashlib.linalg.gemm.bf16_x3 import gemm_padded as gemm_3xbf16
 from flashlib.linalg.cholesky import potrf_3xbf16
 
 

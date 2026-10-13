@@ -71,10 +71,11 @@ def matmul_ozaki2_triton(
     A_int, inv_a = split_fp_to_int8_moduli(a, num_moduli, kA)  # (S, M, K)
     B_int, inv_b = split_fp_to_int8_moduli(b, num_moduli, kB)  # (S, N, K)
 
-    if backend == "cute":
+    # The CuTe GEMM's TMA needs 16-byte-aligned rows (K % 16 for int8, N % 4 for the int32 output).
+    if backend == "cute" and K % 16 == 0 and N % 4 == 0:
         from flashlib.linalg.gemm.cutedsl.int8_gemm import cute_int8_mm
         gemm_fn = cute_int8_mm
-    elif backend == "triton":
+    elif backend in ("cute", "triton"):
         gemm_fn = _triton_int_mm
     else:
         raise ValueError(f"unknown backend {backend!r}; use 'triton' or 'cute'")

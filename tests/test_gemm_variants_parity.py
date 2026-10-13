@@ -231,6 +231,41 @@ def test_gemm_ozaki2_int8_unavailable_raises_or_runs():
     assert rms < 3e-6, f"ozaki2_int8 RMS rel-err {rms:.2e}"
 
 
+def _variant_fn(variant):
+    from flashlib.linalg import gemm as g
+    return {
+        "3xbf16": g.gemm_3xbf16,
+        "fp16_x9": g.gemm_fp16_x9,
+        "ozaki2_triton": lambda A, B: g.gemm_ozaki2_triton(A, B, num_moduli=8),
+        "ozaki2_cute": lambda A, B: g.gemm_ozaki2_cute(A, B, num_moduli=8),
+    }[variant]
+
+
+@pytest.mark.parametrize("M,K,N", [(1000, 333, 777), (512, 1001, 512), (512, 512, 1001), (8, 7, 7)])
+@pytest.mark.parametrize("variant,threshold", [
+    ("3xbf16", 1e-4), ("fp16_x9", 1e-5), ("ozaki2_triton", 1e-6), ("ozaki2_cute", 1e-6),
+])
+def test_gemm_variants_unaligned_shapes(variant, threshold, M, K, N):
+    """Shapes off the kernels' TMA / block alignment must still be exact to the variant's tier."""
+    _seeded()
+    A = torch.randn(M, K, device=DEVICE, dtype=torch.float32)
+    B = torch.randn(K, N, device=DEVICE, dtype=torch.float32)
+    rms = _rms_relerr(_variant_fn(variant)(A, B), _fp64_reference(A, B))
+    assert rms < threshold, f"{variant} {M}x{K}x{N} RMS rel-err {rms:.2e}"
+
+
+@pytest.mark.parametrize("variant", ["3xbf16", "fp16_x9", "ozaki2_cute"])
+def test_gemm_result_not_overwritten_by_next_call(variant):
+    """A second same-shape call must not write into the tensor returned by the first."""
+    _seeded()
+    A1, B1, A2, B2 = (torch.randn(256, 256, device=DEVICE) for _ in range(4))
+    fn = _variant_fn(variant)
+    C1 = fn(A1, B1)
+    snapshot = C1.clone()
+    fn(A2, B2)
+    assert torch.equal(C1, snapshot)
+
+
 def test_gemm_dispatcher_routes_by_tol():
     """gemm(..., tol=t) picks the strictest variant whose residual ≤ t."""
     _seeded()

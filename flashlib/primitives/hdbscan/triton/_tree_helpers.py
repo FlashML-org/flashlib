@@ -5,11 +5,25 @@ Used by both ``flash_hdbscan`` and ``flash_hdbscan_sparse`` for:
   • condensing the tree (removes nodes with size < min_cluster_size)
   • computing per-cluster stability
   • extracting flat labels from the condensed tree (EOM / leaf)
+
+Without numba the same functions run as plain Python (slower, same results).
 """
 import numpy as np
-import numba
 
-@numba.njit(cache=True)
+from flashlib._optional import has_numba, warn_no_numba
+
+if has_numba():
+    import numba
+
+    _njit = numba.njit
+else:
+    warn_no_numba("flash_hdbscan")
+
+    def _njit(**_kwargs):
+        return lambda f: f
+
+
+@_njit(cache=True)
 def _bfs_into_buffer(hierarchy, root, num_points, queue, out):
     """Iterative BFS over SLT — writes nodes in BFS order to `out`, returns count.
     `queue` and `out` must be pre-allocated (size >= 2*num_points)."""
@@ -27,7 +41,7 @@ def _bfs_into_buffer(hierarchy, root, num_points, queue, out):
     return n_out
 
 
-@numba.njit(cache=True)
+@_njit(cache=True)
 def _bfs_from_hierarchy(hierarchy, root, num_points):
     """Allocating wrapper — kept for backwards compatibility within this module."""
     queue = np.empty(2 * num_points, dtype=np.int64)
@@ -36,7 +50,7 @@ def _bfs_from_hierarchy(hierarchy, root, num_points):
     return out[:n]
 
 
-@numba.njit(cache=True)
+@_njit(cache=True)
 def _fast_condense_tree(hierarchy, min_cluster_size):
     """Port of upstream condense_tree to numba. Returns 4 parallel arrays:
     parent, child, lambda_val, child_size.
@@ -141,7 +155,7 @@ def _fast_condense_tree(hierarchy, min_cluster_size):
             out_lambda[:n_out], out_size[:n_out])
 
 
-@numba.njit(cache=True)
+@_njit(cache=True)
 def _fast_compute_stability(parents, children, lambdas, sizes):
     """Port of compute_stability. Returns (cluster_ids, stability) parallel arrays.
 
@@ -193,7 +207,7 @@ def _fast_compute_stability(parents, children, lambdas, sizes):
     return cluster_ids, result
 
 
-@numba.njit(cache=True)
+@_njit(cache=True)
 def _fast_get_clusters(parents, children, lambdas, sizes,
                        cluster_ids, stability_arr, num_points):
     """Port of get_clusters (eom strategy, no allow_single_cluster, no epsilon).
@@ -301,7 +315,7 @@ def _fast_get_clusters(parents, children, lambdas, sizes,
     return labels
 
 
-@numba.njit(cache=True, fastmath=True)
+@_njit(cache=True, fastmath=True)
 def _fast_label(mst_sorted):
     """Single-linkage dendrogram from sorted MST edges.
 

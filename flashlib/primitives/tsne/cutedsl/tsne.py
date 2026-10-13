@@ -278,7 +278,7 @@ def cutedsl_tsne_perplex_bisect(d_centered: torch.Tensor,
 
     if n_bisect != DEFAULT_NBISECT or not _try_init_cutedsl():
         return triton_tsne_perplex_bisect(d_centered, perplexity=perplexity,
-                                            n_bisect=n_bisect)
+                                            max_iter=n_bisect)
 
     try:
         from cutlass.cute.runtime import from_dlpack
@@ -293,7 +293,7 @@ def cutedsl_tsne_perplex_bisect(d_centered: torch.Tensor,
         return beta
     except Exception:
         return triton_tsne_perplex_bisect(d_centered, perplexity=perplexity,
-                                            n_bisect=n_bisect)
+                                            max_iter=n_bisect)
 
 
 def cutedsl_compute_p_matrix(X: torch.Tensor,

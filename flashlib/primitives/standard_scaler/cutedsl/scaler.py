@@ -66,8 +66,8 @@ Fallback
 If the CuteDSL JIT is unavailable, ``cutedsl_standard_scaler_*`` falls
 back to the Triton implementation transparently.
 """
-from __future__ import annotations
-
+# No postponed annotations: the CuTe DSL evaluates kernel annotations
+# (``cute.Tensor``) against module globals, where ``cute`` is absent.
 import os
 import sys
 from typing import Optional
@@ -313,7 +313,7 @@ def cutedsl_standard_scaler_fit(X: torch.Tensor):
     """
     assert X.is_cuda and X.ndim == 2
     if not _try_init_cutedsl():
-        return _triton_fit(X, method="1pass")
+        return _triton_fit(X)
 
     try:
         from cutlass.cute.runtime import from_dlpack
@@ -345,7 +345,7 @@ def cutedsl_standard_scaler_fit(X: torch.Tensor):
         inv_std = 1.0 / std_safe
         return mean, std, inv_std
     except Exception:
-        return _triton_fit(X, method="1pass")
+        return _triton_fit(X)
 
 
 def cutedsl_standard_scaler_transform(X: torch.Tensor, mean: torch.Tensor,
@@ -356,7 +356,7 @@ def cutedsl_standard_scaler_transform(X: torch.Tensor, mean: torch.Tensor,
     """
     assert X.is_cuda and X.ndim == 2
     if not _try_init_cutedsl():
-        return _triton_transform(X, mean, inv_std, layout="2d")
+        return _triton_transform(X.contiguous(), mean, inv_std)
 
     try:
         from cutlass.cute.runtime import from_dlpack
@@ -371,7 +371,7 @@ def cutedsl_standard_scaler_transform(X: torch.Tensor, mean: torch.Tensor,
         xform_c(cX, cY, cMu, cInv)
         return Y
     except Exception:
-        return _triton_transform(X, mean, inv_std, layout="2d")
+        return _triton_transform(X.contiguous(), mean, inv_std)
 
 
 def cutedsl_standard_scaler_fit_transform(X: torch.Tensor):

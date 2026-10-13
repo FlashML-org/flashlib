@@ -31,7 +31,7 @@ zolo, and tests):
 import contextlib
 import torch
 
-from flashlib._optional import has_cutedsl
+from flashlib._optional import has_cutedsl_sm90
 from flashlib.linalg.gemm.triton.triton_mm import mm_3xbf16, bf16_mm_fp32, mm_tf32_lt
 from flashlib.linalg.gemm.triton.fused_kernels import (
     fused_kl_poly,
@@ -280,7 +280,7 @@ def polar_qdwh_hybrid(A, n_qdwh=2, n_ns=2, alpha=None, L0=1e-5):
     # (≈1.2e-2) gets amplified by (a-b/c) ≈ 5400 on the follow-up iter plus
     # two KL steps; at N ≥ 12288 the residual drifts to 7e-3 (seed=42) to
     # 1e-2 (seed=123 N=16384), outside the 5e-3 budget.
-    cute_iter1 = n <= 8192 and has_cutedsl()
+    cute_iter1 = n <= 8192 and has_cutedsl_sm90()
     # potrf_3xbf16 at iter-1: factor rel err ~1e-3 is absorbed when
     # cholesky_solve is also 3xbf16 (same precision class). At N ≥ 16384
     # factor rel err rises to 2e-3 AND cholesky_solve drops back to fp32
