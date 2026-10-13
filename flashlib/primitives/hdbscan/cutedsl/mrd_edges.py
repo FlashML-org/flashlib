@@ -11,7 +11,7 @@ The flash-hdbscan sparse-kNN pipeline has these stages:
      Triton fused kernel reads (N,K) fp32 dists + (N,K) int32 idxs + (N,) fp32
      core, writes (N,K) fp32 mrd.
   3. Sparse Boruvka MST on N×K edges — atomic_min over component buckets.
-  4. SLT label + condense + extract on CPU (numba).
+  4. SLT label + condense + extract on CPU.
 
 CuteDSL targets surveyed:
 - (1) **kNN GEMM** — already Triton-bf16-optimized in flash_knn; no
@@ -170,7 +170,7 @@ def cutedsl_hdbscan(X: torch.Tensor,
 
     ``tol`` is forwarded to :func:`flash_knn`; ``None`` (default) keeps
     the input dtype intact (exact). flash_knn / sparse Boruvka MST /
-    numba dendrogram are shared with the Triton path.
+    CPU dendrogram are shared with the Triton path.
     """
     assert X.is_cuda
     N, D = X.shape

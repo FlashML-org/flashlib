@@ -1,4 +1,4 @@
-"""Every op must run without the optional extras (``[cutedsl]``, ``[numba]``).
+"""Every op must run without the optional ``[cutedsl]`` extra (and without numba).
 
 Each check runs in a fresh interpreter that hides ``cutlass`` and ``numba``
 from the import system, so it exercises the plain ``pip install flashlib``
@@ -41,8 +41,9 @@ _md.version = _no_cutlass_dsl
 needs_cuda = pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
 
 
-def _run_without_extras(body: str) -> str:
+def _run_without_extras(body: str, **env_overrides: str) -> str:
     env = dict(os.environ, PYTHONPATH=os.pathsep.join(filter(None, [str(ROOT), os.environ.get("PYTHONPATH")])))
+    env.update(env_overrides)
     proc = subprocess.run(
         [sys.executable, "-c", _HIDE_EXTRAS + textwrap.dedent(body)],
         capture_output=True, text=True, timeout=900, env=env, cwd=ROOT,
@@ -55,8 +56,8 @@ def test_import_all_names_without_extras():
     _run_without_extras("""
         import sys
         import flashlib
-        from flashlib._optional import has_cutedsl, has_numba
-        assert not has_cutedsl() and not has_numba()
+        from flashlib._optional import has_cutedsl
+        assert not has_cutedsl()
         for name in flashlib._LAZY_ATTRS:
             getattr(flashlib, name)
         assert not [m for m in sys.modules if m.split(".")[0] in ("cutlass", "numba")]
@@ -98,7 +99,7 @@ def test_cutedsl_only_linalg_ops_run_without_cutedsl():
 
 
 @needs_cuda
-def test_hdbscan_runs_without_numba():
+def test_hdbscan_runs_without_numba(tmp_path):
     stderr = _run_without_extras("""
         import torch
         import flashlib
@@ -108,8 +109,8 @@ def test_hdbscan_runs_without_numba():
         X = (centers.repeat_interleave(300, 0) + torch.randn(900, 2)).cuda()
         labels = flashlib.flash_hdbscan(X, min_cluster_size=25)
         assert labels.max() + 1 == 3, labels.max() + 1
-    """)
-    assert "pip install 'flashlib[numba]'" in stderr
+    """, FLASHLIB_CACHE_DIR=str(tmp_path))
+    assert "pure Python" not in stderr, stderr
 
 
 @needs_cuda
