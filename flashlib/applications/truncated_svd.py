@@ -27,15 +27,10 @@ class TruncatedSVD:
     def fit(self, X: torch.Tensor) -> "TruncatedSVD":
         if not X.is_cuda or X.ndim != 2:
             raise ValueError("TruncatedSVD requires a 2D CUDA tensor")
-        result = flash_truncated_svd(X, self.n_components)
-        # flash_truncated_svd returns (U, S, Vt) or similar tuple.
-        if isinstance(result, tuple) and len(result) == 3:
-            U, S, Vt = result
-            self.components_ = Vt.contiguous() if Vt.shape[0] == self.n_components else Vt.T.contiguous()
-            self.singular_values_ = S
-            self.explained_variance_ = (S ** 2) / max(X.shape[0] - 1, 1)
-        else:
-            raise RuntimeError("flash_truncated_svd returned unexpected format")
+        S, Vt = flash_truncated_svd(X, self.n_components)
+        self.components_ = Vt.contiguous()
+        self.singular_values_ = S
+        self.explained_variance_ = (S ** 2) / max(X.shape[0] - 1, 1)
         return self
 
     def transform(self, X: torch.Tensor) -> torch.Tensor:

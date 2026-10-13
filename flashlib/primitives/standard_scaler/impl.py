@@ -35,6 +35,7 @@ def flash_standard_scaler_fit(
     backend: Optional[str] = None,
     fused: bool = True,
 ):
+    X = X.contiguous()  # the kernels assume row-major rows
     if _use_cutedsl(backend, "flash_standard_scaler_fit"):
         return cutedsl_standard_scaler_fit(X)
     return triton_standard_scaler_fit(X, fused=fused)
@@ -47,6 +48,7 @@ def flash_standard_scaler_transform(
     *,
     backend: Optional[str] = None,
 ):
+    X = X.contiguous()
     if _use_cutedsl(backend, "flash_standard_scaler_transform"):
         return cutedsl_standard_scaler_transform(X, mean, inv_std)
     return triton_standard_scaler_transform(X, mean, inv_std)
@@ -57,6 +59,7 @@ def flash_standard_scaler_fit_transform(
     *,
     backend: Optional[str] = None,
 ):
+    X = X.contiguous()
     if _use_cutedsl(backend, "flash_standard_scaler_fit_transform"):
         return cutedsl_standard_scaler_fit_transform(X)
     return triton_standard_scaler_fit_transform(X)

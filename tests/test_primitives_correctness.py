@@ -22,6 +22,49 @@ def test_standard_scaler_matches_sklearn():
 
 
 @cuda_only
+@pytest.mark.parametrize("layout", ["strided", "col-major", "row-slice"])
+def test_standard_scaler_non_contiguous_input(layout):
+    from flashlib import StandardScaler, flash_standard_scaler
+
+    torch.manual_seed(0)
+    X = torch.randn(2001, 37, device="cuda") * 3 + 1
+    Xv = {
+        "strided": lambda: torch.empty(2001, 74, device="cuda")[:, ::2].copy_(X),
+        "col-major": lambda: X.T.contiguous().T,
+        "row-slice": lambda: torch.empty(4002, 37, device="cuda")[::2].copy_(X),
+    }[layout]()
+    assert not Xv.is_contiguous()
+    ref = flash_standard_scaler(X)[0]
+    assert torch.equal(flash_standard_scaler(Xv)[0], ref)
+    assert torch.equal(StandardScaler().fit_transform(Xv), ref)
+
+
+@cuda_only
+def test_logistic_regression_application():
+    from flashlib import LogisticRegression, flash_logistic_regression
+
+    torch.manual_seed(0)
+    X = torch.randn(2001, 37, device="cuda")
+    y = (X[:, 0] + 0.5 * X[:, 1] > 0).long()
+    model = LogisticRegression(max_iter=50).fit(X, y)
+    assert (model.predict(X) == y).float().mean().item() > 0.97
+    assert torch.equal(model.coef_, flash_logistic_regression(X, y, n_iter=50)[0])
+
+
+@cuda_only
+def test_truncated_svd_application():
+    from flashlib import TruncatedSVD
+
+    torch.manual_seed(0)
+    X = torch.randn(2001, 37, device="cuda")
+    model = TruncatedSVD(5).fit(X)
+    assert model.components_.shape == (5, 37)
+    ref = torch.linalg.svdvals(X.double())[:5]
+    assert torch.allclose(model.singular_values_.double(), ref, rtol=1e-4)
+    assert torch.equal(model.transform(X), X @ model.components_.T)
+
+
+@cuda_only
 def test_kmeans_partitions_blob_data():
     from flashlib import KMeans
 
