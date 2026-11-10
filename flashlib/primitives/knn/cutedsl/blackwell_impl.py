@@ -439,6 +439,9 @@ if _BW_AVAILABLE:
                 acc_pipeline.consumer_wait(acc_cons)
                 cute.copy(tiled_copy_t2r, tTR_tAcc[(None, None, None, 0, 0)],
                           tTR_rAcc)
+                # tcgen05.ld is asynchronous: wait for it before the single
+                # accumulator stage is released to warp 0's next MMA.
+                cute.arch.fence_view_async_tmem_load()
                 acc_pipeline.consumer_release(acc_cons)
                 acc_cons.advance()
 
@@ -446,7 +449,8 @@ if _BW_AVAILABLE:
 
                 # issue the next tile's MMA now (warp 0): async tcgen05 overlaps
                 # the CUDA-core-bound top-K below. 1 acc stage suffices -- the
-                # copy above already drained the accumulator to registers.
+                # tcgen05.wait::ld above completed the copy to registers before
+                # the stage was released.
                 db_next = db + 1
                 if dd + 1 < tiles_per_split:
                     if warp_idx == 0:
@@ -769,6 +773,9 @@ if _BW_AVAILABLE:
                 acc_pipeline.consumer_wait(acc_cons)
                 cute.copy(tiled_copy_t2r, tTR_tAcc[(None, None, None, 0, 0)],
                           tTR_rAcc)
+                # tcgen05.ld is asynchronous: wait for it before the single
+                # accumulator stage is released to warp 0's next MMA.
+                cute.arch.fence_view_async_tmem_load()
                 acc_pipeline.consumer_release(acc_cons)
                 acc_cons.advance()
 
